@@ -12,7 +12,7 @@ PYTHON = python
 
 IMPLS = bash c clojure coffee cs forth go haskell java js lua make mal \
 	ocaml matlab miniMAL perl php ps python r racket ruby rust \
-	scala vb nim
+	scala sdt-perl vb nim
 
 step0 = step0_repl
 step1 = step1_read_print
@@ -79,6 +79,7 @@ racket_STEP_TO_PROG =  racket/$($(1)).rkt
 ruby_STEP_TO_PROG =    ruby/$($(1)).rb
 rust_STEP_TO_PROG =    rust/target/release/$($(1))
 scala_STEP_TO_PROG =   scala/$($(1)).scala
+sdt-perl_STEP_TO_PROG = sdt-perl/$($(1)).pl
 vb_STEP_TO_PROG =      vb/$($(1)).exe
 nim_STEP_TO_PROG =     nim/$($(1))
 
@@ -113,6 +114,7 @@ racket_RUNSTEP =  ../$(2) $(3)
 ruby_RUNSTEP =    ruby ../$(2) $(3)
 rust_RUNSTEP =    ../$(2) $(3)
 scala_RUNSTEP =   sbt 'run-main $($(1))$(if $(3), $(3),)'
+sdt-perl_RUNSTEP = ../$(2) $(3)
 vb_RUNSTEP =      mono ../$(2) --raw $(3)
 nim_RUNSTEP =     ../$(2) $(3)
 
