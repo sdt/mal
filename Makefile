@@ -76,7 +76,7 @@ racket_STEP_TO_PROG =  racket/$($(1)).rkt
 ruby_STEP_TO_PROG =    ruby/$($(1)).rb
 rust_STEP_TO_PROG =    rust/target/release/$($(1))
 scala_STEP_TO_PROG =   scala/$($(1)).scala
-sdt-perl_STEP_TO_PROG = sdt-perl/$($(1)).pl
+sdt-perl_STEP_TO_PROG = sdt-perl/bin/$($(1))
 vb_STEP_TO_PROG =      vb/$($(1)).exe
 
 # Needed some argument munging
