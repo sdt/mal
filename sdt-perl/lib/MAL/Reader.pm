@@ -117,26 +117,33 @@ fun _read_atom($reader) {
 }
 
 fun _read_list($reader) {
-    $reader->debug('_read_list');
-    if ($reader->empty) {
-        die "Expected ')', got EOF\n";
+    my %close = (
+        '(' => ')',
+        '[' => ']',
+        '{' => '}',
+    );
+    my $terminator = $close{$reader->peek};
+    $reader->debug("_read_list:$terminator");
+    $reader->next;
+    my @items;
+    while (1) {
+        if ($reader->empty) {
+            die "Expected '$terminator', got EOF\n";
+        }
+        my $value = $reader->peek;
+        if ($value eq $terminator) {
+            $reader->next;
+            return @items;
+        }
+        push(@items, _read_form($reader));
     }
-    if ($reader->peek eq ')') {
-        $reader->next;
-        return MAL::Object->nil;
-    }
-    else {
-        my $car = _read_form($reader);
-        my $cdr = _read_list($reader);
-        return MAL::Object->pair($car, $cdr);
-    }
+    return @items;
 }
 
 fun _read_form($reader) {
     $reader->debug('_read_form');
     if ($reader->peek eq '(') {
-        $reader->next; # consume the left paren
-        return _read_list($reader);
+        return MAL::Object->list(_read_list($reader));
     }
     else {
         my $atom = _read_atom($reader);
