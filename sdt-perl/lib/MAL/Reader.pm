@@ -77,6 +77,7 @@ fun _read_atom($reader) {
         q(')  => 'quote',
         q(`)  => 'quasiquote',
         q(~)  => 'unquote',
+        q(@)  => 'deref',
         q(~@) => 'splice-unquote',
     );
 
