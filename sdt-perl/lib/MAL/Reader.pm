@@ -96,6 +96,9 @@ fun _read_atom($reader) {
 
 fun _read_list($reader) {
     $reader->debug('_read_list');
+    if ($reader->empty) {
+        die "Expected ')', got EOF\n";
+    }
     if ($reader->peek eq ')') {
         $reader->next;
         return MAL::Object->nil;
