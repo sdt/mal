@@ -48,8 +48,11 @@ package Reader {
         my @tokens;
         my $input = $self->input;
         while ($input =~ m/$re/g) {
-            if (length($&) == 0) {
+            if (length($1) == 0) {
                 if (pos($input) != length($input)) {
+                    if (substr($input, pos($input), 1) eq '"') {
+                        die "Expected '\"', got EOF\n";
+                    }
                     $self->token_error('unexpected input', pos($input));
                 }
                 else {
