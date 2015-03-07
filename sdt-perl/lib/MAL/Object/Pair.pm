@@ -2,16 +2,16 @@ package MAL::Object::Pair;
 use 5.20.0;
 use warnings;
 
-use Moo;
-with qw( MAL::Interface::Object );
+use parent qw( MAL::Object );
 
 use Function::Parameters qw( :strict );
-use Types::Standard qw( ConsumerOf );
 
-has [qw( car cdr )] => (
-    is => 'rw',
-    isa => ConsumerOf['MAL::Interface::Object'],
-);
+method new($class: $car, $cdr) {
+    bless [ $car, $cdr ], $class;
+}
+
+method car { $self->[0] }
+method cdr { $self->[1] }
 
 method to_string {
     return $self->in_parens(
