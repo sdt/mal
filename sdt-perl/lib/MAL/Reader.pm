@@ -63,7 +63,8 @@ package Reader {
             push(@tokens, $token);
         }
 
-        return [ grep { ! /^[ ,]*$/ } @tokens ];
+        @tokens = grep { $_->{value} !~ /^;/ } @tokens; # strip comments
+        return \@tokens;
     }
 };
 
