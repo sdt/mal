@@ -21,11 +21,8 @@ use Sub::Name qw( subname );
 
         no strict 'refs';
         no warnings 'redefine';
-        *{ $sym } = subname $sym => $subref;
+        *{ $sym } = subname($sym => $subref);
     }
-
-    sub true { return 1 }
-    sub false { return }
 
     # First of all, load up the subclass modules
     load pkg($_) for @types;
