@@ -145,6 +145,9 @@ fun _read_form($reader) {
     if ($reader->peek eq '(') {
         return MAL::Object->list(_read_list($reader));
     }
+    elsif ($reader->peek eq '[') {
+        return MAL::Object->vector(_read_list($reader));
+    }
     else {
         my $atom = _read_atom($reader);
 #        use Data::Dumper::Concise; print STDERR Dumper($atom);
