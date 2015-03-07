@@ -94,6 +94,22 @@ fun _read_atom($reader) {
         }
     }
 
+    if ($value eq '^') {
+        if ($reader->empty) {
+            die "Expecting first form to with-meta, got EOF\n";
+        }
+        my $first = _read_form($reader);
+        if ($reader->empty) {
+            die "Expecting second form to with-meta, got EOF\n";
+        }
+        my $second = _read_form($reader);
+        return MAL::Object->list(
+                MAL::Object->symbol('with-meta'),
+                $second,
+                $first,
+            );
+    }
+
     if ($value =~ /^"(.*)"$/) {
         my $str = $1;
         $str =~ s/\\"/"/g;
