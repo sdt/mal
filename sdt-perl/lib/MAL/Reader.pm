@@ -181,6 +181,9 @@ fun _read_form($reader) {
 
 method read_str($class: $input) {
     my $reader = Reader->new(input => $input);
+    if ($reader->empty) {
+        return MAL::Object->nil;
+    }
     my $ast = _read_form($reader);
     if (!$reader->empty) {
         $reader->token_error('unexpected extra input');
