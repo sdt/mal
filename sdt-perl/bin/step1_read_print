@@ -20,7 +20,8 @@ fun main(@argv) {
     my $prompt = 'user> ';
     while (defined(my $input = $term->readline($prompt))) {
         chomp($input);
-        say rep($input);
+        eval { say rep($input) };
+        print $@ if $@;
         $term->addhistory($input) if $input =~ /\S/;
     }
     return 0;
