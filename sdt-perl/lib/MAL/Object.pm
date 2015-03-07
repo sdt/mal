@@ -61,4 +61,12 @@ method dump {
     use Data::Dumper::Concise; print STDERR Dumper($self);
 }
 
+method list($class: @items) {
+    my $list = $class->nil;
+    for my $item (reverse @items) {
+        $list = $class->pair($item, $list);
+    }
+    return $list;
+}
+
 1;
