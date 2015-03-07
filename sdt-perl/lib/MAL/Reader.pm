@@ -73,14 +73,24 @@ fun _read_atom($reader) {
     my $value = $reader->peek;
     $reader->next;
 
-    if ($value eq q(')) {
-        if ($reader->empty) {
-            die "Expecting form to quote, got EOF\n";
+    my %quote = (
+        q(')  => 'quote',
+        q(`)  => 'quasiquote',
+        q(~)  => 'unquote',
+        q(~@) => 'splice-unquote',
+    );
+
+    for my $quotesym (keys %quote) {
+        if ($value eq $quotesym) {
+            my $quotetype = $quote{$quotesym};
+            if ($reader->empty) {
+                die "Expecting form to $quotetype, got EOF\n";
+            }
+            return MAL::Object->list(
+                MAL::Object->symbol($quotetype),
+                _read_form($reader),
+            );
         }
-        return MAL::Object->list(
-            MAL::Object->symbol('quote'),
-            _read_form($reader),
-        );
     }
 
     if ($value =~ /^"(.*)"$/) {
