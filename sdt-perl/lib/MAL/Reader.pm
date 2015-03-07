@@ -62,6 +62,7 @@ package Reader {
             my $token = { value => $1, position => $-[0] };
             push(@tokens, $token);
         }
+
         return [ grep { ! /^[ ,]*$/ } @tokens ];
     }
 };
@@ -126,9 +127,9 @@ fun _read_form($reader) {
 method read_str($class: $input) {
     my $reader = Reader->new(input => $input);
     my $ast = _read_form($reader);
-#    if (!$reader->empty) {
-#        $reader->token_error('unexpected extra input');
-#    }
+    if (!$reader->empty) {
+        $reader->token_error('unexpected extra input');
+    }
     return $ast;
 }
 
