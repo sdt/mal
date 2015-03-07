@@ -11,7 +11,8 @@ method new($class: @items) {
     my %hash;
     while (@items) {
         my $key = shift @items;
-        die "Keys to hash must be strings" unless $key->is_string;
+        die "Keys to hash must be keywords or strings"
+            unless $key->is_string || $key->is_keyword;
         my $value = shift @items;
         $hash{$key->to_string} = $value;
     }

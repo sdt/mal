@@ -8,7 +8,7 @@ use Sub::Name qw( subname );
 
 {
     my @constants = qw( False Nil True );
-    my @scalars   = qw( Integer String Symbol );
+    my @scalars   = qw( Integer Keyword String Symbol );
     my @compounds = qw( Hash Pair Vector );
     my @types     = (@constants, @scalars, @compounds);
 
