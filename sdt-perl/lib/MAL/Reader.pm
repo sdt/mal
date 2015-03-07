@@ -100,6 +100,10 @@ fun _read_atom($reader) {
         return MAL::Object->string($str);
     }
 
+    if ($value =~ /^:/) {
+        return MAL::Object->keyword($value);
+    }
+
     if ($value =~ /^\d+$/) {
         return MAL::Object->integer($value);
     }
