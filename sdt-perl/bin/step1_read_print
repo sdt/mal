@@ -30,8 +30,9 @@ fun rep($arg) {
     return PRINT(EVAL(READ($arg)));
 }
 
-fun READ($arg) {
-    return $arg;
+fun READ($input) {
+    my $ast = MAL::Reader->read_str($input);
+    return $ast;
 }
 
 fun EVAL($arg) {
@@ -39,5 +40,5 @@ fun EVAL($arg) {
 }
 
 fun PRINT($arg) {
-    return $arg;
+    return $arg->to_string;
 }
