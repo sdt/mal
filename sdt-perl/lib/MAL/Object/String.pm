@@ -2,19 +2,14 @@ package MAL::Object::String;
 use 5.20.0;
 use warnings;
 
-use Moo;
-with qw( MAL::Interface::Object );
-
+use parent qw( MAL::Object::Scalar );
 use Function::Parameters qw( :strict );
-use Types::Standard qw( Str );
-
-has value => (
-    is => 'ro',
-    isa => Str,
-);
 
 method to_string {
-    return '"' . $self->value . '"';
+    my $value = $self->value;
+    $value =~ s/"/\\"/g;
+    $value =~ s/\n/\\n/g;
+    return '"' . $value . '"';
 }
 
 1;

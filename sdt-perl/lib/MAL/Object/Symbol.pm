@@ -2,19 +2,6 @@ package MAL::Object::Symbol;
 use 5.20.0;
 use warnings;
 
-use Moo;
-with qw( MAL::Interface::Object );
-
-use Function::Parameters qw( :strict );
-use Types::Standard qw( Str );
-
-has value => (
-    is => 'ro',
-    isa => Str,
-);
-
-method to_string {
-    return $self->value;
-}
+use parent qw( MAL::Object::Scalar );
 
 1;

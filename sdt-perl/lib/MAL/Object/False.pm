@@ -1,4 +1,4 @@
-package MAL::Object::Nil;
+package MAL::Object::False;
 use 5.20.0;
 use warnings;
 

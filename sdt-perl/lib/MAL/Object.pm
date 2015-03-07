@@ -3,31 +3,62 @@ use 5.20.0;
 use warnings;
 
 use Function::Parameters qw( :strict );
-use Module::Load;
+use Module::Load qw( load );
+use Sub::Name qw( subname );
 
-my @types = qw( Integer Nil Pair String Symbol );
+{
+    my @constants = qw( False Nil True );
+    my @scalars   = qw( Integer String Symbol );
+    my @compounds = qw( Pair );
+    my @types     = (@constants, @scalars, @compounds);
 
-load "MAL::Object::$_" for @types;
+    fun pkg($sym, $pkg = __PACKAGE__) {
+        return $pkg . '::' . $sym;
+    }
 
-method integer($class: $value) {
-    return MAL::Object::Integer->new(value => $value);
+    fun make_method($method, $subref, $pkg = __PACKAGE__) {
+        my $sym = pkg($method, $pkg);
+
+        no strict 'refs';
+        no warnings 'redefine';
+        *{ $sym } = subname $sym => $subref;
+    }
+
+    sub true { return 1 }
+    sub false { return }
+
+    # First of all, load up the subclass modules
+    load pkg($_) for @types;
+
+    # Now build constant constructors for all the constants
+    for my $type (@constants) {
+        my $pkg = pkg($type);
+        my $value = $pkg->new;
+        make_method(lc($type), sub { return $value });
+    }
+
+    # And regular constructors for all the rest
+    for my $type (@scalars, @compounds) {
+        my $module = pkg($type);
+        make_method(lc($type), sub { shift; $module->new(@_) });
+    }
+
+    # Add in type detection methods
+    for my $type (@types) {
+        my $lctype = lc($type);
+        my $method = "is_$lctype";
+        make_method($method, sub { return });
+        make_method($method, sub { return 1 }, pkg($type));
+        make_method('type', sub { return $lctype }, pkg($type));
+    }
 }
 
-method nil($class:) {
-    state $nil = MAL::Object::Nil->new;
-    return $nil;
+method in_parens {
+    return '(' . join(' ', @_) . ')';
 }
 
-method pair($class: $car, $cdr) {
-    return MAL::Object::Pair->new(car => $car, cdr => $cdr);
-}
-
-method string($class: $value) {
-    return MAL::Object::String->new(value => $value);
-}
-
-method symbol($class: $value) {
-    return MAL::Object::Symbol->new(value => $value);
+method dump {
+    use Data::Dumper::Concise; print STDERR Dumper($self);
 }
 
 1;

@@ -83,6 +83,11 @@ fun _read_atom($reader) {
         $reader->token_error('syntax error');
     }
 
+    for my $constant (qw( true false nil )) {
+        if ($value eq $constant) {
+            return MAL::Object->$constant;
+        }
+    }
     return MAL::Object->symbol($value);
 }
 
