@@ -77,6 +77,7 @@ my %builtin = (
         sub { reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_) },
         'integer',
     ),
+    'list' => MAL::Object->builtin('list', sub { @_ }, 'list'),
 );
 
 exit main(@ARGV) ? 0 : 1;
