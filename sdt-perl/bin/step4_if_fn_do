@@ -45,6 +45,9 @@ my %special_form = (
             return EVAL($consequent, $env);
         }
         else {
+            if ($args->cdr->cdr->is_nil) {
+                return MAL::Object->nil;
+            }
             my $alternative = $args->cdr->cdr->car;
             return EVAL($alternative, $env);
         }
