@@ -11,7 +11,7 @@ use overload '""' => method { $self->to_string };
 {
     my @constants = qw( False Nil True );
     my @scalars   = qw( Integer Keyword String Symbol );
-    my @compounds = qw( BuiltIn Hash Pair Vector );
+    my @compounds = qw( BuiltIn Hash Lambda Pair Vector );
     my @types     = (@constants, @scalars, @compounds);
 
     fun pkg($sym, $pkg = __PACKAGE__) {

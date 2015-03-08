@@ -32,8 +32,8 @@ my %special_form = (
     },
     'do' => fun($args, $env) {
         my $ret = MAL::Object->nil;
-        for my $expr ($args->items) {
-            $ret = EVAL($expr, $env);
+        for my $expression ($args->items) {
+            $ret = EVAL($expression, $env);
         }
         return $ret;
     },
@@ -48,6 +48,11 @@ my %special_form = (
             my $alternative = $args->cdr->cdr->car;
             return EVAL($alternative, $env);
         }
+    },
+    'fn*' => fun($args, $env) {
+        my $parameters = $args->car;
+        my $expression = $args->cdr->car;
+        return MAL::Object->lambda($parameters, $expression, $env, \&EVAL);
     },
 );
 
