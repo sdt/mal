@@ -9,7 +9,7 @@ use Sub::Name qw( subname );
 {
     my @constants = qw( False Nil True );
     my @scalars   = qw( Integer Keyword String Symbol );
-    my @compounds = qw( Hash Pair Vector );
+    my @compounds = qw( BuiltIn Hash Pair Vector );
     my @types     = (@constants, @scalars, @compounds);
 
     fun pkg($sym, $pkg = __PACKAGE__) {
