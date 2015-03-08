@@ -25,4 +25,16 @@ method to_string {
     '}';
 }
 
+method get($key) {
+    return $self->{$key};
+}
+
+method map_values($f) {
+    my %hash;
+    for my $key (keys %$self) {
+        $hash{$key} = $f->($self->{$key});
+    }
+    return bless { %hash }, ref $self;
+}
+
 1;
