@@ -76,6 +76,7 @@ my @builtins = (
     [ 'list', list => sub { @_ } ],
     [ 'list?', boolean => sub { $_[0]->is_pair || $_[0]->is_nil } ],
     [ 'empty?', boolean => sub { ! $_[0]->is_pair } ],
+    [ 'count', integer => sub { scalar($_[0]->items) // 0 } ],
 );
 
 exit main(@ARGV) ? 0 : 1;
