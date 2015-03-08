@@ -21,6 +21,7 @@ has outer => (
 
 method set($key, $value) {
     $self->data->{$key} = $value;
+    return $value;
 }
 
 method find($key) {
