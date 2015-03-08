@@ -82,6 +82,10 @@ my %builtin = (
         sub { $_[0]->is_pair || $_[0]->is_nil },
         'boolean',
     ),
+    'empty?' => MAL::Object->builtin('empty?',
+        sub { ! $_[0]->is_pair },
+        'boolean',
+    ),
 );
 
 exit main(@ARGV) ? 0 : 1;
