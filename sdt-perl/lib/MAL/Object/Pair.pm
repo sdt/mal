@@ -26,4 +26,10 @@ method items {
     return ( $self->car, $self->cdr->items );
 }
 
+method equal($rhs) {
+    return $self->same_type($rhs)
+        && $self->car->equal($rhs->car)
+        && $self->cdr->equal($rhs->cdr);
+}
+
 1;

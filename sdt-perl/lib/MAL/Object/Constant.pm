@@ -16,4 +16,8 @@ method to_string {
     return $$self;
 }
 
+method equal($rhs) {
+    return $self->same_type($rhs); # there is no value, so type check is enough
+}
+
 1;

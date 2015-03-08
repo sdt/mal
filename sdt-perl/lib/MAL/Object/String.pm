@@ -12,4 +12,8 @@ method to_string {
     return '"' . $value . '"';
 }
 
+method equal($rhs) {
+    return $self->same_type($rhs) && ($self->value eq $rhs->value);
+}
+
 1;
