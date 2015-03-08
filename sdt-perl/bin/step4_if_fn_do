@@ -37,6 +37,18 @@ my %special_form = (
         }
         return $ret;
     },
+    'if' => fun($args, $env) {
+        my $condition = $args->car;
+        my $result = EVAL($condition, $env);
+        if (! ($result->is_false || $result->is_nil)) {
+            my $consequent = $args->cdr->car;
+            return EVAL($consequent, $env);
+        }
+        else {
+            my $alternative = $args->cdr->cdr->car;
+            return EVAL($alternative, $env);
+        }
+    },
 );
 
 my %builtin = (
