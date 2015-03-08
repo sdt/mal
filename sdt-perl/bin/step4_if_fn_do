@@ -61,20 +61,21 @@ my %special_form = (
 
 my %builtin = (
     '+' => MAL::Object->builtin('+',
-        sub { reduce(sub { $_[0] + $_[1] }, 0, @_) },
-        'MAL::Object::Integer',
+        sub { reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_) },
+        'integer',
     ),
     '-' => MAL::Object->builtin('+',
-        sub { @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, @_) },
-        'MAL::Object::Integer',
+        sub { @_ == 1 ? -$_[0]
+                      : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_) },
+        'integer',
     ),
     '*' => MAL::Object->builtin('*',
-        sub { reduce(sub { $_[0] * $_[1] }, 1, @_) },
-        'MAL::Object::Integer',
+        sub { reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_) },
+        'integer',
     ),
     '/' => MAL::Object->builtin('/',
-        sub { reduce(sub { int($_[0] / $_[1]) }, @_) },
-        'MAL::Object::Integer',
+        sub { reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_) },
+        'integer',
     ),
 );
 
