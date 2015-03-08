@@ -13,6 +13,32 @@ use MAL::Environment;
 use MAL::Object;
 use MAL::Reader;
 
+my %special_form = (
+    'def!' => fun($args, $env) {
+        my $symbol = $args->car->value;
+        my $value = EVAL($args->cdr->car, $env);
+        return $env->set($symbol, $value);
+    },
+    'let*' => fun($args, $env) {
+        my $inner_env = MAL::Environment->new(outer => $env);
+        my @bindings = $args->car->items;
+        while (@bindings) {
+            $inner_env->set($bindings[0]->to_string,
+                            EVAL($bindings[1], $inner_env));
+            splice(@bindings, 0, 2);
+        }
+        my $expression = $args->cdr->car;
+        return EVAL($expression, $inner_env);
+    },
+    'do' => fun($args, $env) {
+        my $ret = MAL::Object->nil;
+        for my $expr ($args->items) {
+            $ret = EVAL($expr, $env);
+        }
+        return $ret;
+    },
+);
+
 exit main(@ARGV) ? 0 : 1;
 
 #-------------------------------------------------------------------------------
@@ -58,8 +84,9 @@ fun READ($input) {
 fun EVAL($ast, $env) {
     if ($ast->is_pair) {
         if ($ast->car->is_symbol) {
-            my $ret = eval_special_forms($ast->car->value, $ast->cdr, $env);
-            return $ret if defined $ret;
+            if (my $special = $special_form{$ast->car->value}) {
+                return $special->($ast->cdr, $env);
+            }
         }
         $ast = eval_ast($ast, $env);
         my $op = $ast->car;
@@ -67,33 +94,6 @@ fun EVAL($ast, $env) {
         return $op->apply($args);
     }
     return eval_ast($ast, $env);
-}
-
-fun eval_special_forms($operator, $args, $env) {
-    if ($operator eq 'def!') {
-        my $symbol = $args->car->value;
-        my $value = EVAL($args->cdr->car, $env);
-        return $env->set($symbol, $value);
-    }
-    if ($operator eq 'let*') {
-        my $inner_env = MAL::Environment->new(outer => $env);
-        my @bindings = $args->car->items;
-        while (@bindings) {
-            $inner_env->set($bindings[0]->to_string,
-                            EVAL($bindings[1], $inner_env));
-            splice(@bindings, 0, 2);
-        }
-        my $expression = $args->cdr->car;
-        return EVAL($expression, $inner_env);
-    }
-    if ($operator eq 'do') {
-        my $ret = MAL::Object->nil;
-        for my $expr ($args->items) {
-            $ret = EVAL($expr, $env);
-        }
-        return $ret;
-    }
-    return;
 }
 
 fun eval_ast($ast, $env) {
