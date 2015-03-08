@@ -75,6 +75,14 @@ fun eval_ast($ast, $env) {
             eval_ast($ast->cdr, $env),
         );
     }
+    if ($ast->is_vector) {
+        return MAL::Object->vector(
+            map { EVAL($_, $env) } $ast->items
+        );
+    }
+    if ($ast->is_hash) {
+        return $ast->map_values(sub { EVAL($_[0], $env) });
+    }
     return $ast;
 }
 
