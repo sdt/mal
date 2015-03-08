@@ -15,9 +15,9 @@ method new($class: $name, $subref, $return_type) {
 }
 
 method apply($args) {
-    my @argvals = map { $_->value } $args->items;
-    my $ret = $self->{subref}->(@argvals);
-    return $self->{return_type}->new($ret);
+    my $ret = $self->{subref}->($args->items);
+    my $type = $self->{return_type};
+    return MAL::Object->$type($ret);
 }
 
 method to_string {
