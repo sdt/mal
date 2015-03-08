@@ -6,6 +6,8 @@ use Function::Parameters qw( :strict );
 use Module::Load qw( load );
 use Sub::Name qw( subname );
 
+use overload '""' => method { $self->to_string };
+
 {
     my @constants = qw( False Nil True );
     my @scalars   = qw( Integer Keyword String Symbol );
