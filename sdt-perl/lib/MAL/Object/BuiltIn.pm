@@ -15,9 +15,10 @@ method new($class: $name, $subref, $return_type) {
 }
 
 method apply($args) {
-    my $ret = $self->{subref}->($args->items);
     my $type = $self->{return_type};
-    return MAL::Object->$type($ret);
+    return MAL::Object->$type(
+        $self->{subref}->($args->items) # may be scalar or array
+    );
 }
 
 method to_string {
