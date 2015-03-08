@@ -9,4 +9,8 @@ method items {
     return ();
 }
 
+method to_string {
+    return '()';
+}
+
 1;
