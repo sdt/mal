@@ -15,7 +15,7 @@ method new($class: $name, $subref, $return_type) {
 }
 
 method apply($args) {
-    my @argvals = map { $_->value } $args->as_list;
+    my @argvals = map { $_->value } $args->items;
     my $ret = $self->{subref}->(@argvals);
     return $self->{return_type}->new($ret);
 }
