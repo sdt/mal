@@ -1,0 +1,103 @@
+#!/usr/bin/env perl
+
+use 5.20.1;
+use warnings;
+
+use Function::Parameters qw( :strict );
+use Term::ReadLine;
+
+use FindBin ();
+use lib "$FindBin::Bin/../lib";
+
+use MAL::Environment;
+use MAL::Object;
+use MAL::Reader;
+
+exit main(@ARGV) ? 0 : 1;
+
+#-------------------------------------------------------------------------------
+
+fun main(@argv) {
+    my $term = Term::ReadLine->new('mal');
+    my $prompt = 'user> ';
+    my $global_env = MAL::Environment->new(data => {
+        '+' => MAL::Object->builtin('+',
+            sub { reduce(sub { $_[0] + $_[1] }, 0, @_) },
+            'MAL::Object::Integer',
+        ),
+        '-' => MAL::Object->builtin('+',
+            sub { @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, @_) },
+            'MAL::Object::Integer',
+        ),
+        '*' => MAL::Object->builtin('*',
+            sub { reduce(sub { $_[0] * $_[1] }, 1, @_) },
+            'MAL::Object::Integer',
+        ),
+        '/' => MAL::Object->builtin('/',
+            sub { reduce(sub { int($_[0] / $_[1]) }, @_) },
+            'MAL::Object::Integer',
+        ),
+    });
+    while (defined(my $input = $term->readline($prompt))) {
+        chomp($input);
+        eval { say rep($input, $global_env) };
+        print $@ if $@;
+        $term->addhistory($input) if $input =~ /\S/;
+    }
+    return 0;
+}
+
+fun rep($input, $env) {
+    return PRINT(EVAL(READ($input), $env));
+}
+
+fun READ($input) {
+    return MAL::Reader->read_str($input);
+}
+
+fun EVAL($ast, $env) {
+    if ($ast->is_pair) {
+        if ($ast->car->is_symbol) {
+            if ($ast->car->value eq 'def!') {
+                my $symbol = $ast->cdr->car->value;
+                my $value = EVAL($ast->cdr->cdr->car, $env);
+                return $env->set($symbol, $value);
+            }
+        }
+        $ast = eval_ast($ast, $env);
+        my $op = $ast->car;
+        my $args = $ast->cdr;
+        return $op->apply($args);
+    }
+    return eval_ast($ast, $env);
+}
+
+fun eval_ast($ast, $env) {
+    if ($ast->is_symbol) {
+        return $env->get($ast->value);
+    }
+    if ($ast->is_pair) {
+        return MAL::Object->pair(
+            EVAL($ast->car, $env),
+            eval_ast($ast->cdr, $env),
+        );
+    }
+    if ($ast->is_vector) {
+        return MAL::Object->vector(
+            map { EVAL($_, $env) } $ast->items
+        );
+    }
+    if ($ast->is_hash) {
+        return $ast->map_values(sub { EVAL($_[0], $env) });
+    }
+    return $ast;
+}
+
+fun PRINT($ast) {
+    return $ast->to_string;
+}
+
+fun reduce($op, $base, @list) {
+    $base = $op->($base, $_) for @list;
+    return $base;
+}
