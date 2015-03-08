@@ -78,6 +78,7 @@ my %builtin = (
         'integer',
     ),
     'list' => MAL::Object->builtin('list', sub { @_ }, 'list'),
+    'list?' => MAL::Object->builtin('list?', sub { $_[0]->is_pair }, 'boolean'),
 );
 
 exit main(@ARGV) ? 0 : 1;
