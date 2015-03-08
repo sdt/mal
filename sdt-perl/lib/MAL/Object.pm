@@ -72,4 +72,12 @@ method boolean($class: $cond = undef) {
     return $cond ? $class->true : $class->false;
 }
 
+method same_type($rhs) {
+    return ref $self eq ref $rhs;
+}
+
+method equal($rhs) {
+    return;
+}
+
 1;
