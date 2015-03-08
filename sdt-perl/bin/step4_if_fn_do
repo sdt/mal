@@ -59,33 +59,23 @@ my %special_form = (
     },
 );
 
-my %builtin = (
-    '+' => MAL::Object->builtin('+',
+my @builtins = (
+    [ '+', integer =>
         sub { reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_) },
-        'integer',
-    ),
-    '-' => MAL::Object->builtin('+',
+    ],
+    [ '-', integer =>
         sub { @_ == 1 ? -$_[0]
                       : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_) },
-        'integer',
-    ),
-    '*' => MAL::Object->builtin('*',
+    ],
+    [ '*', integer =>
         sub { reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_) },
-        'integer',
-    ),
-    '/' => MAL::Object->builtin('/',
+    ],
+    [ '/', integer =>
         sub { reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_) },
-        'integer',
-    ),
-    'list' => MAL::Object->builtin('list', sub { @_ }, 'list'),
-    'list?' => MAL::Object->builtin('list?',
-        sub { $_[0]->is_pair || $_[0]->is_nil },
-        'boolean',
-    ),
-    'empty?' => MAL::Object->builtin('empty?',
-        sub { ! $_[0]->is_pair },
-        'boolean',
-    ),
+    ],
+    [ 'list', list => sub { @_ } ],
+    [ 'list?', boolean => sub { $_[0]->is_pair || $_[0]->is_nil } ],
+    [ 'empty?', boolean => sub { ! $_[0]->is_pair } ],
 );
 
 exit main(@ARGV) ? 0 : 1;
@@ -95,7 +85,11 @@ exit main(@ARGV) ? 0 : 1;
 fun main(@argv) {
     my $term = Term::ReadLine->new('mal');
     my $prompt = 'user> ';
-    my $global_env = MAL::Environment->new(data => \%builtin);
+    my $global_env = MAL::Environment->new;
+    for (@builtins) {
+        my ($sym, $type, $coderef) = @$_;
+        $global_env->set($sym, MAL::Object->builtin($sym, $coderef, $type));
+    }
     while (defined(my $input = $term->readline($prompt))) {
         chomp($input);
         eval { say rep($input, $global_env) };
