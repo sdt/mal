@@ -68,4 +68,8 @@ method list($class: @items) {
     return $list;
 }
 
+method boolean($class: $cond = undef) {
+    return $cond ? $class->true : $class->false;
+}
+
 1;
