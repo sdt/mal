@@ -152,7 +152,7 @@ fun eval_ast($ast, $env) {
 }
 
 fun PRINT($ast) {
-    return $ast->to_string;
+    return $ast->to_string(1);
 }
 
 fun reduce($op, $base, @list) {
