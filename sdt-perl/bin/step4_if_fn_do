@@ -60,19 +60,18 @@ my %special_form = (
 );
 
 my @builtins = (
-    [ '+', integer =>
-        sub { reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_) },
-    ],
-    [ '-', integer =>
-        sub { @_ == 1 ? -$_[0]
-                      : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_) },
-    ],
-    [ '*', integer =>
-        sub { reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_) },
-    ],
-    [ '/', integer =>
-        sub { reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_) },
-    ],
+    [ '+', integer => sub {
+        reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_)
+    }],
+    [ '-', integer => sub {
+        @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_)
+    }],
+    [ '*', integer => sub {
+        reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_)
+    }],
+    [ '/', integer => sub {
+        reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_)
+    }],
     [ 'list', list => sub { @_ } ],
     [ 'list?', boolean => sub { $_[0]->is_pair || $_[0]->is_nil } ],
     [ 'empty?', boolean => sub { ! $_[0]->is_pair } ],
