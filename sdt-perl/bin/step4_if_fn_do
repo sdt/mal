@@ -85,6 +85,10 @@ my @builtins = (
         return scalar(@items);
     }],
     [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
+    [ '<',  boolean => sub { $_[0]->value <  $_[1]->value } ],
+    [ '<=', boolean => sub { $_[0]->value <= $_[1]->value } ],
+    [ '>',  boolean => sub { $_[0]->value >  $_[1]->value } ],
+    [ '>=', boolean => sub { $_[0]->value >= $_[1]->value } ],
 );
 
 my @library = (
