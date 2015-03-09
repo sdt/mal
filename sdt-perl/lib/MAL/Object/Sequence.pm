@@ -26,10 +26,10 @@ method length {
     return scalar(@$self);
 }
 
-method to_string {
+method to_string($readable = 0) {
     return
         $self->ldelim .
-        join(' ', map { $_->to_string } $self->items) .
+        join(' ', map { $_->to_string($readable) } $self->items) .
         $self->rdelim;
 }
 

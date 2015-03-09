@@ -19,9 +19,11 @@ method new($class: @items) {
     bless { %hash }, $class;
 }
 
-method to_string {
+method to_string($readable = 0) {
     return '{' .
-        join(' ', map { $_ => $self->{$_}->to_string } sort keys %$self) .
+        join(' ',
+            map { $_ => $self->{$_}->to_string($readable) } sort keys %$self
+        ) .
     '}';
 }
 
