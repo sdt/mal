@@ -85,6 +85,7 @@ my @builtins = (
     [ '<=', boolean => sub { $_[0]->value <= $_[1]->value } ],
     [ '>',  boolean => sub { $_[0]->value >  $_[1]->value } ],
     [ '>=', boolean => sub { $_[0]->value >= $_[1]->value } ],
+    [ 'str', string => sub { join('', map { $_->to_string } @_) }],
 );
 
 my @library = (
