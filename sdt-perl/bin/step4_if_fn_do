@@ -74,7 +74,12 @@ my @builtins = (
     }],
     [ 'list', list => sub { @_ } ],
     [ 'list?', boolean => sub { $_[0]->is_pair || $_[0]->is_nil } ],
-    [ 'empty?', boolean => sub { ! $_[0]->is_pair } ],
+    [ 'empty?', boolean => sub {
+        return 1 if $_[0]->is_nil;
+        return   if $_[0]->is_pair;
+        return scalar($_[0]->items) == 0 if $_[0]->is_seq;
+        return;
+    }],
     [ 'count', integer => sub { scalar($_[0]->items) // 0 } ],
     [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
 );
