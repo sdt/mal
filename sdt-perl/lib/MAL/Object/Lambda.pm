@@ -7,30 +7,41 @@ use parent qw( MAL::Object );
 use Function::Parameters qw( :strict );
 use MAL::Environment;
 
-method new($class: $parameters, $expression, $env, $eval) {
-    bless {
-        expression => $expression,
-        parameters => [ map { $_->value } $parameters->items ],
-        env => $env,
-        eval => $eval, # this is EVAL, kind of a hack passing it in
-    }, $class;
+fun index_of($list, $item) {
+    for my $i (0 .. scalar(@$list)-1) {
+        return $i if $list->[$i] eq $item;
+    }
+    return;
 }
 
-fun make_hash($keys, $values) {
-    my @k = @$keys;
-    my @v = @$values;
-    my %hash;
-    while (@k && @v) {
-        $hash{shift @k} = shift @v;
+method new($class: $parameters, $expression, $env, $eval) {
+    my $self = {
+        expression => $expression,
+        env => $env,
+        eval => $eval, # this is EVAL, kind of a hack passing it in
+    };
+
+    my @params = map { $_->value } $parameters->items;
+    my $ampersand = index_of(\@params, '&');
+    if (defined $ampersand) {
+        die "Must be one and only one parameter after &"
+            unless scalar(@params) == $ampersand + 2;
+        $self->{slurpy} = pop(@params);
+        pop(@params); # drop the '&'
     }
-    return %hash;
+    $self->{parameters} = \@params;
+    bless $self, $class;
 }
 
 method apply($args) {
-    my $inner = MAL::Environment->new(
-        outer => $self->{env},
-        data  => { make_hash($self->{parameters}, [ $args->items ]) },
-    );
+    my $inner = MAL::Environment->new(outer => $self->{env});
+    for my $key (@{ $self->{parameters} }) {
+        $inner->set($key, $args->car);
+        $args = $args->cdr;
+    }
+    if (exists $self->{slurpy}) {
+        $inner->set($self->{slurpy}, $args);
+    }
     return $self->{eval}->($self->{expression}, $inner);
 }
 
