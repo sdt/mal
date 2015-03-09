@@ -12,6 +12,7 @@ use overload '""' => method { $self->to_string };
     my @constants = qw( False Nil True );
     my @scalars   = qw( Integer Keyword String Symbol );
     my @compounds = qw( BuiltIn Hash Lambda Pair Vector );
+    my @sequences = qw( Nil Pair Vector );
     my @types     = (@constants, @scalars, @compounds);
 
     fun pkg($sym, $pkg = __PACKAGE__) {
@@ -46,9 +47,27 @@ use overload '""' => method { $self->to_string };
     for my $type (@types) {
         my $lctype = lc($type);
         my $method = "is_$lctype";
+        my $package = pkg($type);
         make_method($method, sub { return });
-        make_method($method, sub { return 1 }, pkg($type));
-        make_method('type', sub { return $lctype }, pkg($type));
+        make_method($method, sub { return 1 }, $package);
+        make_method('type', sub { return $lctype }, $package);
+        make_method('is_seq', sub { return }, $package);
+    }
+
+    # Add special is_seq methods
+    for my $type (@sequences) {
+        my $package = pkg($type);
+        make_method('is_seq', sub { return 1 }, $package);
+        make_method('equal', method($rhs) {
+            return unless $rhs->is_seq;
+            my @mine = $self->items;
+            my @theirs = $rhs->items;
+            return unless @mine == @theirs;
+            for my $i (0 .. $#mine) {
+                return unless $mine[$i]->equal($theirs[$i]);
+            }
+            return 1;
+        }, $package);
     }
 }
 
