@@ -40,13 +40,13 @@ my %special_form = (
         my ($condition, $consequent, $alternative) = $args->items;
         my $result = EVAL($condition, $env);
         if (! ($result->is_false || $result->is_nil)) {
-            return EVAL($consequent, $env);
+            return ($consequent, $env);
         }
         else {
             if (! defined($alternative)) {
                 return MAL::Object->nil;
             }
-            return EVAL($alternative, $env);
+            return ($alternative, $env);
         }
     },
     'fn*' => fun($args, $env) {
