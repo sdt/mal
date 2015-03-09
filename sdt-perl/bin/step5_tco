@@ -129,17 +129,14 @@ fun READ($input) {
 fun EVAL($ast, $env) {
     while (1) {
         if ($ast->is_list) {
-            if ($ast->car->is_symbol) {
-                if (my $special = $special_form{$ast->car->value}) {
-                    ($ast, $env) = $special->($ast->cdr, $env);
-                    next if $env; # TCO
-                    return $ast;
-                }
-            }
-            $ast = eval_ast($ast, $env);
             my $op = $ast->car;
-            my $args = $ast->cdr;
-            ($ast, $env) = $op->apply($args);
+            if ($op->is_symbol && (my $special = $special_form{$op->value})) {
+                ($ast, $env) = $special->($ast->cdr, $env);
+            }
+            else {
+                $ast = eval_ast($ast, $env);
+                ($ast, $env) = $ast->car->apply($ast->cdr);
+            }
             next if $env; # TCO
             return $ast;
         }
