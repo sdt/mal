@@ -1,0 +1,51 @@
+package MAL::Object::Sequence;
+use 5.20.0;
+use warnings;
+
+use parent qw( MAL::Object );
+
+use Function::Parameters qw( :strict );
+
+method new($class: @items) {
+    bless [ @items ], $class;
+}
+
+method is_sequence {
+    return 1;
+}
+
+method items {
+    return @$self;
+}
+
+method item($index) {
+    return $self->[$index];
+}
+
+method length {
+    return scalar(@$self);
+}
+
+method to_string {
+    return
+        $self->ldelim .
+        join(' ', map { $_->to_string } $self->items) .
+        $self->rdelim;
+}
+
+method map_items($f) {
+    my @mapped = map { $f->($_) } $self->items;
+    my $class = ref $self;
+    return $class->new(@mapped);
+}
+
+method equal($rhs) {
+    return unless $rhs->is_sequence;
+    return unless $self->length == $rhs->length;
+    for my $i (0 .. $self->length-1) {
+        return unless $self->item($i)->equal($rhs->item($i));
+    }
+    return 1;
+}
+
+1;

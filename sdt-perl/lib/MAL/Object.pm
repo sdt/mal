@@ -11,9 +11,9 @@ use overload '""' => method { $self->to_string };
 {
     my @constants = qw( False Nil True );
     my @scalars   = qw( Integer Keyword String Symbol );
-    my @compounds = qw( BuiltIn Hash Lambda Pair Vector );
-    my @sequences = qw( Nil Pair Vector );
-    my @types     = (@constants, @scalars, @compounds);
+    my @sequences = qw( List Vector );
+    my @specials  = qw( BuiltIn Hash Lambda );
+    my @types     = (@constants, @scalars, @sequences, @specials);
 
     fun pkg($sym, $pkg = __PACKAGE__) {
         return $pkg . '::' . $sym;
@@ -38,7 +38,7 @@ use overload '""' => method { $self->to_string };
     }
 
     # And regular constructors for all the rest
-    for my $type (@scalars, @compounds) {
+    for my $type (@scalars, @sequences, @specials) {
         my $module = pkg($type);
         make_method(lc($type), sub { shift; $module->new(@_) });
     }
@@ -51,23 +51,6 @@ use overload '""' => method { $self->to_string };
         make_method($method, sub { return });
         make_method($method, sub { return 1 }, $package);
         make_method('type', sub { return $lctype }, $package);
-        make_method('is_seq', sub { return }, $package);
-    }
-
-    # Add special is_seq methods
-    for my $type (@sequences) {
-        my $package = pkg($type);
-        make_method('is_seq', sub { return 1 }, $package);
-        make_method('equal', method($rhs) {
-            return unless $rhs->is_seq;
-            my @mine = $self->items;
-            my @theirs = $rhs->items;
-            return unless @mine == @theirs;
-            for my $i (0 .. $#mine) {
-                return unless $mine[$i]->equal($theirs[$i]);
-            }
-            return 1;
-        }, $package);
     }
 }
 
@@ -79,13 +62,7 @@ method dump {
     use Data::Dumper::Concise; print STDERR Dumper($self);
 }
 
-method list($class: @items) {
-    my $list = $class->nil;
-    for my $item (reverse @items) {
-        $list = $class->pair($item, $list);
-    }
-    return $list;
-}
+method is_sequence { return }
 
 method boolean($class: $cond = undef) {
     return $cond ? $class->true : $class->false;
