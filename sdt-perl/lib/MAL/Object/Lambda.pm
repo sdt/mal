@@ -14,11 +14,10 @@ fun index_of($list, $item) {
     return;
 }
 
-method new($class: $parameters, $expression, $env, $eval) {
+method new($class: $parameters, $expression, $env) {
     my $self = {
         expression => $expression,
         env => $env,
-        eval => $eval, # this is EVAL, kind of a hack passing it in
     };
 
     my @params = map { $_->value } $parameters->items;
@@ -42,7 +41,7 @@ method apply($args) {
     if (exists $self->{slurpy}) {
         $inner->set($self->{slurpy}, $args);
     }
-    return $self->{eval}->($self->{expression}, $inner);
+    return ($self->{expression}, $inner);
 }
 
 method to_string {

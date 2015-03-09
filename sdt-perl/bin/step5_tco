@@ -51,7 +51,7 @@ my %special_form = (
     },
     'fn*' => fun($args, $env) {
         my ($parameters, $expression) = $args->items;
-        return MAL::Object->lambda($parameters, $expression, $env, \&EVAL);
+        return MAL::Object->lambda($parameters, $expression, $env);
     },
 );
 
@@ -140,11 +140,8 @@ fun EVAL($ast, $env) {
             my $op = $ast->car;
             my $args = $ast->cdr;
             ($ast, $env) = $op->apply($args);
-            # tail-recursive special forms will return an env as well
-            if (!$env) {
-                return $ast;
-            }
-            # else fall through to the next iteration
+            next if $env; # TCO
+            return $ast;
         }
         else {
             return eval_ast($ast, $env);
