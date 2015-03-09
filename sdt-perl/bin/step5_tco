@@ -131,7 +131,9 @@ fun EVAL($ast, $env) {
         if ($ast->is_list) {
             if ($ast->car->is_symbol) {
                 if (my $special = $special_form{$ast->car->value}) {
-                    return $special->($ast->cdr, $env);
+                    ($ast, $env) = $special->($ast->cdr, $env);
+                    next if $env; # TCO
+                    return $ast;
                 }
             }
             $ast = eval_ast($ast, $env);
