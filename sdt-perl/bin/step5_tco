@@ -128,18 +128,27 @@ fun READ($input) {
 }
 
 fun EVAL($ast, $env) {
-    if ($ast->is_list) {
-        if ($ast->car->is_symbol) {
-            if (my $special = $special_form{$ast->car->value}) {
-                return $special->($ast->cdr, $env);
+    while (1) {
+        if ($ast->is_list) {
+            if ($ast->car->is_symbol) {
+                if (my $special = $special_form{$ast->car->value}) {
+                    return $special->($ast->cdr, $env);
+                }
             }
+            $ast = eval_ast($ast, $env);
+            my $op = $ast->car;
+            my $args = $ast->cdr;
+            ($ast, $env) = $op->apply($args);
+            # tail-recursive special forms will return an env as well
+            if (!$env) {
+                return $ast;
+            }
+            # else fall through to the next iteration
         }
-        $ast = eval_ast($ast, $env);
-        my $op = $ast->car;
-        my $args = $ast->cdr;
-        return $op->apply($args);
+        else {
+            return eval_ast($ast, $env);
+        }
     }
-    return eval_ast($ast, $env);
 }
 
 fun eval_ast($ast, $env) {
