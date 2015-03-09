@@ -22,20 +22,22 @@ fun main(@argv) {
     my $prompt = 'user> ';
     my $global_env = MAL::Environment->new(data => {
         '+' => MAL::Object->builtin('+',
-            sub { reduce(sub { $_[0] + $_[1] }, 0, @_) },
-            'MAL::Object::Integer',
+            sub { reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_) },
+            'integer',
         ),
         '-' => MAL::Object->builtin('+',
-            sub { @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, @_) },
-            'MAL::Object::Integer',
+            sub {
+                @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] },
+                    map { $_->value } @_) },
+            'integer',
         ),
         '*' => MAL::Object->builtin('*',
-            sub { reduce(sub { $_[0] * $_[1] }, 1, @_) },
-            'MAL::Object::Integer',
+            sub { reduce(sub { $_[0] * $_[1] }, 1,  map { $_->value } @_) },
+            'integer',
         ),
         '/' => MAL::Object->builtin('/',
-            sub { reduce(sub { int($_[0] / $_[1]) }, @_) },
-            'MAL::Object::Integer',
+            sub { reduce(sub { int($_[0] / $_[1]) },  map { $_->value } @_) },
+            'integer',
         ),
     });
     while (defined(my $input = $term->readline($prompt))) {
@@ -56,7 +58,7 @@ fun READ($input) {
 }
 
 fun EVAL($ast, $env) {
-    if ($ast->is_pair) {
+    if ($ast->is_list) {
         $ast = eval_ast($ast, $env);
         my $op = $ast->car;
         my $args = $ast->cdr;
@@ -69,16 +71,8 @@ fun eval_ast($ast, $env) {
     if ($ast->is_symbol) {
         return $env->get($ast->value);
     }
-    if ($ast->is_pair) {
-        return MAL::Object->pair(
-            EVAL($ast->car, $env),
-            eval_ast($ast->cdr, $env),
-        );
-    }
-    if ($ast->is_vector) {
-        return MAL::Object->vector(
-            map { EVAL($_, $env) } $ast->items
-        );
+    if ($ast->is_sequence) {
+        return $ast->map_items(sub { EVAL($_[0], $env) });
     }
     if ($ast->is_hash) {
         return $ast->map_values(sub { EVAL($_[0], $env) });

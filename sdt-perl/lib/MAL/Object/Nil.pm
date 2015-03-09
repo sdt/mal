@@ -5,12 +5,8 @@ use warnings;
 use parent qw( MAL::Object::Constant );
 use Function::Parameters qw( :strict );
 
-method items {
-    return ();
-}
-
 method to_string {
-    return '()';
+    return 'nil';
 }
 
 1;

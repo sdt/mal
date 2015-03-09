@@ -15,19 +15,19 @@ use MAL::Reader;
 
 my %special_form = (
     'def!' => fun($args, $env) {
-        my $symbol = $args->car->value;
-        my $value = EVAL($args->cdr->car, $env);
+        my $symbol = $args->item(0)->value;
+        my $value = EVAL($args->item(1), $env);
         return $env->set($symbol, $value);
     },
     'let*' => fun($args, $env) {
         my $inner_env = MAL::Environment->new(outer => $env);
-        my @bindings = $args->car->items;
+        my @bindings = $args->item(0)->items;
         while (@bindings) {
             $inner_env->set($bindings[0]->to_string,
                             EVAL($bindings[1], $inner_env));
             splice(@bindings, 0, 2);
         }
-        my $expression = $args->cdr->car;
+        my $expression = $args->item(1);
         return EVAL($expression, $inner_env);
     },
     'do' => fun($args, $env) {
@@ -38,23 +38,20 @@ my %special_form = (
         return $ret;
     },
     'if' => fun($args, $env) {
-        my $condition = $args->car;
+        my ($condition, $consequent, $alternative) = $args->items;
         my $result = EVAL($condition, $env);
         if (! ($result->is_false || $result->is_nil)) {
-            my $consequent = $args->cdr->car;
             return EVAL($consequent, $env);
         }
         else {
-            if ($args->cdr->cdr->is_nil) {
+            if (! defined($alternative)) {
                 return MAL::Object->nil;
             }
-            my $alternative = $args->cdr->cdr->car;
             return EVAL($alternative, $env);
         }
     },
     'fn*' => fun($args, $env) {
-        my $parameters = $args->car;
-        my $expression = $args->cdr->car;
+        my ($parameters, $expression) = $args->items;
         return MAL::Object->lambda($parameters, $expression, $env, \&EVAL);
     },
 );
@@ -73,14 +70,13 @@ my @builtins = (
         reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_)
     }],
     [ 'list', list => sub { @_ } ],
-    [ 'list?', boolean => sub { $_[0]->is_pair || $_[0]->is_nil } ],
+    [ 'list?', boolean => sub { $_[0]->is_list } ],
     [ 'empty?', boolean => sub {
-        return 1 if $_[0]->is_nil;
-        return   if $_[0]->is_pair;
-        return scalar($_[0]->items) == 0 if $_[0]->is_seq;
+        return scalar($_[0]->items) == 0 if $_[0]->is_sequence;
         return;
     }],
     [ 'count', integer => sub {
+        return 0 unless $_[0]->is_sequence;
         my @items = $_[0]->items;
         return scalar(@items);
     }],
@@ -128,7 +124,7 @@ fun READ($input) {
 }
 
 fun EVAL($ast, $env) {
-    if ($ast->is_pair) {
+    if ($ast->is_list) {
         if ($ast->car->is_symbol) {
             if (my $special = $special_form{$ast->car->value}) {
                 return $special->($ast->cdr, $env);
@@ -146,16 +142,8 @@ fun eval_ast($ast, $env) {
     if ($ast->is_symbol) {
         return $env->get($ast->value);
     }
-    if ($ast->is_pair) {
-        return MAL::Object->pair(
-            EVAL($ast->car, $env),
-            eval_ast($ast->cdr, $env),
-        );
-    }
-    if ($ast->is_vector) {
-        return MAL::Object->vector(
-            map { EVAL($_, $env) } $ast->items
-        );
+    if ($ast->is_sequence) {
+        return $ast->map_items(sub { EVAL($_[0], $env) });
     }
     if ($ast->is_hash) {
         return $ast->map_values(sub { EVAL($_[0], $env) });
