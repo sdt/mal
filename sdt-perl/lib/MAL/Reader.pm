@@ -15,8 +15,12 @@ package Reader {
     );
 
     method peek { return $self->_tokens->[0]->{value}; }
-    method next { shift(@{ $self->_tokens }); }
     method empty { return scalar @{ $self->_tokens } == 0; }
+    method next {
+        my $token = $self->peek;
+        shift(@{ $self->_tokens });
+        return $token;
+    }
 
     method debug($msg) {
 #        use Data::Dumper::Concise; print STDERR $msg, Dumper($self->_tokens);
@@ -70,8 +74,7 @@ package Reader {
 
 fun _read_atom($reader) {
     $reader->debug('_read_atom');
-    my $value = $reader->peek;
-    $reader->next;
+    my $value = $reader->next;
 
     my %quote = (
         q(')  => 'quote',
@@ -143,9 +146,8 @@ fun _read_list($reader) {
         '[' => ']',
         '{' => '}',
     );
-    my $terminator = $close{$reader->peek};
+    my $terminator = $close{$reader->next};
     $reader->debug("_read_list:$terminator");
-    $reader->next;
     my @items;
     while (1) {
         if ($reader->empty) {
