@@ -8,6 +8,7 @@ use Function::Parameters qw( :strict );
 method to_string($readable = 0) {
     my $value = $self->value;
     if ($readable) {
+        $value =~ s/\\/\\\\/g;
         $value =~ s/"/\\"/g;
         $value =~ s/\n/\\n/g;
         return '"' . $value . '"';
