@@ -31,11 +31,10 @@ my %special_form = (
         return ($expression, $inner_env);
     },
     'do' => fun($args, $env) {
-        my $ret = MAL::Object->nil;
-        for my $expression ($args->items) {
-            $ret = EVAL($expression, $env);
-        }
-        return $ret;
+        my @args = $args->items;
+        my $last = pop @args;
+        EVAL($_, $env) for @args;
+        return ($last, $env);
     },
     'if' => fun($args, $env) {
         my ($condition, $consequent, $alternative) = $args->items;
