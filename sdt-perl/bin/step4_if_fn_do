@@ -84,6 +84,10 @@ my @builtins = (
     [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
 );
 
+my @library = (
+    '(def! not (fn* (x) (if x false true)))',
+);
+
 exit main(@ARGV) ? 0 : 1;
 
 #-------------------------------------------------------------------------------
@@ -95,6 +99,9 @@ fun main(@argv) {
     for (@builtins) {
         my ($sym, $type, $coderef) = @$_;
         $global_env->set($sym, MAL::Object->builtin($sym, $coderef, $type));
+    }
+    for (@library) {
+        rep($_, $global_env);
     }
     while (defined(my $input = $term->readline($prompt))) {
         chomp($input);
