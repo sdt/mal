@@ -28,7 +28,7 @@ my %special_form = (
             splice(@bindings, 0, 2);
         }
         my $expression = $args->item(1);
-        return EVAL($expression, $inner_env);
+        return ($expression, $inner_env);
     },
     'do' => fun($args, $env) {
         my $ret = MAL::Object->nil;
