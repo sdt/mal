@@ -98,6 +98,7 @@ my @builtins = (
 
 my @library = (
     '(def! not (fn* (x) (if x false true)))',
+    '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
 );
 
 exit main(@ARGV) ? 0 : 1;
