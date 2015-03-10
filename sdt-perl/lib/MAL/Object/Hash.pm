@@ -14,7 +14,7 @@ method new($class: @items) {
         die "Keys to hash must be keywords or strings"
             unless $key->is_string || $key->is_keyword;
         my $value = shift @items;
-        $hash{$key->to_string} = $value;
+        $hash{$key->to_string(1)} = $value;
     }
     bless { %hash }, $class;
 }
