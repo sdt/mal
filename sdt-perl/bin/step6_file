@@ -88,6 +88,7 @@ my @builtins = (
     [ 'pr-str', string => sub { join(' ', map { $_->to_string(1) } @_) }],
     [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
     [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
+    [ 'read-string', undef, sub { READ($_[0]->value) }],
 );
 
 my @library = (
