@@ -115,13 +115,22 @@ fun main(@argv) {
     for (@library) {
         rep($_, $global_env);
     }
-    while (defined(my $input = $term->readline($prompt))) {
-        chomp($input);
-        eval { say rep($input, $global_env) };
-        print $@ if $@;
-        $term->addhistory($input) if $input =~ /\S/;
+    my ($filename, @args) = @argv;
+    $global_env->set('*ARGV*',
+        MAL::Object->list(map { MAL::Object->string($_) } @args)
+    );
+    if ($filename) {
+        say rep("(load-file \"$filename\")", $global_env);
     }
-    return 0;
+    else {
+        while (defined(my $input = $term->readline($prompt))) {
+            chomp($input);
+            eval { say rep($input, $global_env) };
+            print $@ if $@;
+            $term->addhistory($input) if $input =~ /\S/;
+        }
+    }
+    return 1;
 }
 
 fun rep($input, $env) {
