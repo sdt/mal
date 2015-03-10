@@ -56,6 +56,9 @@ my %special_form = (
         my ($parameters, $expression) = $args->items;
         return MAL::Object->lambda($parameters, $expression, $env);
     },
+    'quote' => fun($args, $env) {
+        return $args->car;
+    },
 );
 
 my @builtins = (
