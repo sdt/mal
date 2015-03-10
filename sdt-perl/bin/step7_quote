@@ -59,6 +59,32 @@ my %special_form = (
     'quote' => fun($args, $env) {
         return $args->car;
     },
+    'quasiquote' => fun($args, $env) {
+        my $arg = $args->car;
+        if (!$arg->is_sequence) {
+            return $arg;
+        }
+        if ($arg->item(0)->is_symbol && ($arg->item(0)->value eq 'unquote')) {
+            return EVAL($arg->item(1), $env);
+        }
+        my @elems;
+        for my $elem ($arg->items) {
+            if ($elem->is_sequence &&
+                $elem->item(0)->is_symbol &&
+                ($elem->item(0)->value eq 'unquote')) {
+                push(@elems, EVAL($elem->item(1), $env));
+            }
+            elsif ($elem->is_sequence &&
+                $elem->item(0)->is_symbol &&
+                ($elem->item(0)->value eq 'splice-unquote')) {
+                push(@elems, EVAL($elem->item(1), $env)->items);
+            }
+            else {
+                push(@elems, $elem);
+            }
+        }
+        return MAL::Object->list(@elems);
+    },
 );
 
 my @builtins = (
