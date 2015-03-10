@@ -16,9 +16,16 @@ method new($class: $name, $subref, $return_type) {
 
 method apply($args) {
     my $type = $self->{return_type};
-    return MAL::Object->$type(
-        $self->{subref}->($args->items) # may be scalar or array
-    );
+    if ($type) {
+        # Box the return value
+        return MAL::Object->$type(
+            $self->{subref}->($args->items) # may be scalar or array
+        );
+    }
+    else {
+        # Return the value directly
+        return $self->{subref}->($args->items);
+    }
 }
 
 method to_string {
