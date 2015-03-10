@@ -28,7 +28,7 @@ method to_string($readable = 0) {
 }
 
 method get($key) {
-    return $self->{$key};
+    return $self->{$key->to_string(1)};
 }
 
 method map_values($f) {
