@@ -13,6 +13,8 @@ use MAL::Environment;
 use MAL::Object;
 use MAL::Reader;
 
+my $global_env = MAL::Environment->new;
+
 my %special_form = (
     'def!' => fun($args, $env) {
         my $symbol = $args->item(0)->value;
@@ -89,6 +91,7 @@ my @builtins = (
     [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
     [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
     [ 'read-string', undef, sub { READ($_[0]->value) }],
+    [ 'eval', undef, sub { EVAL($_[0], $global_env) }],
 );
 
 my @library = (
@@ -102,7 +105,6 @@ exit main(@ARGV) ? 0 : 1;
 fun main(@argv) {
     my $term = Term::ReadLine->new('mal');
     my $prompt = 'user> ';
-    my $global_env = MAL::Environment->new;
     for (@builtins) {
         my ($sym, $type, $coderef) = @$_;
         $global_env->set($sym, MAL::Object->builtin($sym, $coderef, $type));
