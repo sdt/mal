@@ -98,6 +98,7 @@ my @builtins = (
     [ 'eval', undef, sub { EVAL($_[0], $global_env) }],
     [ 'slurp',  string => sub { scalar(read_file($_[0]->value)) }],
     [ 'cons', list => sub { return ( $_[0], $_[1]->items ) }],
+    [ 'concat', list => sub { return map { $_->items } @_ }],
 );
 
 my @library = (
