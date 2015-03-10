@@ -1,0 +1,169 @@
+#!/usr/bin/env perl
+
+use 5.20.1;
+use warnings;
+
+use Function::Parameters qw( :strict );
+use Term::ReadLine;
+
+use FindBin ();
+use lib "$FindBin::Bin/../lib";
+
+use MAL::Environment;
+use MAL::Object;
+use MAL::Reader;
+
+my %special_form = (
+    'def!' => fun($args, $env) {
+        my $symbol = $args->item(0)->value;
+        my $value = EVAL($args->item(1), $env);
+        return $env->set($symbol, $value);
+    },
+    'let*' => fun($args, $env) {
+        my $inner_env = MAL::Environment->new(outer => $env);
+        my @bindings = $args->item(0)->items;
+        while (@bindings) {
+            $inner_env->set($bindings[0]->to_string,
+                            EVAL($bindings[1], $inner_env));
+            splice(@bindings, 0, 2);
+        }
+        my $expression = $args->item(1);
+        return ($expression, $inner_env);
+    },
+    'do' => fun($args, $env) {
+        my @args = $args->items;
+        my $last = pop @args;
+        EVAL($_, $env) for @args;
+        return ($last, $env);
+    },
+    'if' => fun($args, $env) {
+        my ($condition, $consequent, $alternative) = $args->items;
+        my $result = EVAL($condition, $env);
+        if (! ($result->is_false || $result->is_nil)) {
+            return ($consequent, $env);
+        }
+        else {
+            if (! defined($alternative)) {
+                return MAL::Object->nil;
+            }
+            return ($alternative, $env);
+        }
+    },
+    'fn*' => fun($args, $env) {
+        my ($parameters, $expression) = $args->items;
+        return MAL::Object->lambda($parameters, $expression, $env);
+    },
+);
+
+my @builtins = (
+    [ '+', integer => sub {
+        reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_)
+    }],
+    [ '-', integer => sub {
+        @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_)
+    }],
+    [ '*', integer => sub {
+        reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_)
+    }],
+    [ '/', integer => sub {
+        reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_)
+    }],
+    [ 'list', list => sub { @_ } ],
+    [ 'list?', boolean => sub { $_[0]->is_list } ],
+    [ 'empty?', boolean => sub {
+        return scalar($_[0]->items) == 0 if $_[0]->is_sequence;
+        return;
+    }],
+    [ 'count', integer => sub {
+        return 0 unless $_[0]->is_sequence;
+        my @items = $_[0]->items;
+        return scalar(@items);
+    }],
+    [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
+    [ '<',  boolean => sub { $_[0]->value <  $_[1]->value } ],
+    [ '<=', boolean => sub { $_[0]->value <= $_[1]->value } ],
+    [ '>',  boolean => sub { $_[0]->value >  $_[1]->value } ],
+    [ '>=', boolean => sub { $_[0]->value >= $_[1]->value } ],
+    [ 'str', string => sub { join('', map { $_->to_string } @_) }],
+    [ 'pr-str', string => sub { join(' ', map { $_->to_string(1) } @_) }],
+    [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
+    [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
+);
+
+my @library = (
+    '(def! not (fn* (x) (if x false true)))',
+);
+
+exit main(@ARGV) ? 0 : 1;
+
+#-------------------------------------------------------------------------------
+
+fun main(@argv) {
+    my $term = Term::ReadLine->new('mal');
+    my $prompt = 'user> ';
+    my $global_env = MAL::Environment->new;
+    for (@builtins) {
+        my ($sym, $type, $coderef) = @$_;
+        $global_env->set($sym, MAL::Object->builtin($sym, $coderef, $type));
+    }
+    for (@library) {
+        rep($_, $global_env);
+    }
+    while (defined(my $input = $term->readline($prompt))) {
+        chomp($input);
+        eval { say rep($input, $global_env) };
+        print $@ if $@;
+        $term->addhistory($input) if $input =~ /\S/;
+    }
+    return 0;
+}
+
+fun rep($input, $env) {
+    return PRINT(EVAL(READ($input), $env));
+}
+
+fun READ($input) {
+    return MAL::Reader->read_str($input);
+}
+
+fun EVAL($ast, $env) {
+    while (1) {
+        if ($ast->is_list) {
+            my $op = $ast->car;
+            if ($op->is_symbol && (my $special = $special_form{$op->value})) {
+                ($ast, $env) = $special->($ast->cdr, $env);
+            }
+            else {
+                $ast = eval_ast($ast, $env);
+                ($ast, $env) = $ast->car->apply($ast->cdr);
+            }
+            next if $env; # TCO
+            return $ast;
+        }
+        else {
+            return eval_ast($ast, $env);
+        }
+    }
+}
+
+fun eval_ast($ast, $env) {
+    if ($ast->is_symbol) {
+        return $env->get($ast->value);
+    }
+    if ($ast->is_sequence) {
+        return $ast->map_items(sub { EVAL($_[0], $env) });
+    }
+    if ($ast->is_hash) {
+        return $ast->map_values(sub { EVAL($_[0], $env) });
+    }
+    return $ast;
+}
+
+fun PRINT($ast) {
+    return $ast->to_string(1);
+}
+
+fun reduce($op, $base, @list) {
+    $base = $op->($base, $_) for @list;
+    return $base;
+}
