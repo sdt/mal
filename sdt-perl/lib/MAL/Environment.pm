@@ -38,7 +38,7 @@ method get($key) {
     if (my $env = $self->find($key)) {
         return $env->data->{$key};
     }
-    die "Undefined symbol $key\n";
+    die "'$key' not found\n";
 }
 
 method safe_get($key) {
