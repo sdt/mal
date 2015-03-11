@@ -11,4 +11,6 @@ sub rdelim { ')' }
 method car { return $self->first }
 method cdr { return $self->rest  }
 
+method to_list { return $self }
+
 1;
