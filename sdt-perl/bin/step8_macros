@@ -22,6 +22,12 @@ my %special_form = (
         my $value = EVAL($args->item(1), $env);
         return $env->set($symbol, $value);
     },
+    'defmacro!' => fun($args, $env) {
+        my $symbol = $args->item(0)->value;
+        my $value = EVAL($args->item(1), $env);
+        $value->is_macro(1);
+        return $env->set($symbol, $value);
+    },
     'let*' => fun($args, $env) {
         my $inner_env = MAL::Environment->new(outer => $env);
         my @bindings = $args->item(0)->items;
@@ -151,6 +157,7 @@ fun READ($input) {
 
 fun EVAL($ast, $env) {
     while (1) {
+        $ast = macro_expand($ast, $env);
         if ($ast->is_list) {
             my $op = $ast->car;
             if ($op->is_symbol && (my $special = $special_form{$op->value})) {
@@ -197,6 +204,25 @@ fun is_pair($ast) {
 
 fun is_symbol($ast, $text) {
     return $ast->is_symbol && ($ast->value eq $text);
+}
+
+fun is_macro_call($ast, $env) {
+    return unless is_pair($ast);
+    return unless $ast->first->is_symbol;
+
+    $env = $env->find($ast->first->value);
+    return unless $env;
+
+    return unless $value->is_lambda && $value->is_macro;
+    return $value;
+}
+
+fun macro_expand($ast, $env) {
+    while (my $macro = is_macro_call($ast, $env)) {
+        my ($mast, $menv) = $macro->apply($ast->rest);
+        $ast = EVAL($mast, $menv);
+    }
+    return $ast;
 }
 
 fun make_form($symbol, @args) {
