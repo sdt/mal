@@ -60,30 +60,7 @@ my %special_form = (
         return $args->car;
     },
     'quasiquote' => fun($args, $env) {
-        my $arg = $args->car;
-        if (!$arg->is_sequence) {
-            return $arg;
-        }
-        if ($arg->item(0)->is_symbol && ($arg->item(0)->value eq 'unquote')) {
-            return EVAL($arg->item(1), $env);
-        }
-        my @elems;
-        for my $elem ($arg->items) {
-            if ($elem->is_sequence &&
-                $elem->item(0)->is_symbol &&
-                ($elem->item(0)->value eq 'unquote')) {
-                push(@elems, EVAL($elem->item(1), $env));
-            }
-            elsif ($elem->is_sequence &&
-                $elem->item(0)->is_symbol &&
-                ($elem->item(0)->value eq 'splice-unquote')) {
-                push(@elems, EVAL($elem->item(1), $env)->items);
-            }
-            else {
-                push(@elems, $elem);
-            }
-        }
-        return MAL::Object->list(@elems);
+        return ( quasiquote($args->item(0)), $env );
     },
 );
 
@@ -212,4 +189,39 @@ fun PRINT($ast) {
 fun reduce($op, $base, @list) {
     $base = $op->($base, $_) for @list;
     return $base;
+}
+
+fun is_pair($ast) {
+    return $ast->is_sequence && ($ast->length > 0);
+}
+
+fun is_symbol($ast, $text) {
+    return $ast->is_symbol && ($ast->value eq $text);
+}
+
+fun make_form($symbol, @args) {
+    return MAL::Object->list(
+        MAL::Object->symbol($symbol),
+        @args,
+    );
+}
+
+fun quasiquote($ast) {
+    if (!is_pair($ast)) {
+        return make_form(quote => $ast);
+    }
+    if (is_symbol($ast->first, 'unquote')) {
+        return $ast->item(1);
+    }
+    if (is_pair($ast->first) &&
+        is_symbol($ast->first->item(0), 'splice-unquote')) {
+        return make_form(concat =>
+            $ast->first->item(1),
+            quasiquote($ast->rest),
+        );
+    }
+    return make_form(cons =>
+        quasiquote($ast->first),
+        quasiquote($ast->rest)
+    );
 }
