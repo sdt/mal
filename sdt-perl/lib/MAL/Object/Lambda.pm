@@ -14,6 +14,13 @@ fun index_of($list, $item) {
     return;
 }
 
+method is_macro {
+    if (@_) {
+        $self->{is_macro} = !!$_[0];
+    }
+    return $self->{is_macro};
+}
+
 method new($class: $parameters, $expression, $env) {
     my $self = {
         expression => $expression,
