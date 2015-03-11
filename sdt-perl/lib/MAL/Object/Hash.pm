@@ -28,7 +28,11 @@ method to_string($readable = 0) {
 }
 
 method get($key) {
-    return $self->{$key->to_string(1)};
+    return $self->{$key->to_string(1)} // MAL::Object->nil;
+}
+
+method contains($key) {
+    return exists $self->{$key->to_string(1)};
 }
 
 method map_values($f) {
@@ -36,6 +40,12 @@ method map_values($f) {
     for my $key (keys %$self) {
         $hash{$key} = $f->($self->{$key});
     }
+    return bless { %hash }, ref $self;
+}
+
+method augment($key, $value) {
+    my %hash = %$self;
+    $hash{$key->to_string(1)} = $value;
     return bless { %hash }, ref $self;
 }
 
