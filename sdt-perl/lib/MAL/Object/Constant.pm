@@ -7,6 +7,7 @@ use parent qw( MAL::Object );
 use Function::Parameters qw( :strict );
 
 method new($class:) {
+    die "Cannot create $class items directly\n" if $class eq __PACKAGE__;
     my $name = lc($class);
     $name =~ s/^.*:://;
     bless \$name, $class;
