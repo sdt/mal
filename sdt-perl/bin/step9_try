@@ -147,7 +147,12 @@ my @builtins = (
     }],
     [ 'first', undef, sub { is_pair($_[0]) ? $_[0]->first : MAL::Object->nil }],
     [ 'rest',  undef, sub { $_[0]->rest->to_list }],
-    [ 'throw', undef, sub { die $_[0] } ],
+    [ 'throw', undef, sub { die $_[0] }],
+    [ 'apply', undef, sub {
+      my ($op, @args) = @_;
+      my $lastarg = pop(@args);
+      my $arglist = MAL::Object->list(@args, $lastarg->items);
+      EVAL($op->apply($arglist), $global_env) }], #XXX: should pass env here?
 );
 
 my @library = (
