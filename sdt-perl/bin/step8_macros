@@ -65,6 +65,9 @@ my %special_form = (
     'quote' => fun($args, $env) {
         return $args->car;
     },
+    'unquote' => fun($args, $env) {
+        return ( $args->car, $env );
+    },
     'quasiquote' => fun($args, $env) {
         return ( quasiquote($args->item(0)), $env );
     },
