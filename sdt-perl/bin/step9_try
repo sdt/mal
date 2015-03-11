@@ -110,6 +110,10 @@ my @builtins = (
     }],
     [ 'list', list => sub { @_ } ],
     [ 'list?', boolean => sub { $_[0]->is_list } ],
+    [ 'symbol?', boolean => sub { $_[0]->is_symbol } ],
+    [ 'nil?',   boolean => sub { $_[0]->is_nil } ],
+    [ 'true?',  boolean => sub { $_[0]->is_true } ],
+    [ 'false?', boolean => sub { $_[0]->is_false } ],
     [ 'empty?', boolean => sub {
         return scalar($_[0]->items) == 0 if $_[0]->is_sequence;
         return;
@@ -151,6 +155,7 @@ my @library = (
     '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
     "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
     "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
+    '(def! map (fn* (f xs) (if (empty? xs) xs (cons (f (first xs)) (map f (rest xs))))))',
 );
 
 exit main(@ARGV) ? 0 : 1;
