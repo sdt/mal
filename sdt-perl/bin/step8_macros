@@ -71,6 +71,9 @@ my %special_form = (
     'quasiquote' => fun($args, $env) {
         return ( quasiquote($args->item(0)), $env );
     },
+    'macroexpand' => fun($args, $env) {
+        return macro_expand($args->first, $env);
+    },
 );
 
 my @builtins = (
@@ -111,11 +114,24 @@ my @builtins = (
     [ 'slurp',  string => sub { scalar(read_file($_[0]->value)) }],
     [ 'cons', list => sub { return ( $_[0], $_[1]->items ) }],
     [ 'concat', list => sub { return map { $_->items } @_ }],
+    [ 'nth', undef, sub {
+        my ($seq, $index) = @_;
+        $index = $index->value;
+        if ($index < 0 || $index >= $seq->length) {
+            die "Index out of range\n";
+        }
+        return $seq->item($index);
+    }],
+    [ 'first', undef, sub { is_pair($_[0]) ? $_[0]->first : MAL::Object->nil }],
+    [ 'rest',  undef, sub { $_[0]->rest }],
+    [ 'throw', undef, sub { die $_[0]->to_string } ],
 );
 
 my @library = (
     '(def! not (fn* (x) (if x false true)))',
     '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
+    "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
+    "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
 );
 
 exit main(@ARGV) ? 0 : 1;
