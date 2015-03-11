@@ -1,0 +1,227 @@
+#!/usr/bin/env perl
+
+use 5.20.1;
+use warnings;
+
+use File::Slurp qw( read_file );
+use Function::Parameters qw( :strict );
+use Term::ReadLine;
+
+use FindBin ();
+use lib "$FindBin::Bin/../lib";
+
+use MAL::Environment;
+use MAL::Object;
+use MAL::Reader;
+
+my $global_env = MAL::Environment->new;
+
+my %special_form = (
+    'def!' => fun($args, $env) {
+        my $symbol = $args->item(0)->value;
+        my $value = EVAL($args->item(1), $env);
+        return $env->set($symbol, $value);
+    },
+    'let*' => fun($args, $env) {
+        my $inner_env = MAL::Environment->new(outer => $env);
+        my @bindings = $args->item(0)->items;
+        while (@bindings) {
+            $inner_env->set($bindings[0]->to_string,
+                            EVAL($bindings[1], $inner_env));
+            splice(@bindings, 0, 2);
+        }
+        my $expression = $args->item(1);
+        return ($expression, $inner_env);
+    },
+    'do' => fun($args, $env) {
+        my @args = $args->items;
+        my $last = pop @args;
+        EVAL($_, $env) for @args;
+        return ($last, $env);
+    },
+    'if' => fun($args, $env) {
+        my ($condition, $consequent, $alternative) = $args->items;
+        my $result = EVAL($condition, $env);
+        if (! ($result->is_false || $result->is_nil)) {
+            return ($consequent, $env);
+        }
+        else {
+            if (! defined($alternative)) {
+                return MAL::Object->nil;
+            }
+            return ($alternative, $env);
+        }
+    },
+    'fn*' => fun($args, $env) {
+        my ($parameters, $expression) = $args->items;
+        return MAL::Object->lambda($parameters, $expression, $env);
+    },
+    'quote' => fun($args, $env) {
+        return $args->car;
+    },
+    'quasiquote' => fun($args, $env) {
+        return ( quasiquote($args->item(0)), $env );
+    },
+);
+
+my @builtins = (
+    [ '+', integer => sub {
+        reduce(sub { $_[0] + $_[1] }, 0, map { $_->value } @_)
+    }],
+    [ '-', integer => sub {
+        @_ == 1 ? -$_[0] : reduce(sub { $_[0] - $_[1] }, map { $_->value } @_)
+    }],
+    [ '*', integer => sub {
+        reduce(sub { $_[0] * $_[1] }, 1, map { $_->value } @_)
+    }],
+    [ '/', integer => sub {
+        reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_)
+    }],
+    [ 'list', list => sub { @_ } ],
+    [ 'list?', boolean => sub { $_[0]->is_list } ],
+    [ 'empty?', boolean => sub {
+        return scalar($_[0]->items) == 0 if $_[0]->is_sequence;
+        return;
+    }],
+    [ 'count', integer => sub {
+        return 0 unless $_[0]->is_sequence;
+        my @items = $_[0]->items;
+        return scalar(@items);
+    }],
+    [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
+    [ '<',  boolean => sub { $_[0]->value <  $_[1]->value } ],
+    [ '<=', boolean => sub { $_[0]->value <= $_[1]->value } ],
+    [ '>',  boolean => sub { $_[0]->value >  $_[1]->value } ],
+    [ '>=', boolean => sub { $_[0]->value >= $_[1]->value } ],
+    [ 'str', string => sub { join('', map { $_->to_string } @_) }],
+    [ 'pr-str', string => sub { join(' ', map { $_->to_string(1) } @_) }],
+    [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
+    [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
+    [ 'read-string', undef, sub { READ($_[0]->value) }],
+    [ 'eval', undef, sub { EVAL($_[0], $global_env) }],
+    [ 'slurp',  string => sub { scalar(read_file($_[0]->value)) }],
+    [ 'cons', list => sub { return ( $_[0], $_[1]->items ) }],
+    [ 'concat', list => sub { return map { $_->items } @_ }],
+);
+
+my @library = (
+    '(def! not (fn* (x) (if x false true)))',
+    '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
+);
+
+exit main(@ARGV) ? 0 : 1;
+
+#-------------------------------------------------------------------------------
+
+fun main(@argv) {
+    my $term = Term::ReadLine->new('mal');
+    my $prompt = 'user> ';
+    for (@builtins) {
+        my ($sym, $type, $coderef) = @$_;
+        $global_env->set($sym, MAL::Object->builtin($sym, $coderef, $type));
+    }
+    for (@library) {
+        rep($_, $global_env);
+    }
+    my ($filename, @args) = @argv;
+    $global_env->set('*ARGV*',
+        MAL::Object->list(map { MAL::Object->string($_) } @args)
+    );
+    if ($filename) {
+        say rep("(load-file \"$filename\")", $global_env);
+    }
+    else {
+        while (defined(my $input = $term->readline($prompt))) {
+            chomp($input);
+            eval { say rep($input, $global_env) };
+            print $@ if $@;
+            $term->addhistory($input) if $input =~ /\S/;
+        }
+    }
+    return 1;
+}
+
+fun rep($input, $env) {
+    return PRINT(EVAL(READ($input), $env));
+}
+
+fun READ($input) {
+    return MAL::Reader->read_str($input);
+}
+
+fun EVAL($ast, $env) {
+    while (1) {
+        if ($ast->is_list) {
+            my $op = $ast->car;
+            if ($op->is_symbol && (my $special = $special_form{$op->value})) {
+                ($ast, $env) = $special->($ast->cdr, $env);
+            }
+            else {
+                $ast = eval_ast($ast, $env);
+                ($ast, $env) = $ast->car->apply($ast->cdr);
+            }
+            next if $env; # TCO
+            return $ast;
+        }
+        else {
+            return eval_ast($ast, $env);
+        }
+    }
+}
+
+fun eval_ast($ast, $env) {
+    if ($ast->is_symbol) {
+        return $env->get($ast->value);
+    }
+    if ($ast->is_sequence) {
+        return $ast->map_items(sub { EVAL($_[0], $env) });
+    }
+    if ($ast->is_hash) {
+        return $ast->map_values(sub { EVAL($_[0], $env) });
+    }
+    return $ast;
+}
+
+fun PRINT($ast) {
+    return $ast->to_string(1);
+}
+
+fun reduce($op, $base, @list) {
+    $base = $op->($base, $_) for @list;
+    return $base;
+}
+
+fun is_pair($ast) {
+    return $ast->is_sequence && ($ast->length > 0);
+}
+
+fun is_symbol($ast, $text) {
+    return $ast->is_symbol && ($ast->value eq $text);
+}
+
+fun make_form($symbol, @args) {
+    return MAL::Object->list(
+        MAL::Object->symbol($symbol),
+        @args,
+    );
+}
+
+fun quasiquote($ast) {
+    if (!is_pair($ast)) {
+        return make_form(quote => $ast);
+    }
+    if (is_symbol($ast->first, 'unquote')) {
+        return $ast->item(1);
+    }
+    if (is_pair($ast->first) &&
+        is_symbol($ast->first->item(0), 'splice-unquote')) {
+        return make_form(concat =>
+            $ast->first->item(1),
+            quasiquote($ast->rest),
+        );
+    }
+    return make_form(cons =>
+        quasiquote($ast->first),
+        quasiquote($ast->rest)
+    );
+}
