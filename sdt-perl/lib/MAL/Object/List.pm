@@ -8,11 +8,7 @@ use Function::Parameters qw( :strict );
 sub ldelim { '(' }
 sub rdelim { ')' }
 
-method car { return $self->item(0) }
-method cdr {
-    my @items = $self->items;
-    shift @items;
-    return __PACKAGE__->new(@items);
-}
+method car { return $self->first }
+method cdr { return $self->rest  }
 
 1;
