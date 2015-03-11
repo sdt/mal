@@ -160,22 +160,24 @@ fun READ($input) {
 
 fun EVAL($ast, $env) {
     while (1) {
-        $ast = macro_expand($ast, $env);
-        if ($ast->is_list) {
-            my $op = $ast->car;
-            if ($op->is_symbol && (my $special = $special_form{$op->value})) {
-                ($ast, $env) = $special->($ast->cdr, $env);
-            }
-            else {
-                $ast = eval_ast($ast, $env);
-                ($ast, $env) = $ast->car->apply($ast->cdr);
-            }
-            next if $env; # TCO
-            return $ast;
-        }
-        else {
+        if (!$ast->is_list) {
             return eval_ast($ast, $env);
         }
+        $ast = macro_expand($ast, $env);
+        if (!is_pair($ast)) {
+            return $ast;
+        }
+
+        my $op = $ast->car;
+        if ($op->is_symbol && (my $special = $special_form{$op->value})) {
+            ($ast, $env) = $special->($ast->cdr, $env);
+        }
+        else {
+            $ast = eval_ast($ast, $env);
+            ($ast, $env) = $ast->car->apply($ast->cdr);
+        }
+        next if $env; # TCO
+        return $ast;
     }
 }
 
@@ -212,18 +214,14 @@ fun is_symbol($ast, $text) {
 fun is_macro_call($ast, $env) {
     return unless is_pair($ast);
     return unless $ast->first->is_symbol;
-
-    $env = $env->find($ast->first->value);
-    return unless $env;
-
-    return unless $value->is_lambda && $value->is_macro;
+    my $value = $env->safe_get($ast->first->value);
+    return unless $value && $value->is_lambda && $value->is_macro;
     return $value;
 }
 
 fun macro_expand($ast, $env) {
     while (my $macro = is_macro_call($ast, $env)) {
-        my ($mast, $menv) = $macro->apply($ast->rest);
-        $ast = EVAL($mast, $menv);
+        $ast = macro_expand(EVAL($macro->apply($ast->rest)), $env);
     }
     return $ast;
 }
