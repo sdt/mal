@@ -6,6 +6,7 @@ use warnings;
 use File::Slurp qw( read_file );
 use Function::Parameters qw( :strict );
 use Term::ReadLine;
+use Try::Tiny;
 
 use FindBin ();
 use lib "$FindBin::Bin/../lib";
@@ -73,6 +74,24 @@ my %special_form = (
     },
     'macroexpand' => fun($args, $env) {
         return macro_expand($args->first, $env);
+    },
+    'try*' => fun($args, $env) {
+        my ($try, $catch) = $args->items;
+        my $ret = try {
+            EVAL($try, $env);
+        }
+        catch {
+            my $exc_value = $_;
+            if (!ref $exc_value) {
+                chomp $exc_value;
+                $exc_value = MAL::Object->string($exc_value);
+            }
+            my ($sym, $exc_sym, $code) = $catch->items;
+            my $handler = MAL::Object->lambda(
+                MAL::Object->list($exc_sym), $code, $env);
+            EVAL($handler->apply(MAL::Object->list($exc_value)));
+        };
+        return $ret;
     },
 );
 
@@ -158,8 +177,13 @@ fun main(@argv) {
     else {
         while (defined(my $input = $term->readline($prompt))) {
             chomp($input);
-            eval { say rep($input, $global_env) };
-            print $@ if $@;
+            try {
+                say rep($input, $global_env);
+            }
+            catch {
+                chomp;
+                say $_;
+            };
             $term->addhistory($input) if $input =~ /\S/;
         }
     }
