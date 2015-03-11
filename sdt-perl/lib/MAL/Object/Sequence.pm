@@ -22,6 +22,16 @@ method item($index) {
     return $self->[$index];
 }
 
+method first {
+    return $self->[0];
+}
+
+method rest {
+    my @items = @$self;
+    shift @items;
+    return bless [ @items ], ref $self;
+}
+
 method length {
     return scalar(@$self);
 }
