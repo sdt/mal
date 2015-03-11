@@ -109,50 +109,63 @@ my @builtins = (
         reduce(sub { int($_[0] / $_[1]) }, map { $_->value } @_)
     }],
     [ 'list', list => sub { @_ } ],
-    [ 'list?', boolean => sub { $_[0]->is_list } ],
-    [ 'symbol?', boolean => sub { $_[0]->is_symbol } ],
-    [ 'nil?',   boolean => sub { $_[0]->is_nil } ],
-    [ 'true?',  boolean => sub { $_[0]->is_true } ],
-    [ 'false?', boolean => sub { $_[0]->is_false } ],
-    [ 'empty?', boolean => sub {
-        return scalar($_[0]->items) == 0 if $_[0]->is_sequence;
-        return;
+    [ 'list?', boolean => fun($a) { $a->is_list } ],
+    [ 'symbol?', boolean => fun($a) { $a->is_symbol } ],
+    [ 'keyword?', boolean => fun($a) { $a->is_keyword } ],
+    [ 'nil?',   boolean => fun($a) { $a->is_nil } ],
+    [ 'true?',  boolean => fun($a) { $a->is_true } ],
+    [ 'false?', boolean => fun($a) { $a->is_false } ],
+    [ 'sequential?', boolean => fun($a) { $a->is_sequence } ],
+    [ 'vector?', boolean => fun($a) { $a->is_vector } ],
+    [ 'map?', boolean => fun($a) { $a->is_hash } ],
+    [ 'empty?', boolean => fun($a) {
+        return $a->is_sequence && (scalar($a->items) == 0);
     }],
-    [ 'count', integer => sub {
-        return 0 unless $_[0]->is_sequence;
-        my @items = $_[0]->items;
-        return scalar(@items);
+    [ 'count', integer => fun($a) {
+        return 0 unless $a->is_sequence;
+        return scalar($a->items);
     }],
-    [ '=', boolean => sub { $_[0]->equal($_[1]) } ],
-    [ '<',  boolean => sub { $_[0]->value <  $_[1]->value } ],
-    [ '<=', boolean => sub { $_[0]->value <= $_[1]->value } ],
-    [ '>',  boolean => sub { $_[0]->value >  $_[1]->value } ],
-    [ '>=', boolean => sub { $_[0]->value >= $_[1]->value } ],
+    [ '=', boolean  => fun($a, $b) { $a->equal($b) } ],
+    [ '<',  boolean => fun($a, $b) { $a->value <  $b->value } ],
+    [ '<=', boolean => fun($a, $b) { $a->value <= $b->value } ],
+    [ '>',  boolean => fun($a, $b) { $a->value >  $b->value } ],
+    [ '>=', boolean => fun($a, $b) { $a->value >= $b->value } ],
     [ 'str', string => sub { join('', map { $_->to_string } @_) }],
     [ 'pr-str', string => sub { join(' ', map { $_->to_string(1) } @_) }],
     [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
     [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
-    [ 'read-string', undef, sub { READ($_[0]->value) }],
-    [ 'eval', undef, sub { EVAL($_[0], $global_env) }],
-    [ 'slurp',  string => sub { scalar(read_file($_[0]->value)) }],
-    [ 'cons', list => sub { return ( $_[0], $_[1]->items ) }],
+    [ 'read-string', undef, fun($str) { READ($str->value) }],
+    [ 'eval', undef, fun($str) { EVAL($str, $global_env) }],
+    [ 'slurp',  string => fun($fname) { scalar(read_file($fname->value)) }],
+    [ 'cons', list => fun($car, $cdr) { return ( $car, $cdr->items ) }],
     [ 'concat', list => sub { return map { $_->items } @_ }],
-    [ 'nth', undef, sub {
-        my ($seq, $index) = @_;
+    [ 'nth', undef, fun($seq, $index) {
         $index = $index->value;
         if ($index < 0 || $index >= $seq->length) {
             die "Index out of range\n";
         }
         return $seq->item($index);
     }],
-    [ 'first', undef, sub { is_pair($_[0]) ? $_[0]->first : MAL::Object->nil }],
-    [ 'rest',  undef, sub { $_[0]->rest->to_list }],
-    [ 'throw', undef, sub { die $_[0] }],
-    [ 'apply', undef, sub {
-      my ($op, @args) = @_;
-      my $lastarg = pop(@args);
-      my $arglist = MAL::Object->list(@args, $lastarg->items);
-      EVAL($op->apply($arglist), $global_env) }], #XXX: should pass env here?
+    [ 'first', undef, fun($seq) {
+        is_pair($seq) ? $seq->first : MAL::Object->nil
+    }],
+    [ 'rest',  undef, fun($seq) { $seq->rest->to_list }],
+    [ 'throw', undef, fun($msg) { die $msg }],
+    [ 'apply', undef, fun($op, @args) {
+        my $lastarg = pop(@args);
+        my $arglist = MAL::Object->list(@args, $lastarg->items);
+        EVAL($op->apply($arglist), $global_env) }], #XXX: should pass env here?
+    [ 'symbol', symbol => fun($str) { return $str->value }],
+    [ 'keyword', keyword => fun($str) { return ':' . $str->value }],
+    [ 'vector', vector => sub { return @_ }],
+    [ 'hash-map', hash => sub { return @_ }],
+    [ 'assoc', undef, fun($hash, $key, $value) {
+        $hash->augment($key, $value)
+    }],
+    [ 'get', undef, fun($hash, $key) {
+        return $hash->is_hash ? $hash->get($key) : MAL::Object->nil;
+    }],
+    [ 'contains?', boolean => fun($hash, $key) { $hash->contains($key) } ],
 );
 
 my @library = (
