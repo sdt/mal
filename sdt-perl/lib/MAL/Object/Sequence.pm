@@ -7,6 +7,7 @@ use parent qw( MAL::Object );
 use Function::Parameters qw( :strict );
 
 method new($class: @items) {
+    die "Cannot create $class items directly\n" if $class eq __PACKAGE__;
     bless [ @items ], $class;
 }
 
