@@ -167,6 +167,9 @@ my @builtins = (
     [ 'contains?', boolean => fun($hash, $key) { $hash->contains($key) } ],
     [ 'keys', list => fun($hash) { map { READ($_) } $hash->get_keys } ],
     [ 'vals', list => fun($hash) { $hash->get_vals } ],
+    [ 'atom', atom => fun($obj) { return $obj }],
+    [ 'deref', undef, fun($atom) { return $atom->deref }],
+    [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
 );
 
 my @library = (
@@ -175,6 +178,7 @@ my @library = (
     "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
     "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
     '(def! map (fn* (f xs) (if (empty? xs) xs (cons (f (first xs)) (map f (rest xs))))))',
+    '(defmacro! swap! (fn* (atom f & args) `(reset! ~atom (~f (deref ~atom) ~@args))))',
 );
 
 exit main(@ARGV) ? 0 : 1;

@@ -10,7 +10,7 @@ use overload '""' => method { $self->to_string };
 
 {
     my @constants = qw( False Nil True );
-    my @scalars   = qw( Integer Keyword String Symbol );
+    my @scalars   = qw( Atom Integer Keyword String Symbol );
     my @sequences = qw( List Vector );
     my @specials  = qw( BuiltIn Hash Lambda );
     my @types     = (@constants, @scalars, @sequences, @specials);
