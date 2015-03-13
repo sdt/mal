@@ -10,4 +10,10 @@ sub rdelim { ']' }
 
 method to_list { return MAL::Object::List->new($self->items); }
 
+method conj(@items) { # does preserve meta
+    my $clone = $self->clone;
+    push(@{ $clone->{value} }, @items);
+    return $clone;
+}
+
 1;
