@@ -171,6 +171,7 @@ my @builtins = (
     [ 'with-meta', undef, fun($obj, $meta) { return $obj->with_meta($meta) }],
     [ 'meta', undef, fun($obj) { return $obj->meta }],
     [ 'atom', atom => fun($obj) { return $obj }],
+    [ 'atom?', boolean => fun($obj) { return $obj->is_atom }],
     [ 'deref', undef, fun($atom) { return $atom->deref }],
     [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
     [ 'conj', undef, fun($seq, @items) { return $seq->conj(@items) }],
@@ -180,7 +181,6 @@ my @builtins = (
         chomp $input;
         return MAL::Object->string($input);
     }],
-
 );
 
 my @library = (
