@@ -172,6 +172,7 @@ my @builtins = (
     [ 'atom', atom => fun($obj) { return $obj }],
     [ 'deref', undef, fun($atom) { return $atom->deref }],
     [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
+    [ 'conj', undef, fun($seq, @items) { return $seq->conj(@items) }],
 );
 
 my @library = (

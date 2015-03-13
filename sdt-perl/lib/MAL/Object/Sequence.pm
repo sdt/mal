@@ -37,7 +37,7 @@ method first {
     return $self->{value}->[0];
 }
 
-method rest {
+method rest { # does not preserve meta
     my @items = $self->items;
     shift @items;
     my $class = ref $self;

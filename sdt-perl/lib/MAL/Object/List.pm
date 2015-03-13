@@ -13,4 +13,10 @@ method cdr { return $self->rest  }
 
 method to_list { return $self }
 
+method conj(@items) { # does preserve meta
+    my $clone = $self->clone;
+    unshift(@{ $clone->{value} }, $_) for @items;
+    return $clone;
+}
+
 1;
