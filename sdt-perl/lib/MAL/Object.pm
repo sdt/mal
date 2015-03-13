@@ -76,4 +76,14 @@ method equal($rhs) {
     return;
 }
 
+method with_meta($meta) {
+    my $clone = $self->clone;
+    $clone->{meta} = $meta;
+    return $clone;
+}
+
+method meta {
+    return $self->{meta} // MAL::Object->nil;
+}
+
 1;

@@ -14,6 +14,11 @@ method new($class: $name, $subref, $return_type) {
     }, $class;
 }
 
+method clone {
+    my $clone = { %$self };
+    return bless $clone, ref $self;
+};
+
 method apply($args) {
     my $type = $self->{return_type};
     if ($type) {

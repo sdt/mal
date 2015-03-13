@@ -39,6 +39,11 @@ method new($class: $parameters, $expression, $env) {
     bless $self, $class;
 }
 
+method clone {
+    my $clone = { %$self }; # single-level copy
+    bless $clone, ref $self;
+}
+
 method apply($args) {
     my $inner = MAL::Environment->new(outer => $self->{env});
     for my $key (@{ $self->{parameters} }) {

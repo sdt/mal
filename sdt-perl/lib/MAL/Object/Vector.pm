@@ -8,6 +8,6 @@ use Function::Parameters qw( :strict );
 sub ldelim { '[' }
 sub rdelim { ']' }
 
-method to_list { return MAL::Object::List->new(@$self); }
+method to_list { return MAL::Object::List->new($self->items); }
 
 1;

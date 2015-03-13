@@ -167,6 +167,8 @@ my @builtins = (
     [ 'contains?', boolean => fun($hash, $key) { $hash->contains($key) } ],
     [ 'keys', list => fun($hash) { map { READ($_) } $hash->get_keys } ],
     [ 'vals', list => fun($hash) { $hash->get_vals } ],
+    [ 'with-meta', undef, fun($obj, $meta) { return $obj->with_meta($meta) }],
+    [ 'meta', undef, fun($obj) { return $obj->meta }],
     [ 'atom', atom => fun($obj) { return $obj }],
     [ 'deref', undef, fun($atom) { return $atom->deref }],
     [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
