@@ -71,7 +71,7 @@ my %special_form = (
         return ( $args->car, $env );
     },
     'quasiquote' => fun($args, $env) {
-        return ( quasiquote($args->item(0)), $env );
+        return ( quasiquote($args->first), $env );
     },
     'macroexpand' => fun($args, $env) {
         return macro_expand($args->first, $env);
@@ -185,6 +185,7 @@ my @builtins = (
 );
 
 my @library = (
+    '(def! *host-language* "sdt-perl")',
     '(def! not (fn* (x) (if x false true)))',
     '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
     "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
