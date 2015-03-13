@@ -8,33 +8,44 @@ use Function::Parameters qw( :strict );
 
 method new($class: @items) {
     die "Cannot create $class items directly\n" if $class eq __PACKAGE__;
-    bless [ @items ], $class;
+    bless {
+        value => \@items,
+    }, $class;
 }
+
+method clone {
+    my $clone = {
+        value => [ @{ $self->{value } } ], # new array, same values
+    };
+    $clone->{meta} = $self->{meta} if exists $self->{meta};
+    return bless $clone, ref $self;
+};
 
 method is_sequence {
     return 1;
 }
 
 method items {
-    return @$self;
+    return @{$self->{value}};
 }
 
 method item($index) {
-    return $self->[$index];
+    return $self->{value}->[$index];
 }
 
 method first {
-    return $self->[0];
+    return $self->{value}->[0];
 }
 
 method rest {
-    my @items = @$self;
+    my @items = $self->items;
     shift @items;
-    return bless [ @items ], ref $self;
+    my $class = ref $self;
+    return $class->new(@items);
 }
 
 method length {
-    return scalar(@$self);
+    return scalar($self->items);
 }
 
 method to_string($readable = 0) {

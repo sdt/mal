@@ -20,55 +20,71 @@ method new($class: @items) {
         my $value = shift @items;
         $hash{make_key($key)} = $value;
     }
-    bless { %hash }, $class;
+    bless { value => \%hash, }, $class;
 }
 
+method clone {
+    my $clone = {
+        value => { %{ $self->{value } } }, # new hash, same kv's
+    };
+    $clone->{meta} = $self->{meta} if exists $self->{meta};
+    return bless $clone, ref $self;
+};
+
 method to_string($readable = 0) {
+    my $hash = $self->{value};
     return '{' .
         join(' ',
-            map { $_ => $self->{$_}->to_string($readable) } sort keys %$self
+            map { $_ => $hash->{$_}->to_string($readable) } $self->get_keys
         ) .
     '}';
 }
 
 method get($key) {
-    return $self->{make_key($key)} // MAL::Object->nil;
+    return $self->{value}->{make_key($key)} // MAL::Object->nil;
 }
 
 method contains($key) {
-    return exists $self->{make_key($key)};
+    return exists $self->{value}->{make_key($key)};
 }
 
 method get_keys {
-    return sort keys %$self
+    return sort keys %{$self->{value}};
 }
 
 method get_vals {
-    return map { $self->{$_} } $self->get_keys;
+    return map { $self->{value}->{$_} } $self->get_keys;
 }
 
 method map_values($f) {
-    my %hash;
-    for my $key (keys %$self) {
-        $hash{$key} = $f->($self->{$key});
-    }
-    return bless { %hash }, ref $self;
+    return $self->_with_clone(fun($hash) {
+        for my $key (keys %$hash) {
+            $hash->{$key} = $f->($hash->{$key});
+        }
+    });
 }
 
 method assoc(@pairs) {
-    my %hash = %$self;
-    while (@pairs) {
-        my ($key, $value) = splice(@pairs, 0, 2);
-        $hash{make_key($key)} = $value;
-    }
-    return bless { %hash }, ref $self;
+    return $self->_with_clone(fun($hash) {
+        while (@pairs) {
+            my ($key, $value) = splice(@pairs, 0, 2);
+            $hash->{make_key($key)} = $value;
+        }
+    });
 }
 
 method dissoc(@keys) {
-    my %hash = %$self;
-    delete @hash{ map { make_key($_) } @keys };
-    return bless { %hash }, ref $self;
+    return $self->_with_clone(fun($hash) {
+        for my $key (@keys) {
+            delete $hash->{make_key($key)};
+        }
+    });
 }
 
+method _with_clone($f) {
+    my $clone = $self->clone;
+    $f->($clone->{value});
+    return $clone;
+}
 
 1;
