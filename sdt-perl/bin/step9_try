@@ -16,6 +16,7 @@ use MAL::Object;
 use MAL::Reader;
 
 my $global_env = MAL::Environment->new;
+my $term;
 
 my %special_form = (
     'def!' => fun($args, $env) {
@@ -173,6 +174,13 @@ my @builtins = (
     [ 'deref', undef, fun($atom) { return $atom->deref }],
     [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
     [ 'conj', undef, fun($seq, @items) { return $seq->conj(@items) }],
+    [ 'readline', undef, fun($prompt) {
+        my $input = $term->readline($prompt->to_string);
+        return MAL::Object->nil unless defined $input;
+        chomp $input;
+        return MAL::Object->string($input);
+    }],
+
 );
 
 my @library = (
@@ -189,7 +197,8 @@ exit main(@ARGV) ? 0 : 1;
 #-------------------------------------------------------------------------------
 
 fun main(@argv) {
-    my $term = Term::ReadLine->new('mal');
+    $term = Term::ReadLine->new('mal');
+    $term->ornaments(0);
     my $prompt = 'user> ';
     for (@builtins) {
         my ($sym, $type, $coderef) = @$_;
