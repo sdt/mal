@@ -132,47 +132,47 @@ my @builtins = (
     [ 'pr-str', string => sub { join(' ', map { $_->to_string(1) } @_) }],
     [ 'prn', nil => sub { say join(' ', map { $_->to_string(1) } @_) }],
     [ 'println', nil => sub { say join(' ', map { $_->to_string } @_) }],
-    [ 'read-string', undef, fun($str) { READ($str->value) }],
+    [ 'read-string', undef, fun(MAL::Object::String $str) { READ($str->value) }],
     [ 'eval', undef, fun($str) { EVAL($str, $global_env) }],
     [ 'slurp',  string => fun($fname) { scalar(read_file($fname->value)) }],
     [ 'cons', list => fun($car, $cdr) { return ( $car, $cdr->items ) }],
     [ 'concat', list => sub { return map { $_->items } @_ }],
-    [ 'nth', undef, fun($seq, $index) {
+    [ 'nth', undef, fun(MAL::Object::Sequence $seq, $index) {
         $index = $index->value;
         if ($index < 0 || $index >= $seq->length) {
             die "Index out of range\n";
         }
         return $seq->item($index);
     }],
-    [ 'first', undef, fun($seq) {
+    [ 'first', undef, fun(MAL::Object::Sequence $seq) {
         is_pair($seq) ? $seq->first : MAL::Object->nil
     }],
-    [ 'rest',  undef, fun($seq) { $seq->rest->to_list }],
+    [ 'rest',  undef, fun(MAL::Object::Sequence $seq) { $seq->rest->to_list }],
     [ 'throw', undef, fun($msg) { die $msg }],
-    [ 'apply', undef, fun($op, @args) {
+    [ 'apply', undef, fun(MAL::Object::Applyable $op, @args) {
         my $lastarg = pop(@args);
         my $arglist = MAL::Object->list(@args, $lastarg->items);
         my ($ast, $env) = $op->apply($arglist);
         EVAL($ast, $env // $global_env) }],
-    [ 'symbol', symbol => fun($str) { return $str->value }],
-    [ 'keyword', keyword => fun($str) { return ':' . $str->value }],
+    [ 'symbol', symbol => fun(MAL::Object::String $str) { return $str->value }],
+    [ 'keyword', keyword => fun(MAL::Object::String $str) { return ':' . $str->value }],
     [ 'vector', vector => sub { return @_ }],
     [ 'hash-map', hash => sub { return @_ }],
-    [ 'assoc', undef, fun($hash, @pairs) { $hash->assoc(@pairs) }],
-    [ 'dissoc', undef, fun($hash, @pairs) { $hash->dissoc(@pairs) }],
+    [ 'assoc', undef, fun(MAL::Object::Hash $hash, @pairs) { $hash->assoc(@pairs) }],
+    [ 'dissoc', undef, fun(MAL::Object::Hash $hash, @pairs) { $hash->dissoc(@pairs) }],
     [ 'get', undef, fun($hash, $key) {
         return $hash->is_hash ? $hash->get($key) : MAL::Object->nil;
     }],
-    [ 'contains?', boolean => fun($hash, $key) { $hash->contains($key) } ],
-    [ 'keys', list => fun($hash) { map { READ($_) } $hash->get_keys } ],
-    [ 'vals', list => fun($hash) { $hash->get_vals } ],
+    [ 'contains?', boolean => fun(MAL::Object::Hash $hash, $key) { $hash->contains($key) } ],
+    [ 'keys', list => fun(MAL::Object::Hash $hash) { map { READ($_) } $hash->get_keys } ],
+    [ 'vals', list => fun(MAL::Object::Hash $hash) { $hash->get_vals } ],
     [ 'with-meta', undef, fun($obj, $meta) { return $obj->with_meta($meta) }],
     [ 'meta', undef, fun($obj) { return $obj->meta }],
     [ 'atom', atom => fun($obj) { return $obj }],
     [ 'atom?', boolean => fun($obj) { return $obj->is_atom }],
     [ 'deref', undef, fun($atom) { return $atom->deref }],
     [ 'reset!', undef, fun($atom, $value) { return $atom->reset($value) }],
-    [ 'conj', undef, fun($seq, @items) { return $seq->conj(@items) }],
+    [ 'conj', undef, fun(MAL::Object::Sequence $seq, @items) { return $seq->conj(@items) }],
     [ 'readline', undef, fun($prompt) {
         my $input = $term->readline($prompt->to_string);
         return MAL::Object->nil unless defined $input;
