@@ -6,11 +6,13 @@ use parent qw( MAL::Object::Applyable );
 
 use Function::Parameters qw( :strict );
 
+use Sub::Name;
+
 method new($class: $name, $subref, $return_type) {
     bless {
         name => $name,
         return_type => $return_type,
-        subref => $subref,
+        subref => subname($name, $subref),
     }, $class;
 }
 
