@@ -300,7 +300,7 @@ fun is_macro_call($ast, $env) {
 
 fun macro_expand($ast, $env) {
     while (my $macro = is_macro_call($ast, $env)) {
-        $ast = macro_expand(EVAL($macro->apply($ast->rest)), $env);
+        $ast = EVAL($macro->apply($ast->rest));
     }
     return $ast;
 }
