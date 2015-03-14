@@ -2,7 +2,7 @@ package MAL::Object::Lambda;
 use 5.20.0;
 use warnings;
 
-use parent qw( MAL::Object );
+use parent qw( MAL::Object::Applyable );
 
 use Function::Parameters qw( :strict );
 use MAL::Environment;
