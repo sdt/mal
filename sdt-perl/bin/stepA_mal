@@ -152,8 +152,8 @@ my @builtins = (
     [ 'apply', undef, fun(MAL::Object::Applyable $op, @args) {
         my $lastarg = pop(@args);
         my $arglist = MAL::Object->list(@args, $lastarg->items);
-        my ($ast, $env) = $op->apply($arglist);
-        EVAL($ast, $env // $global_env) }],
+        return $op->apply($arglist);
+    }],
     [ 'symbol', symbol => fun(MAL::Object::String $str) { return $str->value }],
     [ 'keyword', keyword => fun(MAL::Object::String $str) { return ':' . $str->value }],
     [ 'vector', vector => sub { return @_ }],
