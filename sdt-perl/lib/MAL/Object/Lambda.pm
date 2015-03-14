@@ -15,10 +15,9 @@ fun index_of($list, $item) {
 }
 
 method is_macro {
-    if (@_) {
-        $self->{is_macro} = !!$_[0];
-    }
-    return $self->{is_macro};
+    my $meta = $self->meta;
+    return $meta->is_hash && $meta->contains(
+        MAL::Object->string("ismacro"));
 }
 
 method new($class: $parameters, $expression, $env) {

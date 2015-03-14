@@ -27,8 +27,13 @@ my %special_form = (
     'defmacro!' => fun($args, $env) {
         my $symbol = $args->item(0)->value;
         my $value = EVAL($args->item(1), $env);
-        $value->is_macro(1);
-        return $env->set($symbol, $value);
+        return $env->set($symbol,
+            $value->with_meta(
+                MAL::Object->hash(
+                    MAL::Object->string("ismacro"),
+                    MAL::Object->true,
+                )
+            ));
     },
     'let*' => fun($args, $env) {
         my $inner_env = MAL::Environment->new(outer => $env);
