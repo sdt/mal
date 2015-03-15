@@ -195,11 +195,18 @@ my @builtins = (
 
 my @library = (
     '(def! *host-language* "sdt-perl")',
-    '(def! not (fn* (x) (if x false true)))',
-    '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
+
+    '(defmacro! defn! (fn* (name args body) `(def! ~name (fn* ~args ~body))))',
+
+    '(defn! not (x) (if x false true))',
+    '(defn! load-file (f) (eval (read-string (str "(do " (slurp f) ")"))))',
+    '(defn! map (f xs) (if (empty? xs) xs (cons (f (first xs)) (map f (rest xs)))))',
+    '(defn! foldleft (f base xs) (if (empty? xs) base (foldleft f (f (first xs) base) (rest xs))))',
+    "(defn! reverse (xs) (foldleft cons '() xs))",
+    "(defn! filter (f xs) (if (empty? xs) xs (if (f (head xs)) (cons f (filter f xs)) (filter f xs))))",
+
     "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
     "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
-    '(def! map (fn* (f xs) (if (empty? xs) xs (cons (f (first xs)) (map f (rest xs))))))',
     '(defmacro! swap! (fn* (atom f & args) `(reset! ~atom (~f (deref ~atom) ~@args))))',
 );
 
