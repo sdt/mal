@@ -24,6 +24,13 @@ my %special_form = (
         my $value = EVAL($args->item(1), $env);
         return $env->set($symbol, $value);
     },
+    'set!' => fun($args, $env) {
+        my $symbol = $args->item(0)->value;
+        my $symenv = $env->find($symbol);
+        die "$symbol not found" unless $symenv;
+        my $value = EVAL($args->item(1), $env);
+        return $symenv->set($symbol, $value);
+    },
     'defmacro!' => fun($args, $env) {
         my $symbol = $args->item(0)->value;
         my $value = EVAL($args->item(1), $env);
