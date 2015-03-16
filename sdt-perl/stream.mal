@@ -1,0 +1,83 @@
+; stream.mal
+
+
+(defn! memoise (f)
+       (let* (computed false value nil)
+         (fn* ()
+              (if computed
+                value
+                (do
+                  ;(println "forcing promise")
+                  (set! computed true)
+                  (set! value (f)))))))
+
+(defmacro! delay (fn* (promise) `(fn* () ~promise)))
+(defn! force (promise) (promise))
+
+(defmacro! stream-cons
+           (fn* (item promise) `(list ~item (memoise (delay ~promise)))))
+(def! empty-stream 'empty-stream)
+(def! stream-car first)
+(defn! stream-cdr (s) (force (nth s 1)))
+(defn! stream-empty? (s) (= s empty-stream))
+
+(defn! stream-do (s proc)
+       (if (not (stream-empty? s))
+                (do
+                  (proc (stream-car s))
+                  (stream-do (stream-cdr s) proc))))
+
+(defn! stream-take (s n)
+       (if (or (stream-empty? s) (= n 0))
+         empty-stream
+         (stream-cons (stream-car s)
+                      (stream-take (stream-cdr s) (- n 1)))))
+
+(defn! stream-print (s n)
+       (stream-do (stream-take s n) println))
+
+(defn! stream-map (s f)
+       (if (stream-empty? s)
+         s
+         (stream-cons
+           (f (stream-car s))
+           (stream-map (stream-cdr s) f))))
+
+(defn! stream-filter (s f)
+       (if (stream-empty? s) s
+         (let* (
+                head (stream-car s)
+                tail (stream-cdr s))
+           (if (f head)
+             (stream-cons head (stream-filter tail f))
+             (stream-filter tail f)))))
+
+(defn! ints-from (n)
+       (let* (
+              inc (fn* (x) (+ x 1))
+              str (stream-cons n (stream-map str inc)))
+         str))
+
+(defn! divides? (n d) (= n (* (/ n d) d)))
+
+(defn! strip-n (n) (fn* (x) (not (divides? x n))))
+
+(defn! sieve (s)
+       (stream-cons (stream-car s)
+                    (sieve (stream-filter (stream-cdr s)
+                                          (strip-n (stream-car s))))))
+
+(def! primes (sieve (ints-from 2)))
+
+(defn! stream-zip (s1 s2 op)
+       (if (or (stream-empty? s1) (stream-empty? s2))
+         empty-stream
+         (stream-cons (op (stream-car s1)
+                          (stream-car s2))
+                      (stream-zip (stream-cdr s1)
+                                  (stream-cdr s2) op))))
+
+(def! fib
+      (stream-cons 1
+                   (stream-cons 1
+                                (stream-zip fib (stream-cdr fib) +))))
