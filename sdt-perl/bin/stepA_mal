@@ -204,10 +204,10 @@ my @library = (
     '(defn! foldleft (f base xs) (if (empty? xs) base (foldleft f (f (first xs) base) (rest xs))))',
     "(defn! reverse (xs) (foldleft cons '() xs))",
     "(defn! filter (f xs) (if (empty? xs) xs (if (f (head xs)) (cons f (filter f xs)) (filter f xs))))",
+    '(defn! swap! (atom f & args) (reset! atom (apply f (deref atom) args)))',
 
     "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
     "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
-    '(defmacro! swap! (fn* (atom f & args) `(reset! ~atom (~f (deref ~atom) ~@args))))',
 );
 
 exit main(@ARGV) ? 0 : 1;
