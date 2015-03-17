@@ -1,6 +1,7 @@
 #ifndef INCLUDE_TYPES_H
 #define INCLUDE_TYPES_H
 
+#include "Debug.h"
 #include "RefCounted.h"
 #include "RefCountedPtr.h"
 #include "String.h"
@@ -16,10 +17,10 @@ class Environment;
 class malObject : public RefCounted {
 public:
     malObject() {
-        fprintf(stderr, "Creating malObject %p\n", this);
+        TRACE_OBJECT("Creating malObject %p\n", this);
     }
     virtual ~malObject() {
-        fprintf(stderr, "Destroying malObject %p\n", this);
+        TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
     virtual malObjectPtr eval(Environment* env) = 0;
