@@ -8,6 +8,7 @@ typedef std::sregex_iterator    RegexIter;
 
 static const Regex tokenRegex("[\\s,]*(~@|[\\[\\]{}()'`~^@]|\"(?:\\\\.|[^\\\\\"])*\"|;.*|[^\\s\\[\\]{}('\"`,;)]+)");
 static const Regex intRegex("^[-+]?\\d+$");
+static const Regex closeRegex("[\\)\\]}]");
 
 class Tokeniser
 {
@@ -53,8 +54,8 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 {
     String token = tokeniser.peek();
 
-    if (token == ")") {
-        throw STR("Unexpected \")\"");
+    if (std::regex_match(token, closeRegex)) {
+        throw STR("Unexpected \"%s\"", token.c_str());
     }
     if (token == "(") {
         tokeniser.next();
