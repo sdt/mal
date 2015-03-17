@@ -29,6 +29,19 @@ private:
     int m_value;
 };
 
+class malSymbol : public malObject {
+public:
+    malSymbol(const String& rep) : m_value(rep) { }
+    ~malSymbol() { }
+
+    virtual String print() {
+        return m_value;
+    }
+
+private:
+    String m_value;
+};
+
 class malSequence : public malObject {
 public:
     malSequence(const malObjectVec& items) : m_items(items) { }

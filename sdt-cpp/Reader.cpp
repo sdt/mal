@@ -67,7 +67,7 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     if (std::regex_match(token, intRegex)) {
         return malObjectPtr(new malInteger(token));
     }
-    throw STR("Unexpected token \"%s\"", token.c_str());
+    return malObjectPtr(new malSymbol(token));
 }
 
 static malObjectVec read_list(Tokeniser& tokeniser, char end)
