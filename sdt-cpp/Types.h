@@ -18,7 +18,7 @@ typedef std::vector<malObjectPtr>  malObjectVec;
 
 class malInteger : public malObject {
 public:
-    malInteger(const String& rep) : m_value(std::stoi(rep)) { }
+    malInteger(const String& token) : m_value(std::stoi(token)) { }
     ~malInteger() { }
 
     virtual String print() {
@@ -31,7 +31,7 @@ private:
 
 class malSymbol : public malObject {
 public:
-    malSymbol(const String& rep) : m_value(rep) { }
+    malSymbol(const String& token) : m_value(token) { }
     ~malSymbol() { }
 
     virtual String print() {
@@ -52,10 +52,24 @@ private:
     malObjectVec m_items;
 };
 
-class List : public malSequence {
+class malList : public malSequence {
 public:
-    List(const malObjectVec& items) : malSequence(items) { }
-    ~List() { }
+    malList(const malObjectVec& items) : malSequence(items) { }
+    ~malList() { }
+};
+
+namespace mal {
+    inline malObjectPtr integer(const String& token) {
+        return malObjectPtr(new malInteger(token));
+    };
+
+    inline malObjectPtr list(const malObjectVec& items) {
+        return malObjectPtr(new malList(items));
+    };
+
+    inline malObjectPtr symbol(const String& token) {
+        return malObjectPtr(new malSymbol(token));
+    };
 };
 
 #endif // INCLUDE_TYPES_H

@@ -41,7 +41,7 @@ Tokeniser::Tokeniser(const String& input)
 
 static malObjectPtr read_atom(Tokeniser& tokeniser);
 static malObjectPtr read_form(Tokeniser& tokeniser);
-static malObjectVec read_list(Tokeniser& tokeniser, char end);
+static malObjectVec read_list(Tokeniser& tokeniser, const String& end);
 
 malObjectPtr read_str(const String& input)
 {
@@ -53,10 +53,13 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 {
     String token = tokeniser.peek();
 
-    if (token[0] == '(') {
+    if (token == ")") {
+        throw STR("Unexpected \")\"");
+    }
+    if (token == "(") {
         tokeniser.next();
-        malObjectVec items = read_list(tokeniser, ')');
-        return malObjectPtr(new List(items));
+        malObjectVec items = read_list(tokeniser, ")");
+        return mal::list(items);
     }
     return read_atom(tokeniser);
 }
@@ -65,18 +68,22 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
 {
     String token = tokeniser.next();
     if (std::regex_match(token, intRegex)) {
-        return malObjectPtr(new malInteger(token));
+        return mal::integer(token);
     }
-    return malObjectPtr(new malSymbol(token));
+    return mal::symbol(token);
 }
 
-static malObjectVec read_list(Tokeniser& tokeniser, char end)
+static malObjectVec read_list(Tokeniser& tokeniser, const String& end)
 {
     malObjectVec items;
-    while (tokeniser.peek()[0] != end) {
+    while (1) {
+        if (tokeniser.eof()) {
+            throw STR("Expected \"%s\", got EOF", end.c_str());
+        }
+        if (tokeniser.peek() == end) {
+            tokeniser.next();
+            return items;
+        }
         items.push_back(read_form(tokeniser));
     }
-    tokeniser.next();
-
-    return items;
 }
