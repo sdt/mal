@@ -1,17 +1,19 @@
 #ifndef INCLUDE_TYPES_H
 #define INCLUDE_TYPES_H
 
+#include "RefCounted.h"
+#include "RefCountedPtr.h"
 #include "String.h"
 
 #include <vector>
 
 class malObject;
-typedef std::shared_ptr<malObject> malObjectPtr;
+typedef RefCountedPtr<malObject> malObjectPtr;
 typedef std::vector<malObjectPtr>  malObjectVec;
 
 class Environment;
 
-class malObject {
+class malObject : public RefCounted {
 public:
     malObject() {
         fprintf(stderr, "Creating malObject %p\n", this);
@@ -63,7 +65,7 @@ public:
     virtual String print();
 
     virtual malObjectPtr eval(Environment* env) {
-        return NULL;
+        return malObjectPtr(this);
     }
 
 private:

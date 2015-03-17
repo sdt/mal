@@ -43,9 +43,7 @@ malObjectPtr READ(const String& input)
 
 malObjectPtr EVAL(malObjectPtr ast, Environment* env)
 {
-    // Objects that evaluate to themselves return NULL.
-    malObjectPtr ret = ast->eval(env);
-    return ret ? ret : ast;
+    return ast->eval(env);
 }
 
 String PRINT(malObjectPtr ast)

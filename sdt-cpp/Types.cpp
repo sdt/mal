@@ -3,7 +3,7 @@
 
 malObjectPtr malInteger::eval(Environment* env)
 {
-    return NULL;
+    return malObjectPtr(this);
 }
 
 malObjectPtr malSymbol::eval(Environment* env)
