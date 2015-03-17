@@ -1,4 +1,15 @@
+#include "Environment.h"
 #include "Types.h"
+
+malObjectPtr malInteger::eval(Environment* env)
+{
+    return NULL;
+}
+
+malObjectPtr malSymbol::eval(Environment* env)
+{
+    return env->get(m_value);
+}
 
 String malSequence::print() {
     String str = "(";

@@ -7,7 +7,7 @@ LDFLAGS=$(DEBUG) -L$(RLPATH)/lib -lreadline -lhistory
 CXX=g++
 LD=g++
 
-SOURCES=Reader.cpp ReadLine.cpp String.cpp Types.cpp
+SOURCES=Environment.cpp Reader.cpp ReadLine.cpp String.cpp Types.cpp
 OBJS=$(SOURCES:%.cpp=%.o)
 
 MAINS=$(wildcard step*.cpp)

@@ -5,21 +5,33 @@
 
 #include <vector>
 
+class malObject;
+typedef std::shared_ptr<malObject> malObjectPtr;
+typedef std::vector<malObjectPtr>  malObjectVec;
+
+class Environment;
+
 class malObject {
 public:
-    virtual ~malObject() { };
+    malObject() {
+        fprintf(stderr, "Creating malObject %p\n", this);
+    }
+    virtual ~malObject() {
+        fprintf(stderr, "Destroying malObject %p\n", this);
+    }
+
+    virtual malObjectPtr eval(Environment* env) = 0;
 
     virtual String print() = 0;
     virtual bool isSequence() const { return false; }
 };
 
-typedef std::shared_ptr<malObject> malObjectPtr;
-typedef std::vector<malObjectPtr>  malObjectVec;
-
 class malInteger : public malObject {
 public:
     malInteger(const String& token) : m_value(std::stoi(token)) { }
     ~malInteger() { }
+
+    virtual malObjectPtr eval(Environment* env);
 
     virtual String print() {
         return std::to_string(m_value);
@@ -34,6 +46,8 @@ public:
     malSymbol(const String& token) : m_value(token) { }
     ~malSymbol() { }
 
+    virtual malObjectPtr eval(Environment* env);
+
     virtual String print() {
         return m_value;
     }
@@ -47,6 +61,10 @@ public:
     malSequence(const malObjectVec& items) : m_items(items) { }
     virtual bool isSequence() const { return true; }
     virtual String print();
+
+    virtual malObjectPtr eval(Environment* env) {
+        return NULL;
+    }
 
 private:
     malObjectVec m_items;
