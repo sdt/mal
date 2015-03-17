@@ -18,7 +18,7 @@ TARGETS=$(MAINS:%.cpp=%)
 all: $(TARGETS)
 
 .deps: *.cpp *.h
-	$(CXX) -MM *.cpp > .deps
+	$(CXX) $(CXXFLAGS) -MM *.cpp > .deps
 
 $(TARGETS): %: %.o $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
