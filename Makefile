@@ -76,11 +76,8 @@ racket_STEP_TO_PROG =  racket/$($(1)).rkt
 ruby_STEP_TO_PROG =    ruby/$($(1)).rb
 rust_STEP_TO_PROG =    rust/target/release/$($(1))
 scala_STEP_TO_PROG =   scala/$($(1)).scala
-<<<<<<< HEAD
 sdt-perl_STEP_TO_PROG = sdt-perl/bin/$($(1))
-=======
 sdt-cpp_STEP_TO_PROG = sdt-cpp/$($(1))
->>>>>>> Add sdt-cpp to Makefile
 vb_STEP_TO_PROG =      vb/$($(1)).exe
 
 # Needed some argument munging
@@ -115,11 +112,8 @@ racket_RUNSTEP =  ../$(2) $(3)
 ruby_RUNSTEP =    ruby ../$(2) $(3)
 rust_RUNSTEP =    ../$(2) $(3)
 scala_RUNSTEP =   sbt 'run-main $($(1))$(if $(3), $(3),)'
-<<<<<<< HEAD
 sdt-perl_RUNSTEP = ../$(2) $(3)
-=======
 sdt-cpp_RUNSTEP = ../$(2) $(3)
->>>>>>> Add sdt-cpp to Makefile
 vb_RUNSTEP =      mono ../$(2) --raw $(3)
 
 # Extra options to pass to runtest.py
