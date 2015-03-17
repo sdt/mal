@@ -6,8 +6,8 @@
 typedef std::regex              Regex;
 typedef std::sregex_iterator    RegexIter;
 
-static Regex tokenRegex("[\\s,]*(~@|[\\[\\]{}()'`~^@]|\"(?:\\\\.|[^\\\\\"])*\"|;.*|[^\\s\\[\\]{}('\"`,;)]+)");
-static Regex intRegex("^[-+]?\\d+$");
+static const Regex tokenRegex("[\\s,]*(~@|[\\[\\]{}()'`~^@]|\"(?:\\\\.|[^\\\\\"])*\"|;.*|[^\\s\\[\\]{}('\"`,;)]+)");
+static const Regex intRegex("^[-+]?\\d+$");
 
 class Tokeniser
 {
@@ -43,7 +43,7 @@ static malObjectPtr read_atom(Tokeniser& tokeniser);
 static malObjectPtr read_form(Tokeniser& tokeniser);
 static malObjectVec read_list(Tokeniser& tokeniser, char end);
 
-const malObjectPtr read_str(const String& input)
+malObjectPtr read_str(const String& input)
 {
     Tokeniser tokeniser(input);
     return read_form(tokeniser);
@@ -67,6 +67,7 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     if (std::regex_match(token, intRegex)) {
         return malObjectPtr(new malInteger(token));
     }
+    throw STR("Unexpected token \"%s\"", token.c_str());
 }
 
 static malObjectVec read_list(Tokeniser& tokeniser, char end)

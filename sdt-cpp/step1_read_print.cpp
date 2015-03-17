@@ -20,7 +20,14 @@ int main(int argc, char* argv[])
             break;
         }
 
-        std::cout << rep(input) << "\n";
+        String out;
+        try {
+            out = rep(input);
+        }
+        catch (String& s) {
+            out = s;
+        };
+        std::cout << out << "\n";
     }
 }
 
