@@ -5,8 +5,10 @@
 
 typedef std::string String;
 
-extern String StringPrintf(const char* fmt, ...);
-
 #define STR StringPrintf
+
+extern String StringPrintf(const char* fmt, ...);
+extern String CopyAndFree(char* mallocedString);
+
 
 #endif // INCLUDE_STRING_H

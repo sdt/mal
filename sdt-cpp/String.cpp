@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // Adapted from: http://stackoverflow.com/questions/2342162
 String StringPrintf(const char* fmt, ...) {
@@ -23,4 +24,11 @@ String StringPrintf(const char* fmt, ...) {
             size *= 2;      // Guess at a larger size (OS specific)
     }
     return str;
+}
+
+String CopyAndFree(char* mallocedString)
+{
+    String ret(mallocedString);
+    free(mallocedString);
+    return ret;
 }

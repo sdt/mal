@@ -1,11 +1,13 @@
+RLPATH=/usr/local/Cellar/readline/6.3.8
+
 DEBUG=-ggdb
 CFLAGS=-Wall $(DEBUG)
-CXXFLAGS=-Wall $(DEBUG) -std=c++11
-LDFLAGS=$(DEBUG)
+CXXFLAGS=-Wall $(DEBUG) -std=c++11 -I$(RLPATH)/include
+LDFLAGS=$(DEBUG) -L$(RLPATH)/lib -lreadline -lhistory
 CXX=g++
 LD=g++
 
-SOURCES=Reader.cpp String.cpp Types.cpp
+SOURCES=Reader.cpp ReadLine.cpp String.cpp Types.cpp
 OBJS=$(SOURCES:%.cpp=%.o)
 
 MAINS=$(wildcard step*.cpp)

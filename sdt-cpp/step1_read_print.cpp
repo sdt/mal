@@ -1,3 +1,4 @@
+#include "Readline.h"
 #include "String.h"
 #include "Types.h"
 
@@ -11,15 +12,10 @@ malObjectPtr read_str(const String& input);
 
 int main(int argc, char* argv[])
 {
+    ReadLine readline("~/.mal-history");
     String prompt = "user> ";
-    while (1) {
-        String input;
-        std::cout << prompt;
-        std::getline(std::cin, input);
-        if (std::cin.eof() || std::cin.fail()) {
-            break;
-        }
-
+    String input;
+    while (readline.get(prompt, input)) {
         String out;
         try {
             out = rep(input);
