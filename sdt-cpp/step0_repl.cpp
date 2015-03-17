@@ -1,6 +1,11 @@
-#include "MAL.h"
+#include "String.h"
 
 #include <iostream>
+
+String READ(const String& input);
+String EVAL(const String& input);
+String PRINT(const String& input);
+String rep(const String& input);
 
 int main(int argc, char* argv[])
 {

@@ -1,27 +1,32 @@
-CFLAGS=-Wall -g
-CXXFLAGS=-Wall -g -std=c++11
-LDFLAGS=-g
+DEBUG=-ggdb
+CFLAGS=-Wall $(DEBUG)
+CXXFLAGS=-Wall $(DEBUG) -std=c++11
+LDFLAGS=$(DEBUG)
+CXX=g++
 LD=g++
 
-SOURCES=Tokeniser.cpp
+SOURCES=Reader.cpp String.cpp Types.cpp
 OBJS=$(SOURCES:%.cpp=%.o)
+
+MAINS=$(wildcard step*.cpp)
+TARGETS=$(MAINS:%.cpp=%)
 
 .PHONY:	all clean
 
 .SUFFIXES: .cpp .o
 
-all: step0_repl
+all: $(TARGETS)
 
 .deps: *.cpp *.h
 	$(CXX) -MM *.cpp > .deps
 
-step0_repl: step0_repl.o
-	g++ $(LDFLAGS) $< -o $@
+$(TARGETS): %: %.o $(OBJS)
+	$(LD) $(LDFLAGS) $^ -o $@
 
 .cpp.o:
-	g++ $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o step0_repl
+	rm -rf *.o $(TARGETS)
 
 -include .deps
