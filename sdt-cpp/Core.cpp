@@ -13,6 +13,7 @@
 #define CHECK_ARGS_AT_LEAST(name, expected) \
     check_args_at_least(name, expected, std::distance(argsBegin, argsEnd))
 
+extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 
 malObjectPtr builtIn_ADD(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -32,6 +33,13 @@ malObjectPtr builtIn_DIV(
     malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
     return mal::integer(lhs->value() / rhs->value());
+}
+
+malObjectPtr builtIn_EVAL(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("eval", 1);
+    return EVAL(*argsBegin, env->getRoot());
 }
 
 malObjectPtr builtIn_MUL(
@@ -65,6 +73,7 @@ struct Handler {
 static Handler handler_table[] = {
     { builtIn_ADD,              "+"                                 },
     { builtIn_DIV,              "/"                                 },
+    { builtIn_EVAL,             "eval"                              },
     { builtIn_MUL,              "*"                                 },
     { builtIn_SUB,              "-"                                 },
 };
