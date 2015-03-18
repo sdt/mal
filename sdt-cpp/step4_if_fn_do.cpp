@@ -111,6 +111,11 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 }
                 return EVAL(list->item(2), inner);
             }
+
+            if (special == "quote") {
+                check_args_is("quote", 1, argCount);
+                return list->item(1);
+            }
         }
     }
     return ast->eval(env);
