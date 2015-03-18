@@ -25,9 +25,11 @@ malEnv::malEnv(malEnvPtr outer, const StringVec& bindings,
             set(bindings[n-1], mal::list(args));
             return;
         }
+        ASSERT(it != argsEnd, "Not enough parameters");
         set(bindings[i], *it);
         ++it;
     }
+    ASSERT(it == argsEnd, "Too many parameters");
 }
 
 malEnv::~malEnv()
