@@ -71,6 +71,22 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 return EVAL(list->item(argCount), env);
             }
 
+            if (special == "if") {
+                check_args_between("if", 2, 3, argCount);
+
+                malObjectPtr cond = EVAL(list->item(1), env);
+                if (!(cond == mal::falseObject() || cond == mal::nil())) {
+                    // then
+                    return EVAL(list->item(2), env);
+                }
+                if (argCount == 2) {
+                    // no else case
+                    return mal::nil();
+                }
+                // else case
+                return EVAL(list->item(3), env);
+            }
+
             if (special == "let*") {
                 check_args_is("let*", 2, argCount);
                 malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));

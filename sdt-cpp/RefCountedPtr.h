@@ -1,6 +1,7 @@
 #ifndef INCLUDE_REFCOUNTEDPTR_H
 #define INCLUDE_REFCOUNTEDPTR_H
 
+#include "Debug.h"
 #include "RefCounted.h"
 
 #include <cstddef>
@@ -19,6 +20,14 @@ public:
     const RefCountedPtr& operator = (const RefCountedPtr& rhs) {
         acquire(rhs.m_object);
         return *this;
+    }
+
+    bool operator == (const RefCountedPtr& rhs) {
+        return m_object == rhs.m_object;
+    }
+
+    bool operator != (const RefCountedPtr& rhs) {
+        return m_object != rhs.m_object;
     }
 
     operator bool () {
