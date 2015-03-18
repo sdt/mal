@@ -2,6 +2,7 @@
 
 #include "String.h"
 #include "Types.h"
+#include "Validation.h"
 
 malEnv::malEnv(malEnvPtr outer)
 : m_outer(outer)
@@ -32,7 +33,7 @@ malObjectPtr malEnv::get(const String& symbol)
             return it->second;
         }
     }
-    throw STR("\"%s\" not found", symbol.c_str());
+    ASSERT(false, "\"%s\" not found", symbol.c_str());
 }
 
 malObjectPtr malEnv::set(const String& symbol, malObjectPtr value)

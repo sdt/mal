@@ -67,7 +67,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
-                    malSymbol* var = DYNAMIC_CAST(malSymbol, bindings->item(i));
+                    malSymbol* var = OBJECT_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 return EVAL(list->item(2), inner);
@@ -85,9 +85,7 @@ String PRINT(malObjectPtr ast)
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
-    if (handler == NULL) {
-        throw STR("\"%s\" is not applicable", op->print().c_str());
-    }
+    ASSERT(handler != NULL, "\"%s\" is not applicable", op->print().c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
 }

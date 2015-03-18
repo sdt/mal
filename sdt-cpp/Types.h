@@ -5,6 +5,7 @@
 #include "RefCounted.h"
 #include "RefCountedPtr.h"
 #include "String.h"
+#include "Validation.h"
 
 #include <vector>
 
@@ -33,9 +34,7 @@ public:
 template<class T>
 T* object_cast(malObjectPtr obj, const char* typeName) {
     T* dest = dynamic_cast<T*>(obj.ptr());
-    if (dest == NULL) {
-        throw STR("%s is not a %s", obj->print().c_str(), typeName);
-    }
+    ASSERT(dest != NULL, "%s is not a %s", obj->print().c_str(), typeName);
     return dest;
 }
 

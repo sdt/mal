@@ -54,9 +54,9 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 {
     String token = tokeniser.peek();
 
-    if (std::regex_match(token, closeRegex)) {
-        throw STR("Unexpected \"%s\"", token.c_str());
-    }
+    ASSERT(!std::regex_match(token, closeRegex),
+            "Unexpected \"%s\"", token.c_str());
+
     if (token == "(") {
         tokeniser.next();
         malObjectVec items = read_list(tokeniser, ")");
@@ -78,9 +78,7 @@ static malObjectVec read_list(Tokeniser& tokeniser, const String& end)
 {
     malObjectVec items;
     while (1) {
-        if (tokeniser.eof()) {
-            throw STR("Expected \"%s\", got EOF", end.c_str());
-        }
+        ASSERT(!tokeniser.eof(), "Expected \"%s\", got EOF", end.c_str());
         if (tokeniser.peek() == end) {
             tokeniser.next();
             return items;
