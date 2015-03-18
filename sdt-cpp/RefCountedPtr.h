@@ -3,6 +3,8 @@
 
 #include "RefCounted.h"
 
+#include <cstddef>
+
 template<class T>
 class RefCountedPtr {
 public:
@@ -17,6 +19,10 @@ public:
     const RefCountedPtr& operator = (const RefCountedPtr& rhs) {
         acquire(rhs.m_object);
         return *this;
+    }
+
+    operator bool () {
+        return m_object != NULL;
     }
 
     ~RefCountedPtr() {

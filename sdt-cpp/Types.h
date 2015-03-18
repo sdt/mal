@@ -12,7 +12,8 @@ class malObject;
 typedef RefCountedPtr<malObject> malObjectPtr;
 typedef std::vector<malObjectPtr>  malObjectVec;
 
-class Environment;
+class malEnv;
+typedef RefCountedPtr<malEnv> malEnvPtr;
 
 class malObject : public RefCounted {
 public:
@@ -23,7 +24,7 @@ public:
         TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
-    virtual malObjectPtr eval(Environment* env) = 0;
+    virtual malObjectPtr eval(malEnvPtr env) = 0;
 
     virtual String print() = 0;
     virtual bool isSequence() const { return false; }
@@ -34,7 +35,7 @@ public:
     malInteger(const String& token) : m_value(std::stoi(token)) { }
     ~malInteger() { }
 
-    virtual malObjectPtr eval(Environment* env);
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print() {
         return std::to_string(m_value);
@@ -49,7 +50,7 @@ public:
     malSymbol(const String& token) : m_value(token) { }
     ~malSymbol() { }
 
-    virtual malObjectPtr eval(Environment* env);
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print() {
         return m_value;
@@ -65,7 +66,7 @@ public:
     virtual bool isSequence() const { return true; }
     virtual String print();
 
-    virtual malObjectPtr eval(Environment* env) {
+    virtual malObjectPtr eval(malEnvPtr env) {
         return malObjectPtr(this);
     }
 

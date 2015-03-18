@@ -1,13 +1,16 @@
 #include "Environment.h"
 
-Environment::Environment(Environment* outer)
+#include "String.h"
+#include "Types.h"
+
+malEnv::malEnv(malEnvPtr outer)
 : m_outer(outer)
 {
 }
 
-Environment* Environment::find(const String& symbol)
+malEnvPtr malEnv::find(const String& symbol)
 {
-    for (Environment* env = this; env != NULL; env = env->m_outer) {
+    for (malEnvPtr env = this; env; env = env->m_outer) {
         if (env->m_map.find(symbol) != env->m_map.end()) {
             return env;
         }
@@ -15,9 +18,9 @@ Environment* Environment::find(const String& symbol)
     return NULL;
 }
 
-malObjectPtr Environment::get(const String& symbol)
+malObjectPtr malEnv::get(const String& symbol)
 {
-    for (Environment* env = this; env != NULL; env = env->m_outer) {
+    for (malEnvPtr env = this; env; env = env->m_outer) {
         auto it = env->m_map.find(symbol);
         if (it != env->m_map.end()) {
             return it->second;
@@ -26,7 +29,7 @@ malObjectPtr Environment::get(const String& symbol)
     throw STR("\"%s\" not found", symbol.c_str());
 }
 
-void Environment::set(const String& symbol, malObjectPtr value)
+void malEnv::set(const String& symbol, malObjectPtr value)
 {
     m_map[symbol] = value;
 }

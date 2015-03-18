@@ -1,12 +1,12 @@
 #include "Environment.h"
 #include "Types.h"
 
-malObjectPtr malInteger::eval(Environment* env)
+malObjectPtr malInteger::eval(malEnvPtr env)
 {
     return malObjectPtr(this);
 }
 
-malObjectPtr malSymbol::eval(Environment* env)
+malObjectPtr malSymbol::eval(malEnvPtr env)
 {
     return env->get(m_value);
 }
