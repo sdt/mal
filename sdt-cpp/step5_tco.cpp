@@ -12,6 +12,7 @@ String PRINT(malObjectPtr ast);
 String rep(const String& input, malEnvPtr env);
 malObjectPtr read_str(const String& input);
 void install_core(malEnvPtr env);
+malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 
 int main(int argc, char* argv[])
 {
@@ -44,7 +45,6 @@ malObjectPtr READ(const String& input)
 {
     return read_str(input);
 }
-
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
@@ -124,7 +124,18 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 return list->item(1);
             }
         }
-        return ast->eval(env);
+
+        malObjectVec items = list->eval_items(env);
+        if (malLambda* lambda = DYNAMIC_CAST(malLambda, items[0])) {
+            ast = lambda->getBody();
+            env = lambda->makeEnv(items.begin()+1, items.end());
+            continue; // TCO
+        }
+        else {
+            malObjectIter it = items.begin();
+            malObjectPtr op = *it++;
+            return APPLY(op, it, items.end(), env);
+        }
     }
 }
 

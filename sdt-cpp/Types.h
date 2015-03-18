@@ -190,6 +190,9 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env);
 
+    malObjectPtr getBody() { return m_body; }
+    malEnvPtr makeEnv(malObjectIter argsBegin, malObjectIter argsEnd);
+
     virtual bool doIsEqualTo(malObject* rhs) {
         return this == rhs; // do we need to do a deep inspection?
     }

@@ -84,8 +84,7 @@ malObjectPtr malLambda::apply(malObjectIter argsBegin,
                               malObjectIter argsEnd,
                               malEnvPtr)
 {
-    malEnvPtr inner(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
-    return EVAL(m_body, inner);
+    return EVAL(m_body, makeEnv(argsBegin, argsEnd));
 }
 
 malObjectPtr malLambda::eval(malEnvPtr env)
@@ -93,8 +92,14 @@ malObjectPtr malLambda::eval(malEnvPtr env)
     return malObjectPtr(this);
 }
 
+malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd)
+{
+    return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
+}
+
 malObjectPtr malList::eval(malEnvPtr env)
 {
+    //TODO: is this still called after TCO?
     if (count() == 0) {
         return malObjectPtr(this);
     }
