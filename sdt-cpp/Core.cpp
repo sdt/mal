@@ -15,6 +15,7 @@
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
+extern String rep(const String& input, malEnvPtr env);
 
 malObjectPtr builtIn_ADD(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -89,7 +90,7 @@ struct Handler {
     const char* name;
 };
 
-static Handler handler_table[] = {
+static Handler handlerTable[] = {
     { builtIn_ADD,              "+"                                 },
     { builtIn_APPLY,            "apply"                             },
     { builtIn_DIV,              "/"                                 },
@@ -98,10 +99,20 @@ static Handler handler_table[] = {
     { builtIn_SUB,              "-"                                 },
 };
 
+static const char* malFunctionTable[] = {
+    "(def! list (fn* (& items) items))",
+    "(def! not (fn* (cond) (if cond false true)))",
+};
+
 void install_core(malEnvPtr env) {
-    int handlerCount = sizeof(handler_table) / sizeof(handler_table[0]);
-    for (Handler *it = &handler_table[0],
-                 *end = &handler_table[handlerCount]; it < end; ++it) {
+    int handlerCount = sizeof(handlerTable) / sizeof(handlerTable[0]);
+    for (Handler *it = &handlerTable[0],
+                 *end = &handlerTable[handlerCount]; it < end; ++it) {
         env->set(it->name, mal::builtin(it->name, it->handler));
+    }
+
+    int nativeCount = sizeof(malFunctionTable) / sizeof(malFunctionTable[0]);
+    for (int i = 0; i < nativeCount; i++) {
+        rep(malFunctionTable[i], env);
     }
 }
