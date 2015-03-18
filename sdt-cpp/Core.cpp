@@ -14,6 +14,7 @@
     check_args_at_least(name, expected, std::distance(argsBegin, argsEnd))
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
+extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 
 malObjectPtr builtIn_ADD(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -23,6 +24,24 @@ malObjectPtr builtIn_ADD(
     malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
     return mal::integer(lhs->value() + rhs->value());
+}
+
+malObjectPtr builtIn_APPLY(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_AT_LEAST("apply", 2);
+    malObjectPtr op = *argsBegin++; // this gets checked in APPLY
+
+    // Copy the first N-1 arguments in.
+    malObjectVec args(argsBegin, argsEnd-1);
+
+    // Then append the argument as a list.
+    malList* lastArg = OBJECT_CAST(malList, *(argsEnd-1));
+    for (int i = 0; i < lastArg->count(); i++) {
+        args.push_back(lastArg->item(i));
+    }
+
+    return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
 malObjectPtr builtIn_DIV(
@@ -72,6 +91,7 @@ struct Handler {
 
 static Handler handler_table[] = {
     { builtIn_ADD,              "+"                                 },
+    { builtIn_APPLY,            "apply"                             },
     { builtIn_DIV,              "/"                                 },
     { builtIn_EVAL,             "eval"                              },
     { builtIn_MUL,              "*"                                 },
