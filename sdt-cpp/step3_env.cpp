@@ -69,6 +69,21 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
+
+            if (special == "let*") {
+                CHECK_ARGS_COUNT("let*", 2);
+                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
+                int count = bindings->count();
+                if (count % 2 != 0) {
+                    throw STR("\"let*\" expects an even number of binding args, %d supplied", count);
+                }
+                malEnvPtr inner(new malEnv(env));
+                for (int i = 0; i < count; i += 2) {
+                    malSymbol* var = DYNAMIC_CAST(malSymbol, bindings->item(i));
+                    inner->set(var->value(), EVAL(bindings->item(i+1), inner));
+                }
+                return EVAL(list->item(2), inner);
+            }
         }
     }
     return ast->eval(env);
