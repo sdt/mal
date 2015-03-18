@@ -6,8 +6,17 @@ extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 
 namespace mal {
+    malObjectPtr boolean(bool value) {
+        return value ? trueObject() : falseObject();
+    }
+
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler) {
         return malObjectPtr(new malBuiltIn(name, handler));
+    };
+
+    malObjectPtr falseObject() {
+        static malObjectPtr c(new malConstant("false"));
+        return malObjectPtr(c);
     };
 
     malObjectPtr integer(int value) {
@@ -22,8 +31,18 @@ namespace mal {
         return malObjectPtr(new malList(items));
     };
 
+    malObjectPtr nil() {
+        static malObjectPtr c(new malConstant("nil"));
+        return malObjectPtr(c);
+    };
+
     malObjectPtr symbol(const String& token) {
         return malObjectPtr(new malSymbol(token));
+    };
+
+    malObjectPtr trueObject() {
+        static malObjectPtr c(new malConstant("true"));
+        return malObjectPtr(c);
     };
 
     malObjectPtr vector(const malObjectVec& items) {

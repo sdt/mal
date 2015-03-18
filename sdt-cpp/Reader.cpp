@@ -73,6 +73,15 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 static malObjectPtr read_atom(Tokeniser& tokeniser)
 {
     String token = tokeniser.next();
+    if (token == "true"){
+        return mal::trueObject();
+    }
+    if (token == "false"){
+        return mal::falseObject();
+    }
+    if (token == "nil"){
+        return mal::nil();
+    }
     if (std::regex_match(token, intRegex)) {
         return mal::integer(token);
     }

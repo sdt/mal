@@ -41,6 +41,16 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
 #define OBJECT_CAST(Type, Object)   object_cast<Type>(Object, #Type)
 #define DYNAMIC_CAST(Type, Object)  (dynamic_cast<Type*>((Object).ptr()))
 
+class malConstant : public malObject {
+public:
+    malConstant(String name) : m_name(name) { }
+    virtual malObjectPtr eval(malEnvPtr env)  { return malObjectPtr(this); }
+    virtual String print() { return m_name; }
+
+private:
+    String m_name;
+};
+
 class malInteger : public malObject {
 public:
     malInteger(int value) : m_value(value) { }
@@ -145,11 +155,15 @@ private:
 };
 
 namespace mal {
+    malObjectPtr boolean(bool value);
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
+    malObjectPtr falseObject();
     malObjectPtr integer(int value);
     malObjectPtr integer(const String& token);
     malObjectPtr list(const malObjectVec& items);
+    malObjectPtr nil();
     malObjectPtr symbol(const String& token);
+    malObjectPtr trueObject();
     malObjectPtr vector(const malObjectVec& items);
 };
 
