@@ -11,6 +11,7 @@
 class malObject;
 typedef RefCountedPtr<malObject>    malObjectPtr;
 typedef std::vector<malObjectPtr>   malObjectVec;
+typedef malObjectVec::iterator      malObjectIter;
 
 class malEnv;
 typedef RefCountedPtr<malEnv> malEnvPtr;
@@ -95,18 +96,24 @@ class malApplicable : public malObject {
 public:
     virtual ~malApplicable() { }
 
-    virtual malObjectPtr apply(const malObjectVec& args, malEnvPtr env) = 0;
+    virtual malObjectPtr apply(malObjectIter argsBegin,
+                               malObjectIter argsEnd,
+                               malEnvPtr env) = 0;
 };
 
 class malBuiltIn : public malApplicable {
 public:
-    typedef malObjectPtr (ApplyFunc)(const malObjectVec& args, malEnvPtr env);
+    typedef malObjectPtr (ApplyFunc)(malObjectIter argsBegin,
+                                     malObjectIter argsEnd,
+                                     malEnvPtr env);
 
     malBuiltIn(const String& name, ApplyFunc* handler)
     : m_name(name), m_handler(handler) { }
 
-    malObjectPtr apply(const malObjectVec& args, malEnvPtr env) {
-        return m_handler(args, env);
+    malObjectPtr apply(malObjectIter argsBegin,
+                       malObjectIter argsEnd,
+                       malEnvPtr env) {
+        return m_handler(argsBegin, argsEnd, env);
     }
 
     virtual malObjectPtr eval(malEnvPtr env);

@@ -13,12 +13,14 @@ static void check_args_count(const char* name, int expected, int got) {
 }
 
 #define CHECK_ARGS_COUNT(name, expected) \
-    check_args_count(name, expected, args.size())
+    check_args_count(name, expected, std::distance(argsBegin, argsEnd))
 
-malObjectPtr builtIn_ADD(const malObjectVec& args, malEnvPtr env) {
+malObjectPtr builtIn_ADD(malObjectIter argsBegin,
+                         malObjectIter argsEnd,
+                         malEnvPtr env) {
     CHECK_ARGS_COUNT("+", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, args[0]);
-    malInteger* rhs = OBJECT_CAST(malInteger, args[1]);
+    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
     return mal::integer(lhs->value() + rhs->value());
 }

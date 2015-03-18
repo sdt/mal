@@ -53,12 +53,12 @@ String PRINT(malObjectPtr ast)
     return ast->print();
 }
 
-malObjectPtr APPLY(malObjectPtr op, malObjectVec args, malEnvPtr env)
+malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
     if (handler == NULL) {
         throw STR("\"%s\" is not applicable", op->print().c_str());
     }
 
-    return handler->apply(args, env);
+    return handler->apply(argsBegin, argsEnd, env);
 }

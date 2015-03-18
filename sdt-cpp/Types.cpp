@@ -3,7 +3,7 @@
 #include "Types.h"
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
-extern malObjectPtr APPLY(malObjectPtr op, malObjectVec args, malEnvPtr env);
+extern malObjectPtr APPLY(malObjectPtr op, malObjectVec::iterator argsBegin, malObjectVec::iterator argsEnd, malEnvPtr env);
 
 malObjectPtr malList::eval(malEnvPtr env)
 {
@@ -13,9 +13,7 @@ malObjectPtr malList::eval(malEnvPtr env)
     }
     auto it = items.begin();
     malObjectPtr op = *it;
-    malObjectVec args(items.size() - 1);
-    std::copy(++it, items.end(), args.begin());
-    return APPLY(op, args, env);
+    return APPLY(op, ++it, items.end(), env);
 }
 
 malObjectPtr malBuiltIn::eval(malEnvPtr env)
