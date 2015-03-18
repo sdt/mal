@@ -41,8 +41,36 @@ malObjectPtr READ(const String& input)
     return read_str(input);
 }
 
+#define PLURAL(n)   &("s"[(n)==1])
+
+static void check_args_count(const char* name, int expected, int got) {
+    if (got != expected) {
+        throw STR("\"%s\" expects %d arg%s, %d supplied",
+                    name, expected, PLURAL(expected), got);
+    }
+}
+
+#define CHECK_ARGS_COUNT(name, expected) \
+    check_args_count(name, expected, argCount)
+
+
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
+    if (malList* list = DYNAMIC_CAST(malList, ast)) {
+        malSymbol* symbol;
+        if ((list->count() > 0) &&
+            (symbol = DYNAMIC_CAST(malSymbol, list->item(0)))) {
+
+            String special = symbol->value();
+            int argCount = list->count() - 1;
+
+            if (special == "def!") {
+                CHECK_ARGS_COUNT("def!", 2);
+                malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                return env->set(id->value(), EVAL(list->item(2), env));
+            }
+        }
+    }
     return ast->eval(env);
 }
 
@@ -53,7 +81,7 @@ String PRINT(malObjectPtr ast)
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
+    malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     if (handler == NULL) {
         throw STR("\"%s\" is not applicable", op->print().c_str());
     }

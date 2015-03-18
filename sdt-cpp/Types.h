@@ -40,6 +40,7 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
 }
 
 #define OBJECT_CAST(Type, Object)   object_cast<Type>(Object, #Type)
+#define DYNAMIC_CAST(Type, Object)  (dynamic_cast<Type*>((Object).ptr()))
 
 class malInteger : public malObject {
 public:
@@ -69,6 +70,8 @@ public:
         return m_value;
     }
 
+    String value() { return m_value; }
+
 private:
     String m_value;
 };
@@ -80,6 +83,7 @@ public:
 
     malObjectVec eval_items(malEnvPtr env);
     int count() { return m_items.size(); }
+    malObjectPtr item(int index) { return m_items[index]; }
 
 protected:
     malObjectVec items() { return m_items; }
