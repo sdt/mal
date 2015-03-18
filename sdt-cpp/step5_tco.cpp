@@ -70,7 +70,8 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 for (int i = 1; i < argCount; i++) {
                     EVAL(list->item(i), env);
                 }
-                return EVAL(list->item(argCount), env);
+                ast = list->item(argCount);
+                continue; // TCO
             }
 
             if (special == "fn*") {
@@ -92,14 +93,16 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 malObjectPtr cond = EVAL(list->item(1), env);
                 if (!(cond == mal::falseObject() || cond == mal::nil())) {
                     // then
-                    return EVAL(list->item(2), env);
+                    ast = list->item(2);
+                    continue; // TCO
                 }
                 if (argCount == 2) {
                     // no else case
                     return mal::nil();
                 }
                 // else case
-                return EVAL(list->item(3), env);
+                ast = list->item(3);
+                continue; // TCO
             }
 
             if (special == "let*") {
@@ -111,14 +114,15 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                     malSymbol* var = OBJECT_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
-                return EVAL(list->item(2), inner);
+                ast = list->item(2);
+                env = inner;
+                continue; // TCO
             }
 
             if (special == "quote") {
                 check_args_is("quote", 1, argCount);
                 return list->item(1);
             }
-
         }
         return ast->eval(env);
     }
