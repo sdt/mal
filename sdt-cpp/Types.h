@@ -89,6 +89,8 @@ public:
     malList(const malObjectVec& items) : malSequence(items) { }
     virtual ~malList() { }
 
+    virtual String print();
+
     virtual malObjectPtr eval(malEnvPtr env);
 };
 
@@ -110,11 +112,9 @@ public:
     malBuiltIn(const String& name, ApplyFunc* handler)
     : m_name(name), m_handler(handler) { }
 
-    malObjectPtr apply(malObjectIter argsBegin,
-                       malObjectIter argsEnd,
-                       malEnvPtr env) {
-        return m_handler(argsBegin, argsEnd, env);
-    }
+    virtual malObjectPtr apply(malObjectIter argsBegin,
+                               malObjectIter argsEnd,
+                               malEnvPtr env);
 
     virtual malObjectPtr eval(malEnvPtr env);
 
@@ -128,25 +128,11 @@ private:
 };
 
 namespace mal {
-    inline malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler) {
-        return malObjectPtr(new malBuiltIn(name, handler));
-    };
-
-    inline malObjectPtr integer(int value) {
-        return malObjectPtr(new malInteger(value));
-    };
-
-    inline malObjectPtr integer(const String& token) {
-        return integer(std::stoi(token));
-    };
-
-    inline malObjectPtr list(const malObjectVec& items) {
-        return malObjectPtr(new malList(items));
-    };
-
-    inline malObjectPtr symbol(const String& token) {
-        return malObjectPtr(new malSymbol(token));
-    };
+    malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
+    malObjectPtr integer(int value);
+    malObjectPtr integer(const String& token);
+    malObjectPtr list(const malObjectVec& items);
+    malObjectPtr symbol(const String& token);
 };
 
 #endif // INCLUDE_TYPES_H

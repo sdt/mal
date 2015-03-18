@@ -1,4 +1,3 @@
-#include "Environment.h"
 #include "String.h"
 #include "Types.h"
 

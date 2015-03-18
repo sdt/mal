@@ -3,17 +3,35 @@
 #include "Types.h"
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
-extern malObjectPtr APPLY(malObjectPtr op, malObjectVec::iterator argsBegin, malObjectVec::iterator argsEnd, malEnvPtr env);
+extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 
-malObjectPtr malList::eval(malEnvPtr env)
+namespace mal {
+    malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler) {
+        return malObjectPtr(new malBuiltIn(name, handler));
+    };
+
+    malObjectPtr integer(int value) {
+        return malObjectPtr(new malInteger(value));
+    };
+
+    malObjectPtr integer(const String& token) {
+        return integer(std::stoi(token));
+    };
+
+    malObjectPtr list(const malObjectVec& items) {
+        return malObjectPtr(new malList(items));
+    };
+
+    malObjectPtr symbol(const String& token) {
+        return malObjectPtr(new malSymbol(token));
+    };
+};
+
+malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
+                               malObjectIter argsEnd,
+                               malEnvPtr env)
 {
-    malObjectVec items = eval_items(env);
-    if (items.empty()) {
-        throw STR("Cannot eval an empty list");
-    }
-    auto it = items.begin();
-    malObjectPtr op = *it;
-    return APPLY(op, ++it, items.end(), env);
+    return m_handler(argsBegin, argsEnd, env);
 }
 
 malObjectPtr malBuiltIn::eval(malEnvPtr env)
@@ -26,6 +44,21 @@ malObjectPtr malInteger::eval(malEnvPtr env)
     return malObjectPtr(this);
 }
 
+malObjectPtr malList::eval(malEnvPtr env)
+{
+    malObjectVec items = eval_items(env);
+    if (items.empty()) {
+        throw STR("Cannot eval an empty list");
+    }
+    auto it = items.begin();
+    malObjectPtr op = *it;
+    return APPLY(op, ++it, items.end(), env);
+}
+
+String malList::print() {
+    return '(' + malSequence::print() + ')';
+}
+
 malObjectVec malSequence::eval_items(malEnvPtr env)
 {
     malObjectVec items;
@@ -35,13 +68,8 @@ malObjectVec malSequence::eval_items(malEnvPtr env)
     return items;
 }
 
-malObjectPtr malSymbol::eval(malEnvPtr env)
-{
-    return env->get(m_value);
-}
-
 String malSequence::print() {
-    String str = "(";
+    String str;
     auto end = m_items.end();
     auto it = m_items.begin();
     if (it != end) {
@@ -52,6 +80,11 @@ String malSequence::print() {
         str += " ";
         str += (*it)->print();
     }
-    str += ")";
     return str;
 }
+
+malObjectPtr malSymbol::eval(malEnvPtr env)
+{
+    return env->get(m_value);
+}
+
