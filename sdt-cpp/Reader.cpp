@@ -47,9 +47,14 @@ Tokeniser::Tokeniser(const String& input)
     skipWhitespace();
 }
 
+static bool isWhitespace(const String& token)
+{
+    return token.empty() || (token[0] == ';');
+}
+
 void Tokeniser::skipWhitespace()
 {
-    while (!eof() && (peek() == "")) {
+    while (!eof() && isWhitespace(peek())) {
         ++m_iter;
     }
 }
