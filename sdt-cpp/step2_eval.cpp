@@ -10,6 +10,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 String PRINT(malObjectPtr ast);
 String rep(const String& input, malEnvPtr env);
 malObjectPtr read_str(const String& input);
+void install_core(malEnvPtr env);
 
 int main(int argc, char* argv[])
 {
@@ -19,6 +20,7 @@ int main(int argc, char* argv[])
     malEnvPtr repl_env(new malEnv);
     repl_env->set("aaa", mal::integer("123"));
     repl_env->set("bbb", mal::integer("234"));
+    install_core(repl_env);
     while (readline.get(prompt, input)) {
         String out;
         try {
@@ -49,4 +51,14 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 String PRINT(malObjectPtr ast)
 {
     return ast->print();
+}
+
+malObjectPtr APPLY(malObjectPtr op, malObjectVec args, malEnvPtr env)
+{
+    malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
+    if (handler == NULL) {
+        throw STR("\"%s\" is not applicable", op->print().c_str());
+    }
+
+    return handler->apply(args, env);
 }
