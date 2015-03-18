@@ -30,6 +30,7 @@ public:
     }
 
     T* operator -> () { return m_object; }
+    T* ptr() { return m_object; }
 
 private:
     void acquire(T* object) {

@@ -6,6 +6,12 @@
 malEnv::malEnv(malEnvPtr outer)
 : m_outer(outer)
 {
+    TRACE_ENV("Creating malEnv %p, outer=%p\n", this, m_outer.ptr());
+}
+
+malEnv::~malEnv()
+{
+    TRACE_ENV("Destroying malEnv %p, outer=%p\n", this, m_outer.ptr());
 }
 
 malEnvPtr malEnv::find(const String& symbol)

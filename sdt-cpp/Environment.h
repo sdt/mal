@@ -20,6 +20,7 @@ public:
     malEnv(//malListPtr bindings,
                 //malListPtr values,
                 malEnvPtr outer = NULL);
+    ~malEnv();
 
     malObjectPtr get(const String& symbol);
     malEnvPtr find(const String& symbol);

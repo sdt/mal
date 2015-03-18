@@ -1,8 +1,9 @@
 #ifndef INCLUDE_DEBUG_H
 #define INCLUDE_DEBUG_H
 
-#define DEBUG_TRACE                         1
-#define DEBUG_SHOW_OBJECT_LIFETIMES         1
+#define DEBUG_TRACE                    1
+#define DEBUG_OBJECT_LIFETIMES         1
+#define DEBUG_ENV_LIFETIMES            1
 
 #define DEBUG_TRACE_FILE    stderr
 
@@ -15,10 +16,16 @@
     #define TRACE NOTRACE
 #endif
 
-#if DEBUG_SHOW_OBJECT_LIFETIMES
+#if DEBUG_OBJECT_LIFETIMES
     #define TRACE_OBJECT TRACE
 #else
     #define TRACE_OBJECT NOTRACE
+#endif
+
+#if DEBUG_ENV_LIFETIMES
+    #define TRACE_ENV TRACE
+#else
+    #define TRACE_ENV NOTRACE
 #endif
 
 #endif // INCLUDE_DEBUG_H
