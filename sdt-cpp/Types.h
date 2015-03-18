@@ -153,8 +153,28 @@ public:
     }
 
 private:
-    String m_name;
+    String     m_name;
     ApplyFunc* m_handler;
+};
+
+class malLambda : public malApplicable {
+public:
+    malLambda(const StringVec& bindings, malObjectPtr body, malEnvPtr env);
+
+    virtual malObjectPtr apply(malObjectIter argsBegin,
+                               malObjectIter argsEnd,
+                               malEnvPtr env);
+
+    virtual malObjectPtr eval(malEnvPtr env);
+
+    virtual String print() {
+        return STR("#user-function(%p)", this);
+    }
+
+private:
+    StringVec    m_bindings;
+    malObjectPtr m_body;
+    malEnvPtr    m_env;
 };
 
 namespace mal {
@@ -163,6 +183,7 @@ namespace mal {
     malObjectPtr falseObject();
     malObjectPtr integer(int value);
     malObjectPtr integer(const String& token);
+    malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
     malObjectPtr list(const malObjectVec& items);
     malObjectPtr nil();
     malObjectPtr symbol(const String& token);

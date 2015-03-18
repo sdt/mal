@@ -71,6 +71,19 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 return EVAL(list->item(argCount), env);
             }
 
+            if (special == "fn*") {
+                check_args_is("fn*", 2, argCount);
+
+                malList* bindings = OBJECT_CAST(malList, list->item(1));
+                StringVec params;
+                for (int i = 0; i < bindings->count(); i++) {
+                    malSymbol* sym = OBJECT_CAST(malSymbol, bindings->item(i));
+                    params.push_back(sym->value());
+                }
+
+                return mal::lambda(params, list->item(2), env);
+            }
+
             if (special == "if") {
                 check_args_between("if", 2, 3, argCount);
 

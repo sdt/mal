@@ -5,6 +5,7 @@
 #include "RefCounted.h"
 #include "RefCountedPtr.h"
 #include "String.h"
+#include "Types.h"
 
 #include <map>
 
@@ -17,9 +18,12 @@ typedef RefCountedPtr<malObject> malObjectPtr;
 
 class malEnv : public RefCounted {
 public:
-    malEnv(//malListPtr bindings,
-                //malListPtr values,
-                malEnvPtr outer = NULL);
+    malEnv(malEnvPtr outer = NULL);
+    malEnv(malEnvPtr outer,
+           const StringVec& bindings,
+           malObjectIter argsBegin,
+           malObjectIter argsEnd);
+
     ~malEnv();
 
     malObjectPtr get(const String& symbol);

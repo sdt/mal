@@ -2,8 +2,10 @@
 #define INCLUDE_STRING_H
 
 #include <string>
+#include <vector>
 
-typedef std::string String;
+typedef std::string         String;
+typedef std::vector<String> StringVec;
 
 #define STR         StringPrintf
 #define PLURAL(n)   &("s"[(n)==1])
