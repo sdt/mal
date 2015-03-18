@@ -45,8 +45,6 @@ malObjectPtr READ(const String& input)
     return read_str(input);
 }
 
-#define CHECK_ARGS_COUNT(name, expected) \
-    check_args_count(name, expected, argCount)
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
@@ -59,13 +57,22 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             int argCount = list->count() - 1;
 
             if (special == "def!") {
-                CHECK_ARGS_COUNT("def!", 2);
+                check_args_count("def!", 2, argCount);
                 malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
+            if (special == "do") {
+                check_args_at_least("do", 1, argCount);
+
+                for (int i = 1; i < argCount; i++) {
+                    EVAL(list->item(i), env);
+                }
+                return EVAL(list->item(argCount), env);
+            }
+
             if (special == "let*") {
-                CHECK_ARGS_COUNT("let*", 2);
+                check_args_count("let*", 2, argCount);
                 malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
