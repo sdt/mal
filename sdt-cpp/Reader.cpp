@@ -24,6 +24,7 @@ public:
     String next() {
         ASSERT(!eof(), "Tokeniser reading past EOF in next");
         String ret = peek();
+        checkPrefix();
         ++m_iter;
         skipWhitespace();
         return ret;
@@ -35,6 +36,7 @@ public:
 
 private:
     void skipWhitespace();
+    void checkPrefix();
 
     RegexIter   m_iter;
     RegexIter   m_end;
@@ -52,9 +54,26 @@ static bool isWhitespace(const String& token)
     return token.empty() || (token[0] == ';');
 }
 
+void Tokeniser::checkPrefix()
+{
+    // This is the unmatched portion before the match.
+    auto prefix = m_iter->prefix();
+
+    if (prefix.length() == 0) {
+        return;
+    }
+
+    const String& text = prefix.str();
+    if (text == "\"") {
+        ASSERT(false, "Expected \", got EOF");
+    }
+    ASSERT(false, "Unexpected \"%s\"", text.c_str());
+}
+
 void Tokeniser::skipWhitespace()
 {
     while (!eof() && isWhitespace(peek())) {
+        checkPrefix();
         ++m_iter;
     }
 }
