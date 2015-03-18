@@ -11,7 +11,7 @@
 #define NOTRACE(...)    NOOP
 
 #if DEBUG_TRACE
-    #define TRACE(format, ...) fprintf(DEBUG_TRACE_FILE, format, __VA_ARGS__)
+    #define TRACE(...) fprintf(DEBUG_TRACE_FILE, __VA_ARGS__)
 #else
     #define TRACE NOTRACE
 #endif
