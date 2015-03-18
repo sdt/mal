@@ -62,6 +62,11 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
         malObjectVec items = read_list(tokeniser, ")");
         return mal::list(items);
     }
+    if (token == "[") {
+        tokeniser.next();
+        malObjectVec items = read_list(tokeniser, "]");
+        return mal::vector(items);
+    }
     return read_atom(tokeniser);
 }
 

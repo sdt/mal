@@ -25,6 +25,10 @@ namespace mal {
     malObjectPtr symbol(const String& token) {
         return malObjectPtr(new malSymbol(token));
     };
+
+    malObjectPtr vector(const malObjectVec& items) {
+        return malObjectPtr(new malVector(items));
+    };
 };
 
 malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
@@ -87,5 +91,15 @@ String malSequence::print() {
 malObjectPtr malSymbol::eval(malEnvPtr env)
 {
     return env->get(m_value);
+}
+
+malObjectPtr malVector::eval(malEnvPtr env)
+{
+    malObjectVec items = eval_items(env);
+    return mal::vector(items);
+}
+
+String malVector::print() {
+    return '[' + malSequence::print() + ']';
 }
 

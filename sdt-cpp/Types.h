@@ -101,6 +101,16 @@ public:
     virtual malObjectPtr eval(malEnvPtr env);
 };
 
+class malVector : public malSequence {
+public:
+    malVector(const malObjectVec& items) : malSequence(items) { }
+    virtual ~malVector() { }
+
+    virtual String print();
+
+    virtual malObjectPtr eval(malEnvPtr env);
+};
+
 class malApplicable : public malObject {
 public:
     virtual ~malApplicable() { }
@@ -140,6 +150,7 @@ namespace mal {
     malObjectPtr integer(const String& token);
     malObjectPtr list(const malObjectVec& items);
     malObjectPtr symbol(const String& token);
+    malObjectPtr vector(const malObjectVec& items);
 };
 
 #endif // INCLUDE_TYPES_H
