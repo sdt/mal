@@ -49,6 +49,28 @@ malObjectPtr builtIn_ADD(malObjectIter argsBegin,
     return mal::integer(lhs->value() + rhs->value());
 }
 
+malObjectPtr builtIn_MUL(malObjectIter argsBegin,
+                         malObjectIter argsEnd,
+                         malEnvPtr env)
+{
+    CHECK_ARGS_COUNT("+", 2);
+    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+
+    return mal::integer(lhs->value() * rhs->value());
+}
+
+malObjectPtr builtIn_DIV(malObjectIter argsBegin,
+                         malObjectIter argsEnd,
+                         malEnvPtr env)
+{
+    CHECK_ARGS_COUNT("+", 2);
+    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+
+    return mal::integer(lhs->value() / rhs->value());
+}
+
 malObjectPtr builtIn_SUB(malObjectIter argsBegin,
                          malObjectIter argsEnd,
                          malEnvPtr env)
@@ -70,7 +92,9 @@ struct Handler {
 
 static Handler handler_table[] = {
     { "+", builtIn_ADD },
-    { "-", builtIn_SUB }
+    { "-", builtIn_SUB },
+    { "*", builtIn_MUL },
+    { "/", builtIn_DIV },
 };
 
 void install_core(malEnvPtr env) {

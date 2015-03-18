@@ -18,8 +18,6 @@ int main(int argc, char* argv[])
     String prompt = "user> ";
     String input;
     malEnvPtr repl_env(new malEnv);
-    repl_env->set("aaa", mal::integer("123"));
-    repl_env->set("bbb", mal::integer("234"));
     install_core(repl_env);
     while (readline.get(prompt, input)) {
         String out;
