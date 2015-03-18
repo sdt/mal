@@ -48,11 +48,13 @@ malObjectPtr READ(const String& input)
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
-    if (malList* list = DYNAMIC_CAST(malList, ast)) {
-        malSymbol* symbol;
-        if ((list->count() > 0) &&
-            (symbol = DYNAMIC_CAST(malSymbol, list->item(0)))) {
+    while (1) {
+        malList* list = DYNAMIC_CAST(malList, ast);
+        if (!list || (list->count() == 0)) {
+            return ast->eval(env);
+        }
 
+        if (malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
             String special = symbol->value();
             int argCount = list->count() - 1;
 
@@ -116,9 +118,10 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 check_args_is("quote", 1, argCount);
                 return list->item(1);
             }
+
         }
+        return ast->eval(env);
     }
-    return ast->eval(env);
 }
 
 String PRINT(malObjectPtr ast)
