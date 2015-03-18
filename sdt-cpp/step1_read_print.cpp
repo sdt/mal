@@ -46,3 +46,7 @@ String PRINT(malObjectPtr ast)
 {
     return ast->print();
 }
+
+// Adding these just to keep the linker happy
+malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env) { return NULL; }
+malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env) { return NULL; }
