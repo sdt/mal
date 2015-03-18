@@ -55,6 +55,16 @@ malObjectPtr builtIn_DIV(
     return mal::integer(lhs->value() / rhs->value());
 }
 
+malObjectPtr builtIn_EQUALS(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("=", 2);
+    malObject* lhs = (*argsBegin++).ptr();
+    malObject* rhs = (*argsBegin++).ptr();
+
+    return mal::boolean(lhs->isEqualTo(rhs));
+}
+
 malObjectPtr builtIn_EVAL(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
@@ -94,6 +104,7 @@ static Handler handlerTable[] = {
     { builtIn_ADD,              "+"                                 },
     { builtIn_APPLY,            "apply"                             },
     { builtIn_DIV,              "/"                                 },
+    { builtIn_EQUALS,           "="                                 },
     { builtIn_EVAL,             "eval"                              },
     { builtIn_MUL,              "*"                                 },
     { builtIn_SUB,              "-"                                 },

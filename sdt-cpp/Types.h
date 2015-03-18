@@ -29,9 +29,14 @@ public:
         TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
+    bool isEqualTo(malObjectPtr rhs);
+
     virtual malObjectPtr eval(malEnvPtr env) = 0;
 
     virtual String print() = 0;
+
+protected:
+    virtual bool doIsEqualTo(malObject* rhs) = 0;
 };
 
 template<class T>
@@ -50,6 +55,10 @@ public:
     virtual malObjectPtr eval(malEnvPtr env)  { return malObjectPtr(this); }
     virtual String print() { return m_name; }
 
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return this == rhs; // these are singletons
+    }
+
 private:
     String m_name;
 };
@@ -66,6 +75,10 @@ public:
     }
 
     int value() { return m_value; }
+
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return m_value == static_cast<malInteger*>(rhs)->m_value;
+    }
 
 private:
     int m_value;
@@ -84,6 +97,10 @@ public:
 
     String value() { return m_value; }
 
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return m_value == static_cast<malSymbol*>(rhs)->m_value;
+    }
+
 private:
     String m_value;
 };
@@ -96,6 +113,8 @@ public:
     malObjectVec eval_items(malEnvPtr env);
     int count() { return m_items.size(); }
     malObjectPtr item(int index) { return m_items[index]; }
+
+    virtual bool doIsEqualTo(malObject* rhs);
 
 protected:
     malObjectVec items() { return m_items; }
@@ -152,6 +171,10 @@ public:
         return STR("#builtin-function(%s)", m_name.c_str());
     }
 
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return this == rhs; // these are singletons
+    }
+
 private:
     String     m_name;
     ApplyFunc* m_handler;
@@ -166,6 +189,10 @@ public:
                                malEnvPtr env);
 
     virtual malObjectPtr eval(malEnvPtr env);
+
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return this == rhs; // do we need to do a deep inspection?
+    }
 
     virtual String print() {
         return STR("#user-function(%p)", this);

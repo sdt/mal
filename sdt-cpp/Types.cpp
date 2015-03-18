@@ -109,6 +109,31 @@ String malList::print() {
     return '(' + malSequence::print() + ')';
 }
 
+bool malObject::isEqualTo(malObjectPtr rhs) {
+    malObject* rhsp = rhs.ptr();
+    // Check matching types, and then hand off to the apples vs apples
+    // comparisons.
+    return (typeid(*this) == typeid(*rhsp)) && doIsEqualTo(rhs.ptr());
+}
+
+bool malSequence::doIsEqualTo(malObject* rhs)
+{
+    malSequence* rhsSeq = static_cast<malSequence*>(rhs);
+    if (count() != rhsSeq->count()) {
+        return false;
+    }
+
+    for (malObjectIter it0 = m_items.begin(),
+                       it1 = rhsSeq->items().begin(),
+                       end = m_items.end(); it0 != end; ++it0, ++it1) {
+
+        if (! (*it0)->isEqualTo(*it1)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 malObjectVec malSequence::eval_items(malEnvPtr env)
 {
     malObjectVec items;
