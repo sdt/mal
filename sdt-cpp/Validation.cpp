@@ -1,6 +1,6 @@
 #include "Validation.h"
 
-int check_args_count(const char* name, int expected, int got)
+int check_args_is(const char* name, int expected, int got)
 {
     ASSERT(got == expected,
            "\"%s\" expects %d arg%s, %d supplied",

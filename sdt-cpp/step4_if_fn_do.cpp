@@ -57,7 +57,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             int argCount = list->count() - 1;
 
             if (special == "def!") {
-                check_args_count("def!", 2, argCount);
+                check_args_is("def!", 2, argCount);
                 malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
@@ -72,7 +72,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "let*") {
-                check_args_count("let*", 2, argCount);
+                check_args_is("let*", 2, argCount);
                 malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));

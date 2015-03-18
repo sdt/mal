@@ -4,21 +4,21 @@
 #include "Types.h"
 #include "Validation.h"
 
-#define CHECK_ARGS_COUNT(name, expected) \
-    check_args_count(name, expected, std::distance(argsBegin, argsEnd))
+#define CHECK_ARGS_IS(name, expected) \
+    check_args_is(name, expected, std::distance(argsBegin, argsEnd))
 
 #define CHECK_ARGS_BETWEEN(name, min, max) \
     check_args_between(name, min, max, std::distance(argsBegin, argsEnd))
 
 #define CHECK_ARGS_AT_LEAST(name, expected) \
-    check_args_count(name, expected, std::distance(argsBegin, argsEnd))
+    check_args_at_least(name, expected, std::distance(argsBegin, argsEnd))
 
 
 malObjectPtr builtIn_ADD(malObjectIter argsBegin,
                          malObjectIter argsEnd,
                          malEnvPtr env)
 {
-    CHECK_ARGS_COUNT("+", 2);
+    CHECK_ARGS_IS("+", 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
     malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
@@ -29,7 +29,7 @@ malObjectPtr builtIn_MUL(malObjectIter argsBegin,
                          malObjectIter argsEnd,
                          malEnvPtr env)
 {
-    CHECK_ARGS_COUNT("+", 2);
+    CHECK_ARGS_IS("*", 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
     malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
@@ -40,7 +40,7 @@ malObjectPtr builtIn_DIV(malObjectIter argsBegin,
                          malObjectIter argsEnd,
                          malEnvPtr env)
 {
-    CHECK_ARGS_COUNT("+", 2);
+    CHECK_ARGS_IS("/", 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
     malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
 
