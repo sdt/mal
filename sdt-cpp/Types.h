@@ -7,6 +7,7 @@
 #include "String.h"
 #include "Validation.h"
 
+#include <exception>
 #include <vector>
 
 class malObject;
@@ -16,6 +17,8 @@ typedef malObjectVec::iterator      malObjectIter;
 
 class malEnv;
 typedef RefCountedPtr<malEnv> malEnvPtr;
+
+class malEmptyInputException : public std::exception { };
 
 class malObject : public RefCounted {
 public:

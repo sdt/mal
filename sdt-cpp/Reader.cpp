@@ -1,5 +1,6 @@
 #include "String.h"
 #include "Types.h"
+#include "Validation.h"
 
 #include <regex>
 
@@ -16,12 +17,15 @@ public:
     Tokeniser(const String& input);
 
     String peek() const {
+        ASSERT(!eof(), "Tokeniser reading past EOF in peek");
         return m_iter->str(1);
     }
 
     String next() {
+        ASSERT(!eof(), "Tokeniser reading past EOF in next");
         String ret = peek();
         ++m_iter;
+        skipWhitespace();
         return ret;
     }
 
@@ -30,6 +34,8 @@ public:
     }
 
 private:
+    void skipWhitespace();
+
     RegexIter   m_iter;
     RegexIter   m_end;
 };
@@ -38,6 +44,14 @@ Tokeniser::Tokeniser(const String& input)
 : m_iter(input.begin(), input.end(), tokenRegex)
 , m_end()
 {
+    skipWhitespace();
+}
+
+void Tokeniser::skipWhitespace()
+{
+    while (!eof() && (peek() == "")) {
+        ++m_iter;
+    }
 }
 
 static malObjectPtr read_atom(Tokeniser& tokeniser);
@@ -47,6 +61,9 @@ static malObjectVec read_list(Tokeniser& tokeniser, const String& end);
 malObjectPtr read_str(const String& input)
 {
     Tokeniser tokeniser(input);
+    if (tokeniser.eof()) {
+        throw malEmptyInputException();
+    }
     return read_form(tokeniser);
 }
 

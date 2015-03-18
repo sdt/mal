@@ -25,6 +25,9 @@ int main(int argc, char* argv[])
         try {
             out = rep(input, repl_env);
         }
+        catch (malEmptyInputException&) {
+            continue;
+        }
         catch (String& s) {
             out = s;
         };
