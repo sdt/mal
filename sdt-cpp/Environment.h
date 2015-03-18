@@ -24,7 +24,7 @@ public:
 
     malObjectPtr get(const String& symbol);
     malEnvPtr find(const String& symbol);
-    void set(const String& symbol, malObjectPtr value);
+    malObjectPtr set(const String& symbol, malObjectPtr value);
 
 private:
     typedef std::map<String, malObjectPtr> Map;

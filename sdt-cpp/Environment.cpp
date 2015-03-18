@@ -35,7 +35,8 @@ malObjectPtr malEnv::get(const String& symbol)
     throw STR("\"%s\" not found", symbol.c_str());
 }
 
-void malEnv::set(const String& symbol, malObjectPtr value)
+malObjectPtr malEnv::set(const String& symbol, malObjectPtr value)
 {
     m_map[symbol] = value;
+    return value;
 }
