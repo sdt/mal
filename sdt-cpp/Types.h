@@ -79,6 +79,10 @@ public:
     virtual String print();
 
     malObjectVec eval_items(malEnvPtr env);
+    int count() { return m_items.size(); }
+
+protected:
+    malObjectVec items() { return m_items; }
 
 private:
     malObjectVec m_items;

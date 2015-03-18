@@ -46,10 +46,11 @@ malObjectPtr malInteger::eval(malEnvPtr env)
 
 malObjectPtr malList::eval(malEnvPtr env)
 {
-    malObjectVec items = eval_items(env);
-    if (items.empty()) {
-        throw STR("Cannot eval an empty list");
+    if (count() == 0) {
+        return malObjectPtr(this);
     }
+
+    malObjectVec items = eval_items(env);
     auto it = items.begin();
     malObjectPtr op = *it;
     return APPLY(op, ++it, items.end(), env);
