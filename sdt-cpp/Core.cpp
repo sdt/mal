@@ -14,9 +14,8 @@
     check_args_at_least(name, expected, std::distance(argsBegin, argsEnd))
 
 
-malObjectPtr builtIn_ADD(malObjectIter argsBegin,
-                         malObjectIter argsEnd,
-                         malEnvPtr env)
+malObjectPtr builtIn_ADD(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("+", 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
@@ -25,20 +24,8 @@ malObjectPtr builtIn_ADD(malObjectIter argsBegin,
     return mal::integer(lhs->value() + rhs->value());
 }
 
-malObjectPtr builtIn_MUL(malObjectIter argsBegin,
-                         malObjectIter argsEnd,
-                         malEnvPtr env)
-{
-    CHECK_ARGS_IS("*", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
-
-    return mal::integer(lhs->value() * rhs->value());
-}
-
-malObjectPtr builtIn_DIV(malObjectIter argsBegin,
-                         malObjectIter argsEnd,
-                         malEnvPtr env)
+malObjectPtr builtIn_DIV(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("/", 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
@@ -47,9 +34,18 @@ malObjectPtr builtIn_DIV(malObjectIter argsBegin,
     return mal::integer(lhs->value() / rhs->value());
 }
 
-malObjectPtr builtIn_SUB(malObjectIter argsBegin,
-                         malObjectIter argsEnd,
-                         malEnvPtr env)
+malObjectPtr builtIn_MUL(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("*", 2);
+    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+
+    return mal::integer(lhs->value() * rhs->value());
+}
+
+malObjectPtr builtIn_SUB(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     int argCount = CHECK_ARGS_BETWEEN("-", 1, 2);
     malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
@@ -62,15 +58,15 @@ malObjectPtr builtIn_SUB(malObjectIter argsBegin,
 }
 
 struct Handler {
-    const char* name;
     malBuiltIn::ApplyFunc* handler;
+    const char* name;
 };
 
 static Handler handler_table[] = {
-    { "+", builtIn_ADD },
-    { "-", builtIn_SUB },
-    { "*", builtIn_MUL },
-    { "/", builtIn_DIV },
+    { builtIn_ADD,              "+"                                 },
+    { builtIn_DIV,              "/"                                 },
+    { builtIn_MUL,              "*"                                 },
+    { builtIn_SUB,              "-"                                 },
 };
 
 void install_core(malEnvPtr env) {
