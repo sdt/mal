@@ -5,7 +5,8 @@
 
 typedef std::string String;
 
-#define STR StringPrintf
+#define STR         StringPrintf
+#define PLURAL(n)   &("s"[(n)==1])
 
 extern String StringPrintf(const char* fmt, ...);
 extern String CopyAndFree(char* mallocedString);

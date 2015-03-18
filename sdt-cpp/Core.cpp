@@ -2,31 +2,7 @@
 #include "Environment.h"
 #include "String.h"
 #include "Types.h"
-
-#define PLURAL(n)   &("s"[(n)==1])
-
-static void check_args_count(const char* name, int expected, int got) {
-    if (got != expected) {
-        throw STR("\"%s\" expects %d arg%s, %d supplied",
-                    name, expected, PLURAL(expected), got);
-    }
-}
-
-static int check_args_between(const char* name, int min, int max, int got) {
-    if (got < min || got > max) {
-        throw STR("\"%s\" expects between %d and %d arg%s, %d supplied",
-                    name, min, max, PLURAL(max), got);
-    }
-    return got;
-}
-
-static int check_args_at_least(const char* name, int min, int got) {
-    if (got < min) {
-        throw STR("\"%s\" expects at least %d arg%s, %d supplied",
-                    name, min, PLURAL(min), got);
-    }
-    return got;
-}
+#include "Validation.h"
 
 #define CHECK_ARGS_COUNT(name, expected) \
     check_args_count(name, expected, std::distance(argsBegin, argsEnd))
