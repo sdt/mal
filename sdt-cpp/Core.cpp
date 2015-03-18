@@ -45,6 +45,18 @@ malObjectPtr builtIn_APPLY(
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
+malObjectPtr builtIn_COUNT(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("=", 1);
+    if (*argsBegin == mal::nil()) {
+        return mal::integer(0);
+    }
+
+    malSequence* arg = OBJECT_CAST(malSequence, *argsBegin);
+    return mal::integer(arg->count());
+}
+
 malObjectPtr builtIn_DIV(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
@@ -54,6 +66,16 @@ malObjectPtr builtIn_DIV(
 
     return mal::integer(lhs->value() / rhs->value());
 }
+
+malObjectPtr builtIn_EMPTY_Q(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("=", 1);
+    malSequence* arg = OBJECT_CAST(malSequence, *argsBegin++);
+
+    return mal::boolean(arg->isEmpty());
+}
+
 
 malObjectPtr builtIn_EQUALS(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -70,6 +92,13 @@ malObjectPtr builtIn_EVAL(
 {
     CHECK_ARGS_IS("eval", 1);
     return EVAL(*argsBegin, env->getRoot());
+}
+
+malObjectPtr builtIn_LIST_Q(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("list?", 1);
+    return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
 malObjectPtr builtIn_MUL(
@@ -103,9 +132,12 @@ struct Handler {
 static Handler handlerTable[] = {
     { builtIn_ADD,              "+"                                 },
     { builtIn_APPLY,            "apply"                             },
+    { builtIn_COUNT,            "count"                             },
     { builtIn_DIV,              "/"                                 },
     { builtIn_EQUALS,           "="                                 },
+    { builtIn_EMPTY_Q,          "empty?"                            },
     { builtIn_EVAL,             "eval"                              },
+    { builtIn_LIST_Q,           "list?"                             },
     { builtIn_MUL,              "*"                                 },
     { builtIn_SUB,              "-"                                 },
 };

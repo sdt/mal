@@ -112,6 +112,7 @@ public:
 
     malObjectVec eval_items(malEnvPtr env);
     int count() { return m_items.size(); }
+    bool isEmpty() { return m_items.empty(); }
     malObjectPtr item(int index) { return m_items[index]; }
 
     virtual bool doIsEqualTo(malObject* rhs);
