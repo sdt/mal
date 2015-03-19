@@ -129,15 +129,14 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
         // Now we're left with the case of a regular list to be evaluated.
         malObjectVec items = list->eval_items(env);
-        if (malLambda* lambda = DYNAMIC_CAST(malLambda, items[0])) {
+        malObjectPtr op = items[0];
+        if (malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
             env = lambda->makeEnv(items.begin()+1, items.end());
             continue; // TCO
         }
         else {
-            malObjectIter it = items.begin();
-            malObjectPtr op = *it++;
-            return APPLY(op, it, items.end(), env);
+            return APPLY(op, items.begin()+1, items.end(), env);
         }
     }
 }
