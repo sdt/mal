@@ -20,6 +20,8 @@
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
+extern malObjectPtr read_str(const String& input);
+
 extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
@@ -140,6 +142,14 @@ BUILTIN(PRN)
     return mal::nil();
 }
 
+BUILTIN(READ_STRING)
+{
+    CHECK_ARGS_IS(1);
+    ARG(malString, str);
+
+    return read_str(str->value());
+}
+
 BUILTIN(STR)
 {
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
@@ -176,6 +186,7 @@ static Handler handlerTable[] = {
     { builtIn_PR_STR,           "pr-str"                            },
     { builtIn_PRINTLN,          "println"                           },
     { builtIn_PRN,              "prn"                               },
+    { builtIn_READ_STRING,      "read-string"                       },
     { builtIn_STR,              "str"                               },
     { builtIn_SUB,              "-"                                 },
 };
