@@ -22,11 +22,11 @@ public:
         return *this;
     }
 
-    bool operator == (const RefCountedPtr& rhs) {
+    bool operator == (const RefCountedPtr& rhs) const {
         return m_object == rhs.m_object;
     }
 
-    bool operator != (const RefCountedPtr& rhs) {
+    bool operator != (const RefCountedPtr& rhs) const {
         return m_object != rhs.m_object;
     }
 
@@ -38,8 +38,8 @@ public:
         release();
     }
 
-    T* operator -> () { return m_object; }
-    T* ptr() { return m_object; }
+    T* operator -> () const { return m_object; }
+    T* ptr() const { return m_object; }
 
 private:
     void acquire(T* object) {

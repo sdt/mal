@@ -13,7 +13,7 @@ class malEnv;
 typedef RefCountedPtr<malEnv> malEnvPtr;
 
 class malObject;
-typedef RefCountedPtr<malObject> malObjectPtr;
+typedef RefCountedPtr<const malObject> malObjectPtr;
 
 
 class malEnv : public RefCounted {

@@ -27,7 +27,7 @@ extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
-#define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
+#define ARG(type, name) const type* name = OBJECT_CAST(type, *argsBegin++)
 #define BUILTIN(func) \
     malObjectPtr builtIn_##func(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -50,7 +50,7 @@ BUILTIN(APPLY)
     malObjectVec args(argsBegin, argsEnd-1);
 
     // Then append the argument as a list.
-    malList* lastArg = OBJECT_CAST(malList, *(argsEnd-1));
+    const malList* lastArg = OBJECT_CAST(malList, *(argsEnd-1));
     for (int i = 0; i < lastArg->count(); i++) {
         args.push_back(lastArg->item(i));
     }
@@ -62,14 +62,14 @@ BUILTIN(CONCAT)
 {
     int count = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
-        malSequence* seq = OBJECT_CAST(malSequence, *it);
+        const malSequence* seq = OBJECT_CAST(malSequence, *it);
         count += seq->count();
     }
 
     malObjectVec items(count);
     int offset = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
-        malSequence* seq = static_cast<malSequence*>((*it).ptr());
+        const malSequence* seq = STATIC_CAST(malSequence, *it);
         std::copy(seq->begin(), seq->end(), items.begin() + offset);
         offset += seq->count();
     }
@@ -122,8 +122,8 @@ BUILTIN(EMPTY_Q)
 BUILTIN(EQUALS)
 {
     CHECK_ARGS_IS(2);
-    malObject* lhs = (*argsBegin++).ptr();
-    malObject* rhs = (*argsBegin++).ptr();
+    const malObject* lhs = (*argsBegin++).ptr();
+    const malObject* rhs = (*argsBegin++).ptr();
 
     return mal::boolean(lhs->isEqualTo(rhs));
 }

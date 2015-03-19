@@ -47,8 +47,8 @@ malObjectPtr READ(const String& input)
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
-    if (malList* list = DYNAMIC_CAST(malList, ast)) {
-        malSymbol* symbol;
+    if (const malList* list = DYNAMIC_CAST(malList, ast)) {
+        const malSymbol* symbol;
         if ((list->count() > 0) &&
             (symbol = DYNAMIC_CAST(malSymbol, list->item(0)))) {
 
@@ -57,17 +57,19 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "def!") {
                 CHECK_ARGS_IS("def!", 2);
-                malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
             if (special == "let*") {
                 CHECK_ARGS_IS("let*", 2);
-                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
+                const malSequence* bindings =
+                  OBJECT_CAST(malSequence, list->item(1));
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
-                    malSymbol* var = OBJECT_CAST(malSymbol, bindings->item(i));
+                    const malSymbol* var =
+                      OBJECT_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 return EVAL(list->item(2), inner);
@@ -84,7 +86,7 @@ String PRINT(malObjectPtr ast)
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
+    const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     ASSERT(handler != NULL, "\"%s\" is not applicable",
                             op->print(true).c_str());
 

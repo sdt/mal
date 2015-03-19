@@ -48,8 +48,8 @@ malObjectPtr READ(const String& input)
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
-    if (malList* list = DYNAMIC_CAST(malList, ast)) {
-        malSymbol* symbol;
+    if (const malList* list = DYNAMIC_CAST(malList, ast)) {
+        const malSymbol* symbol;
         if ((list->count() > 0) &&
             (symbol = DYNAMIC_CAST(malSymbol, list->item(0)))) {
 
@@ -58,7 +58,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "def!") {
                 check_args_is("def!", 2, argCount);
-                malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
@@ -74,10 +74,11 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "fn*") {
                 check_args_is("fn*", 2, argCount);
 
-                malList* bindings = OBJECT_CAST(malList, list->item(1));
+                const malList* bindings = OBJECT_CAST(malList, list->item(1));
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
-                    malSymbol* sym = OBJECT_CAST(malSymbol, bindings->item(i));
+                    const malSymbol* sym =
+                      OBJECT_CAST(malSymbol, bindings->item(i));
                     params.push_back(sym->value());
                 }
 
@@ -102,11 +103,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "let*") {
                 check_args_is("let*", 2, argCount);
-                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
+                const malSequence* bindings =
+                  OBJECT_CAST(malSequence, list->item(1));
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
-                    malSymbol* var = OBJECT_CAST(malSymbol, bindings->item(i));
+                    const malSymbol* var =
+                      OBJECT_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 return EVAL(list->item(2), inner);
@@ -128,7 +131,7 @@ String PRINT(malObjectPtr ast)
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
+    const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     ASSERT(handler != NULL, "\"%s\" is not applicable",
                             op->print(true).c_str());
 

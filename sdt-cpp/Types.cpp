@@ -68,17 +68,17 @@ namespace mal {
 
 malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
-                               malEnvPtr env)
+                               malEnvPtr env) const
 {
     return m_handler(m_name, argsBegin, argsEnd, env);
 }
 
 static String makeHashKey(malObjectPtr key)
 {
-    if (malString* skey = DYNAMIC_CAST(malString, key)) {
+    if (const malString* skey = DYNAMIC_CAST(malString, key)) {
         return skey->print(true);
     }
-    else if (malKeyword* kkey = DYNAMIC_CAST(malKeyword, key)) {
+    else if (const malKeyword* kkey = DYNAMIC_CAST(malKeyword, key)) {
         return kkey->print(true);
     }
     ASSERT(false, "%s is not a string or keyword", key->print(true).c_str());
@@ -95,7 +95,7 @@ malHash::malHash(malObjectIter argsBegin, malObjectIter argsEnd)
     }
 }
 
-String malHash::print(bool readably)
+String malHash::print(bool readably) const
 {
     String s = "{";
 
@@ -111,9 +111,9 @@ String malHash::print(bool readably)
     return s + "}";
 }
 
-bool malHash::doIsEqualTo(malObject* rhs)
+bool malHash::doIsEqualTo(const malObject* rhs) const
 {
-    malHash::Map& r_map = static_cast<malHash*>(rhs)->m_map;
+    const malHash::Map& r_map = static_cast<const malHash*>(rhs)->m_map;
     if (m_map.size() != r_map.size()) {
         return false;
     }
@@ -142,39 +142,41 @@ malLambda::malLambda(const StringVec& bindings,
 
 malObjectPtr malLambda::apply(malObjectIter argsBegin,
                               malObjectIter argsEnd,
-                              malEnvPtr)
+                              malEnvPtr) const
 {
     return EVAL(m_body, makeEnv(argsBegin, argsEnd));
 }
 
-malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd)
+malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) const
 {
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
-String malList::print(bool readably) {
+String malList::print(bool readably) const {
     return '(' + malSequence::print(readably) + ')';
 }
 
-malObjectPtr malObject::eval(malEnvPtr env)
+malObjectPtr malObject::eval(malEnvPtr env) const
 {
     // Default case of eval is just to return the object itself.
     return malObjectPtr(this);
 }
 
-bool malObject::isEqualTo(malObjectPtr rhs) {
-    malObject* rhsp = rhs.ptr();
+bool malObject::isEqualTo(malObjectPtr rhs) const
+{
+    const malObject* rhsp = rhs.ptr();
 
     // Special-case. Vectors and Lists can be compared.
     bool matchingTypes = (typeid(*this) == typeid(*rhsp)) ||
-        (dynamic_cast<malSequence*>(this) && dynamic_cast<malSequence*>(rhsp));
+        (dynamic_cast<const malSequence*>(this) &&
+         dynamic_cast<const malSequence*>(rhsp));
 
     return matchingTypes && doIsEqualTo(rhs.ptr());
 }
 
-bool malSequence::doIsEqualTo(malObject* rhs)
+bool malSequence::doIsEqualTo(const malObject* rhs) const
 {
-    malSequence* rhsSeq = static_cast<malSequence*>(rhs);
+    const malSequence* rhsSeq = static_cast<const malSequence*>(rhs);
     if (count() != rhsSeq->count()) {
         return false;
     }
@@ -190,7 +192,7 @@ bool malSequence::doIsEqualTo(malObject* rhs)
     return true;
 }
 
-malObjectVec malSequence::eval_items(malEnvPtr env)
+malObjectVec malSequence::eval_items(malEnvPtr env) const
 {
     malObjectVec items;
     for (auto it = m_items.begin(), end = m_items.end(); it != end; ++it) {
@@ -199,10 +201,11 @@ malObjectVec malSequence::eval_items(malEnvPtr env)
     return items;
 }
 
-String malSequence::print(bool readably) {
+String malSequence::print(bool readably) const
+{
     String str;
-    auto end = m_items.end();
-    auto it = m_items.begin();
+    auto end = m_items.cend();
+    auto it = m_items.cbegin();
     if (it != end) {
         str += (*it)->print(readably);
         ++it;
@@ -220,22 +223,22 @@ malString::malString(const String& token)
 
 }
 
-String malString::escapedValue()
+String malString::escapedValue() const
 {
     return escape(m_value);
 }
 
-String malString::print(bool readably)
+String malString::print(bool readably) const
 {
     return readably ? escapedValue() : m_value;
 }
 
-malObjectPtr malSymbol::eval(malEnvPtr env)
+malObjectPtr malSymbol::eval(malEnvPtr env) const
 {
     return env->get(m_value);
 }
 
-malObjectPtr malVector::eval(malEnvPtr env)
+malObjectPtr malVector::eval(malEnvPtr env) const
 {
     //TODO: check if vectors can be handled like hashes
     //      ie. [ V ] -> (vector V)
@@ -244,6 +247,7 @@ malObjectPtr malVector::eval(malEnvPtr env)
     return mal::vector(items);
 }
 
-String malVector::print(bool readably) {
+String malVector::print(bool readably) const
+{
     return '[' + malSequence::print(readably) + ']';
 }

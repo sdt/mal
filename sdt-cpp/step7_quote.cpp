@@ -72,20 +72,20 @@ malObjectPtr READ(const String& input)
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
     while (1) {
-        malList* list = DYNAMIC_CAST(malList, ast);
+        const malList* list = DYNAMIC_CAST(malList, ast);
         if (!list || (list->count() == 0)) {
             return ast->eval(env);
         }
 
         // From here on down we are evaluating a non-empty list.
         // First handle the special forms.
-        if (malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
+        if (const malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
             String special = symbol->value();
             int argCount = list->count() - 1;
 
             if (special == "def!") {
                 check_args_is("def!", 2, argCount);
-                malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
@@ -102,10 +102,12 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "fn*") {
                 check_args_is("fn*", 2, argCount);
 
-                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
+                const malSequence* bindings =
+                    OBJECT_CAST(malSequence, list->item(1));
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
-                    malSymbol* sym = OBJECT_CAST(malSymbol, bindings->item(i));
+                    const malSymbol* sym =
+                        OBJECT_CAST(malSymbol, bindings->item(i));
                     params.push_back(sym->value());
                 }
 
@@ -128,11 +130,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "let*") {
                 check_args_is("let*", 2, argCount);
-                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
+                const malSequence* bindings =
+                    OBJECT_CAST(malSequence, list->item(1));
                 int count = check_args_even("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
-                    malSymbol* var = OBJECT_CAST(malSymbol, bindings->item(i));
+                    const malSymbol* var =
+                        OBJECT_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 ast = list->item(2);
@@ -149,7 +153,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
         // Now we're left with the case of a regular list to be evaluated.
         malObjectVec items = list->eval_items(env);
         malObjectPtr op = items[0];
-        if (malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
+        if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
             env = lambda->makeEnv(items.begin()+1, items.end());
             continue; // TCO
@@ -167,7 +171,7 @@ String PRINT(malObjectPtr ast)
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
+    const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);

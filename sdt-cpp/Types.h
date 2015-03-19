@@ -12,9 +12,9 @@
 #include <vector>
 
 class malObject;
-typedef RefCountedPtr<malObject>    malObjectPtr;
-typedef std::vector<malObjectPtr>   malObjectVec;
-typedef malObjectVec::iterator      malObjectIter;
+typedef RefCountedPtr<const malObject>    malObjectPtr;
+typedef std::vector<malObjectPtr>         malObjectVec;
+typedef malObjectVec::const_iterator      malObjectIter;
 
 #define ARRAY_SIZE(a)   (sizeof(a)/(sizeof(*(a))))
 
@@ -32,14 +32,14 @@ public:
         TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
-    bool isEqualTo(malObjectPtr rhs);
+    bool isEqualTo(malObjectPtr rhs) const;
 
-    virtual malObjectPtr eval(malEnvPtr env);
+    virtual malObjectPtr eval(malEnvPtr env) const;
 
-    virtual String print(bool readably) = 0;
+    virtual String print(bool readably) const = 0;
 
 protected:
-    virtual bool doIsEqualTo(malObject* rhs) = 0;
+    virtual bool doIsEqualTo(const malObject* rhs) const = 0;
 };
 
 template<class T>
@@ -49,15 +49,16 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
     return dest;
 }
 
-#define OBJECT_CAST(Type, Object)   object_cast<Type>(Object, #Type)
-#define DYNAMIC_CAST(Type, Object)  (dynamic_cast<Type*>((Object).ptr()))
+#define OBJECT_CAST(Type, Object)   object_cast<const Type>(Object, #Type)
+#define DYNAMIC_CAST(Type, Object)  (dynamic_cast<const Type*>((Object).ptr()))
+#define STATIC_CAST(Type, Object)   (static_cast<const Type*>((Object).ptr()))
 
 class malConstant : public malObject {
 public:
     malConstant(String name) : m_name(name) { }
-    virtual String print(bool readably) { return m_name; }
+    virtual String print(bool readably) const { return m_name; }
 
-    virtual bool doIsEqualTo(malObject* rhs) {
+    virtual bool doIsEqualTo(const malObject* rhs) const {
         return this == rhs; // these are singletons
     }
 
@@ -70,14 +71,14 @@ public:
     malInteger(int value) : m_value(value) { }
     virtual ~malInteger() { }
 
-    virtual String print(bool readably) {
+    virtual String print(bool readably) const {
         return std::to_string(m_value);
     }
 
-    int value() { return m_value; }
+    int value() const { return m_value; }
 
-    virtual bool doIsEqualTo(malObject* rhs) {
-        return m_value == static_cast<malInteger*>(rhs)->m_value;
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return m_value == static_cast<const malInteger*>(rhs)->m_value;
     }
 
 private:
@@ -89,13 +90,13 @@ public:
     malString(const String& token);
     virtual ~malString() { }
 
-    virtual String print(bool readably);
+    virtual String print(bool readably) const;
 
-    String value() { return m_value; }
-    String escapedValue();
+    String value() const { return m_value; }
+    String escapedValue() const;
 
-    virtual bool doIsEqualTo(malObject* rhs) {
-        return m_value == static_cast<malString*>(rhs)->m_value;
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return m_value == static_cast<const malString*>(rhs)->m_value;
     }
 
 private:
@@ -107,14 +108,14 @@ public:
     malKeyword(const String& token) : m_value(token) { }
     virtual ~malKeyword() { }
 
-    virtual String print(bool readably) {
+    virtual String print(bool readably) const {
         return m_value;
     }
 
-    String value() { return m_value; }
+    String value() const { return m_value; }
 
-    virtual bool doIsEqualTo(malObject* rhs) {
-        return m_value == static_cast<malKeyword*>(rhs)->m_value;
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return m_value == static_cast<const malKeyword*>(rhs)->m_value;
     }
 
 private:
@@ -126,16 +127,16 @@ public:
     malSymbol(const String& token) : m_value(token) { }
     virtual ~malSymbol() { }
 
-    virtual malObjectPtr eval(malEnvPtr env);
+    virtual malObjectPtr eval(malEnvPtr env) const;
 
-    virtual String print(bool readably) {
+    virtual String print(bool readably) const {
         return m_value;
     }
 
-    String value() { return m_value; }
+    String value() const { return m_value; }
 
-    virtual bool doIsEqualTo(malObject* rhs) {
-        return m_value == static_cast<malSymbol*>(rhs)->m_value;
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return m_value == static_cast<const malSymbol*>(rhs)->m_value;
     }
 
 private:
@@ -145,17 +146,17 @@ private:
 class malSequence : public malObject {
 public:
     malSequence(const malObjectVec& items) : m_items(items) { }
-    virtual String print(bool readably);
+    virtual String print(bool readably) const;
 
-    malObjectVec eval_items(malEnvPtr env);
-    int count() { return m_items.size(); }
-    bool isEmpty() { return m_items.empty(); }
-    malObjectPtr item(int index) { return m_items[index]; }
+    malObjectVec eval_items(malEnvPtr env) const;
+    int count() const { return m_items.size(); }
+    bool isEmpty() const { return m_items.empty(); }
+    malObjectPtr item(int index) const { return m_items[index]; }
 
-    malObjectIter begin() { return m_items.begin(); }
-    malObjectIter end()   { return m_items.end(); }
+    malObjectIter begin() const { return m_items.cbegin(); }
+    malObjectIter end()   const { return m_items.cend(); }
 
-    virtual bool doIsEqualTo(malObject* rhs);
+    virtual bool doIsEqualTo(const malObject* rhs) const;
 
 private:
     malObjectVec m_items;
@@ -166,7 +167,7 @@ public:
     malList(const malObjectVec& items) : malSequence(items) { }
     virtual ~malList() { }
 
-    virtual String print(bool readably);
+    virtual String print(bool readably) const;
 };
 
 class malVector : public malSequence {
@@ -174,8 +175,8 @@ public:
     malVector(const malObjectVec& items) : malSequence(items) { }
     virtual ~malVector() { }
 
-    virtual malObjectPtr eval(malEnvPtr env);
-    virtual String print(bool readably);
+    virtual malObjectPtr eval(malEnvPtr env) const;
+    virtual String print(bool readably) const;
 };
 
 class malApplicable : public malObject {
@@ -184,16 +185,16 @@ public:
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
-                               malEnvPtr env) = 0;
+                               malEnvPtr env) const = 0;
 };
 
 class malHash : public malObject {
 public:
     malHash(malObjectIter argsBegin, malObjectIter argsEnd);
 
-    virtual String print(bool readably);
+    virtual String print(bool readably) const;
 
-    virtual bool doIsEqualTo(malObject* rhs);
+    virtual bool doIsEqualTo(const malObject* rhs) const;
 
 private:
 
@@ -213,13 +214,13 @@ public:
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
-                               malEnvPtr env);
+                               malEnvPtr env) const;
 
-    virtual String print(bool readably) {
+    virtual String print(bool readably) const {
         return STRF("#builtin-function(%s)", m_name.c_str());
     }
 
-    virtual bool doIsEqualTo(malObject* rhs) {
+    virtual bool doIsEqualTo(const malObject* rhs) const {
         return this == rhs; // these are singletons
     }
 
@@ -234,16 +235,16 @@ public:
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
-                               malEnvPtr env);
+                               malEnvPtr env) const;
 
-    malObjectPtr getBody() { return m_body; }
-    malEnvPtr makeEnv(malObjectIter argsBegin, malObjectIter argsEnd);
+    malObjectPtr getBody() const { return m_body; }
+    malEnvPtr makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) const;
 
-    virtual bool doIsEqualTo(malObject* rhs) {
+    virtual bool doIsEqualTo(const malObject* rhs) const {
         return this == rhs; // do we need to do a deep inspection?
     }
 
-    virtual String print(bool readably) {
+    virtual String print(bool readably) const {
         return STRF("#user-function(%p)", this);
     }
 

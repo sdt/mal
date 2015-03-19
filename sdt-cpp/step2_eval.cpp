@@ -53,7 +53,7 @@ String PRINT(malObjectPtr ast)
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
+    const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     if (handler == NULL) {
         throw STRF("\"%s\" is not applicable", op->print(true).c_str());
     }
