@@ -10,7 +10,7 @@
 #include <readline/tilde.h>
 
 ReadLine::ReadLine(const String& historyFile)
-: m_historyPath(CopyAndFree(tilde_expand(historyFile.c_str())))
+: m_historyPath(copyAndFree(tilde_expand(historyFile.c_str())))
 {
     read_history(m_historyPath.c_str());
 }

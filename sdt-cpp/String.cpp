@@ -1,3 +1,4 @@
+#include "Debug.h"
 #include "String.h"
 
 #include <stdarg.h>
@@ -5,7 +6,7 @@
 #include <stdlib.h>
 
 // Adapted from: http://stackoverflow.com/questions/2342162
-String StringPrintf(const char* fmt, ...) {
+String stringPrintf(const char* fmt, ...) {
     int size = strlen(fmt); // make a guess
     String str;
     va_list ap;

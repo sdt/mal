@@ -7,11 +7,10 @@
 typedef std::string         String;
 typedef std::vector<String> StringVec;
 
-#define STR         StringPrintf
+#define STR         stringPrintf
 #define PLURAL(n)   &("s"[(n)==1])
 
-extern String StringPrintf(const char* fmt, ...);
-extern String CopyAndFree(char* mallocedString);
-
+extern String stringPrintf(const char* fmt, ...);
+extern String copyAndFree(char* mallocedString);
 
 #endif // INCLUDE_STRING_H
