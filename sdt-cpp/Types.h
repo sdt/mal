@@ -159,6 +159,9 @@ public:
     bool isEmpty() { return m_items.empty(); }
     malObjectPtr item(int index) { return m_items[index]; }
 
+    malObjectIter begin() { return m_items.begin(); }
+    malObjectIter end()   { return m_items.end(); }
+
     virtual bool doIsEqualTo(malObject* rhs);
 
 protected:

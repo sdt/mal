@@ -58,6 +58,38 @@ BUILTIN(APPLY)
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
+BUILTIN(CONCAT)
+{
+    int count = 0;
+    for (auto it = argsBegin; it != argsEnd; ++it) {
+        malSequence* seq = OBJECT_CAST(malSequence, *it);
+        count += seq->count();
+    }
+
+    malObjectVec items(count);
+    int offset = 0;
+    for (auto it = argsBegin; it != argsEnd; ++it) {
+        malSequence* seq = static_cast<malSequence*>((*it).ptr());
+        std::copy(seq->begin(), seq->end(), items.begin() + offset);
+        offset += seq->count();
+    }
+
+    return mal::list(items);
+}
+
+BUILTIN(CONS)
+{
+    CHECK_ARGS_IS(2);
+    malObjectPtr first = *argsBegin++;
+    ARG(malSequence, rest);
+
+    malObjectVec items(1 + rest->count());
+    items[0] = first;
+    std::copy(rest->begin(), rest->end(), items.begin() + 1);
+
+    return mal::list(items);
+}
+
 BUILTIN(COUNT)
 {
     CHECK_ARGS_IS(1);
@@ -194,6 +226,8 @@ struct Handler {
 static Handler handlerTable[] = {
     { builtIn_ADD,              "+"                                 },
     { builtIn_APPLY,            "apply"                             },
+    { builtIn_CONCAT,           "concat",                           },
+    { builtIn_CONS,             "cons"                              },
     { builtIn_COUNT,            "count"                             },
     { builtIn_DIV,              "/"                                 },
     { builtIn_EQUALS,           "="                                 },
