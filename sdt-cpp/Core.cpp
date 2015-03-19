@@ -4,6 +4,8 @@
 #include "Types.h"
 #include "Validation.h"
 
+#include <iostream>
+
 #define CHECK_ARGS_IS(name, expected) \
     check_args_is(name, expected, std::distance(argsBegin, argsEnd))
 
@@ -16,6 +18,8 @@
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 extern String rep(const String& input, malEnvPtr env);
+static String printObjects(malObjectIter begin, malObjectIter end,
+                           const String& sep, bool readably);
 
 malObjectPtr builtIn_ADD(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -121,6 +125,32 @@ malObjectPtr builtIn_MUL(
     return mal::integer(lhs->value() * rhs->value());
 }
 
+malObjectPtr builtIn_PR_STR(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    return mal::string(printObjects(argsBegin, argsEnd, " ", true));
+}
+
+malObjectPtr builtIn_PRINTLN(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    std::cout << printObjects(argsBegin, argsEnd, " ", false) << "\n";
+    return mal::nil();
+}
+
+malObjectPtr builtIn_PRN(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    std::cout << printObjects(argsBegin, argsEnd, " ", true) << "\n";
+    return mal::nil();
+}
+
+malObjectPtr builtIn_STR(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    return mal::string(printObjects(argsBegin, argsEnd, "", false));
+}
+
 malObjectPtr builtIn_SUB(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
@@ -150,6 +180,10 @@ static Handler handlerTable[] = {
     { builtIn_LE,               "<="                                },
     { builtIn_LIST_Q,           "list?"                             },
     { builtIn_MUL,              "*"                                 },
+    { builtIn_PR_STR,           "pr-str"                            },
+    { builtIn_PRINTLN,          "println"                           },
+    { builtIn_PRN,              "prn"                               },
+    { builtIn_STR,              "str"                               },
     { builtIn_SUB,              "-"                                 },
 };
 
@@ -172,4 +206,22 @@ void install_core(malEnvPtr env) {
     for (int i = 0; i < nativeCount; i++) {
         rep(malFunctionTable[i], env);
     }
+}
+
+static String printObjects(malObjectIter begin, malObjectIter end,
+                           const String& sep, bool readably)
+{
+    String out;
+
+    if (begin != end) {
+        out += (*begin)->print(readably);
+        ++begin;
+    }
+
+    for ( ; begin != end; ++begin) {
+        out += sep;
+        out += (*begin)->print(readably);
+    }
+
+    return out;
 }
