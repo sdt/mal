@@ -15,6 +15,7 @@ void install_core(malEnvPtr env);
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safe_rep(const String& input, malEnvPtr env);
+static malObjectPtr quasiquote(malObjectPtr obj);
 
 int main(int argc, char* argv[])
 {
@@ -141,6 +142,12 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 continue; // TCO
             }
 
+            if (special == "quasiquote") {
+                check_args_is("quasiquote", 1, argCount);
+                ast = quasiquote(list->item(1));
+                continue; // TCO
+            }
+
             if (special == "quote") {
                 check_args_is("quote", 1, argCount);
                 return list->item(1);
@@ -172,4 +179,29 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
     ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
+}
+
+static bool isSymbol(malObjectPtr obj, const String& text)
+{
+    const malSymbol* sym = DYNAMIC_CAST(malSymbol, obj);
+    return sym && (sym->value() == text);
+}
+
+static malObjectPtr quasiquote(malObjectPtr obj)
+{
+    const malList* list = DYNAMIC_CAST(malList, obj);
+    // (quasiquote atom) -> (quote atom)
+    if (!list) {
+        malObjectVec items;
+        items.push_back(mal::symbol("quote"));
+        items.push_back(obj);
+        return mal::list(items);
+    }
+
+    if (isSymbol(list->item(0), "unquote")) {
+        // (quasiquote (unquote form)) -> form
+        return list->item(1);
+    }
+
+    return obj;
 }
