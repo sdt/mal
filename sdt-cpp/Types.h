@@ -167,8 +167,6 @@ public:
     virtual ~malList() { }
 
     virtual String print(bool readably);
-
-    virtual malObjectPtr eval(malEnvPtr env);
 };
 
 class malVector : public malSequence {

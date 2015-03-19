@@ -152,19 +152,6 @@ malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd)
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
-malObjectPtr malList::eval(malEnvPtr env)
-{
-    //TODO: is this still called after TCO?
-    if (count() == 0) {
-        return malObjectPtr(this);
-    }
-
-    malObjectVec items = eval_items(env);
-    auto it = items.begin();
-    malObjectPtr op = *it;
-    return APPLY(op, ++it, items.end(), env);
-}
-
 String malList::print(bool readably) {
     return '(' + malSequence::print(readably) + ')';
 }
