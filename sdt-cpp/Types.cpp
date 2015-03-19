@@ -27,6 +27,10 @@ namespace mal {
         return integer(std::stoi(token));
     };
 
+    malObjectPtr keyword(const String& token) {
+        return malObjectPtr(new malKeyword(token));
+    };
+
     malObjectPtr lambda(const StringVec& bindings, malObjectPtr body, malEnvPtr env) {
         return malObjectPtr(new malLambda(bindings, body, env));
     }
@@ -71,6 +75,11 @@ malObjectPtr malBuiltIn::eval(malEnvPtr env)
 }
 
 malObjectPtr malInteger::eval(malEnvPtr env)
+{
+    return malObjectPtr(this);
+}
+
+malObjectPtr malKeyword::eval(malEnvPtr env)
 {
     return malObjectPtr(this);
 }

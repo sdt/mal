@@ -141,6 +141,9 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     if (token[0] == '"') {
         return mal::string(unescape(token));
     }
+    if (token[0] == ':') {
+        return mal::keyword(token);
+    }
     for (ReaderMacro *it = macroTable, *end = macroTable + macroCount;
         it < end; ++it) {
         if (token == it->token) {
