@@ -4,7 +4,7 @@
 #include "String.h"
 
 #define ASSERT(condition, ...)  \
-    if (!(condition)) { throw STR(__VA_ARGS__); } else { }
+    if (!(condition)) { throw STRF(__VA_ARGS__); } else { }
 
 extern int check_args_is(const char* name, int expected, int got);
 extern int check_args_between(const char* name, int min, int max, int got);

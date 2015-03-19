@@ -7,7 +7,7 @@
 typedef std::string         String;
 typedef std::vector<String> StringVec;
 
-#define STR         stringPrintf
+#define STRF        stringPrintf
 #define PLURAL(n)   &("s"[(n)==1])
 
 extern String stringPrintf(const char* fmt, ...);

@@ -190,7 +190,7 @@ public:
     virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print(bool readably) {
-        return STR("#builtin-function(%s)", m_name.c_str());
+        return STRF("#builtin-function(%s)", m_name.c_str());
     }
 
     virtual bool doIsEqualTo(malObject* rhs) {
@@ -220,7 +220,7 @@ public:
     }
 
     virtual String print(bool readably) {
-        return STR("#user-function(%p)", this);
+        return STRF("#user-function(%p)", this);
     }
 
 private:

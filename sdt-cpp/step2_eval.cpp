@@ -55,7 +55,7 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
 {
     malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
     if (handler == NULL) {
-        throw STR("\"%s\" is not applicable", op->print(true).c_str());
+        throw STRF("\"%s\" is not applicable", op->print(true).c_str());
     }
 
     return handler->apply(argsBegin, argsEnd, env);
