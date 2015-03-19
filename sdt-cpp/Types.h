@@ -15,6 +15,8 @@ typedef RefCountedPtr<malObject>    malObjectPtr;
 typedef std::vector<malObjectPtr>   malObjectVec;
 typedef malObjectVec::iterator      malObjectIter;
 
+#define ARRAY_SIZE(a)   (sizeof(a)/(sizeof(*(a))))
+
 class malEnv;
 typedef RefCountedPtr<malEnv> malEnvPtr;
 

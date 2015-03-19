@@ -126,7 +126,7 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
         { "~",   "unquote" },
         { "^",   "with-meta" },
     };
-    int macroCount = sizeof(macroTable) / sizeof(macroTable[0]);
+    int macroCount = ARRAY_SIZE(macroTable);
 
     String token = tokeniser.next();
     if (token == "true"){
