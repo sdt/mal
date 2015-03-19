@@ -22,9 +22,11 @@ static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
 #define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
+#define BUILTIN(name) \
+    malObjectPtr builtIn_##name( \
+        malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 
-malObjectPtr builtIn_ADD(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(ADD)
 {
     CHECK_ARGS_IS("+", 2);
     ARG(malInteger, lhs);
@@ -33,8 +35,7 @@ malObjectPtr builtIn_ADD(
     return mal::integer(lhs->value() + rhs->value());
 }
 
-malObjectPtr builtIn_APPLY(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(APPLY)
 {
     CHECK_ARGS_AT_LEAST("apply", 2);
     malObjectPtr op = *argsBegin++; // this gets checked in APPLY
@@ -51,8 +52,7 @@ malObjectPtr builtIn_APPLY(
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
-malObjectPtr builtIn_COUNT(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(COUNT)
 {
     CHECK_ARGS_IS("=", 1);
     if (*argsBegin == mal::nil()) {
@@ -63,8 +63,7 @@ malObjectPtr builtIn_COUNT(
     return mal::integer(seq->count());
 }
 
-malObjectPtr builtIn_DIV(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(DIV)
 {
     CHECK_ARGS_IS("/", 2);
     ARG(malInteger, lhs);
@@ -73,8 +72,7 @@ malObjectPtr builtIn_DIV(
     return mal::integer(lhs->value() / rhs->value());
 }
 
-malObjectPtr builtIn_EMPTY_Q(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(EMPTY_Q)
 {
     CHECK_ARGS_IS("empty?", 1);
     ARG(malSequence, seq);
@@ -83,8 +81,7 @@ malObjectPtr builtIn_EMPTY_Q(
 }
 
 
-malObjectPtr builtIn_EQUALS(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(EQUALS)
 {
     CHECK_ARGS_IS("=", 2);
     malObject* lhs = (*argsBegin++).ptr();
@@ -93,15 +90,13 @@ malObjectPtr builtIn_EQUALS(
     return mal::boolean(lhs->isEqualTo(rhs));
 }
 
-malObjectPtr builtIn_EVAL(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(EVAL)
 {
     CHECK_ARGS_IS("eval", 1);
     return EVAL(*argsBegin, env->getRoot());
 }
 
-malObjectPtr builtIn_LE(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(LE)
 {
     CHECK_ARGS_IS("*", 2);
     ARG(malInteger, lhs);
@@ -110,15 +105,13 @@ malObjectPtr builtIn_LE(
     return mal::boolean(lhs->value() <= rhs->value());
 }
 
-malObjectPtr builtIn_LIST_Q(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(LIST_Q)
 {
     CHECK_ARGS_IS("list?", 1);
     return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
-malObjectPtr builtIn_MUL(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(MUL)
 {
     CHECK_ARGS_IS("*", 2);
     ARG(malInteger, lhs);
@@ -127,34 +120,29 @@ malObjectPtr builtIn_MUL(
     return mal::integer(lhs->value() * rhs->value());
 }
 
-malObjectPtr builtIn_PR_STR(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(PR_STR)
 {
     return mal::string(printObjects(argsBegin, argsEnd, " ", true));
 }
 
-malObjectPtr builtIn_PRINTLN(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(PRINTLN)
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", false) << "\n";
     return mal::nil();
 }
 
-malObjectPtr builtIn_PRN(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(PRN)
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", true) << "\n";
     return mal::nil();
 }
 
-malObjectPtr builtIn_STR(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(STR)
 {
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
 }
 
-malObjectPtr builtIn_SUB(
-    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+BUILTIN(SUB)
 {
     int argCount = CHECK_ARGS_BETWEEN("-", 1, 2);
     ARG(malInteger, lhs);
