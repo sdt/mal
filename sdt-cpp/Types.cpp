@@ -110,8 +110,8 @@ malObjectPtr malList::eval(malEnvPtr env)
     return APPLY(op, ++it, items.end(), env);
 }
 
-String malList::print() {
-    return '(' + malSequence::print() + ')';
+String malList::print(bool readably) {
+    return '(' + malSequence::print(readably) + ')';
 }
 
 bool malObject::isEqualTo(malObjectPtr rhs) {
@@ -148,17 +148,17 @@ malObjectVec malSequence::eval_items(malEnvPtr env)
     return items;
 }
 
-String malSequence::print() {
+String malSequence::print(bool readably) {
     String str;
     auto end = m_items.end();
     auto it = m_items.begin();
     if (it != end) {
-        str += (*it)->print();
+        str += (*it)->print(readably);
         ++it;
     }
     for ( ; it != end; ++it) {
         str += " ";
-        str += (*it)->print();
+        str += (*it)->print(readably);
     }
     return str;
 }
@@ -174,7 +174,7 @@ malObjectPtr malVector::eval(malEnvPtr env)
     return mal::vector(items);
 }
 
-String malVector::print() {
-    return '[' + malSequence::print() + ']';
+String malVector::print(bool readably) {
+    return '[' + malSequence::print(readably) + ']';
 }
 

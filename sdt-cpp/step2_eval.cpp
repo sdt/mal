@@ -48,14 +48,14 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
 String PRINT(malObjectPtr ast)
 {
-    return ast->print();
+    return ast->print(true);
 }
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     malApplicable* handler = dynamic_cast<malApplicable*>(op.ptr());
     if (handler == NULL) {
-        throw STR("\"%s\" is not applicable", op->print().c_str());
+        throw STR("\"%s\" is not applicable", op->print(true).c_str());
     }
 
     return handler->apply(argsBegin, argsEnd, env);

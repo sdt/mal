@@ -33,7 +33,7 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env) = 0;
 
-    virtual String print() = 0;
+    virtual String print(bool readably) = 0;
 
 protected:
     virtual bool doIsEqualTo(malObject* rhs) = 0;
@@ -42,7 +42,7 @@ protected:
 template<class T>
 T* object_cast(malObjectPtr obj, const char* typeName) {
     T* dest = dynamic_cast<T*>(obj.ptr());
-    ASSERT(dest != NULL, "%s is not a %s", obj->print().c_str(), typeName);
+    ASSERT(dest != NULL, "%s is not a %s", obj->print(true).c_str(), typeName);
     return dest;
 }
 
@@ -53,7 +53,7 @@ class malConstant : public malObject {
 public:
     malConstant(String name) : m_name(name) { }
     virtual malObjectPtr eval(malEnvPtr env)  { return malObjectPtr(this); }
-    virtual String print() { return m_name; }
+    virtual String print(bool readably) { return m_name; }
 
     virtual bool doIsEqualTo(malObject* rhs) {
         return this == rhs; // these are singletons
@@ -70,7 +70,7 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env);
 
-    virtual String print() {
+    virtual String print(bool readably) {
         return std::to_string(m_value);
     }
 
@@ -91,7 +91,7 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env);
 
-    virtual String print() {
+    virtual String print(bool readably) {
         return m_value;
     }
 
@@ -108,7 +108,7 @@ private:
 class malSequence : public malObject {
 public:
     malSequence(const malObjectVec& items) : m_items(items) { }
-    virtual String print();
+    virtual String print(bool readably);
 
     malObjectVec eval_items(malEnvPtr env);
     int count() { return m_items.size(); }
@@ -129,7 +129,7 @@ public:
     malList(const malObjectVec& items) : malSequence(items) { }
     virtual ~malList() { }
 
-    virtual String print();
+    virtual String print(bool readably);
 
     virtual malObjectPtr eval(malEnvPtr env);
 };
@@ -139,7 +139,7 @@ public:
     malVector(const malObjectVec& items) : malSequence(items) { }
     virtual ~malVector() { }
 
-    virtual String print();
+    virtual String print(bool readably);
 
     virtual malObjectPtr eval(malEnvPtr env);
 };
@@ -168,7 +168,7 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env);
 
-    virtual String print() {
+    virtual String print(bool readably) {
         return STR("#builtin-function(%s)", m_name.c_str());
     }
 
@@ -198,7 +198,7 @@ public:
         return this == rhs; // do we need to do a deep inspection?
     }
 
-    virtual String print() {
+    virtual String print(bool readably) {
         return STR("#user-function(%p)", this);
     }
 

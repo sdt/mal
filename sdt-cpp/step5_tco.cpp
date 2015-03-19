@@ -139,13 +139,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
 String PRINT(malObjectPtr ast)
 {
-    return ast->print();
+    return ast->print(true);
 }
 
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
-    ASSERT(handler != NULL, "\"%s\" is not applicable", op->print().c_str());
+    ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
 }

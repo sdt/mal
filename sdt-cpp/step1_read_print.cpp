@@ -44,7 +44,7 @@ malObjectPtr EVAL(malObjectPtr ast)
 
 String PRINT(malObjectPtr ast)
 {
-    return ast->print();
+    return ast->print(true);
 }
 
 // Adding these just to keep the linker happy
