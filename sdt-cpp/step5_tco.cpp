@@ -79,7 +79,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "fn*") {
                 check_args_is("fn*", 2, argCount);
 
-                malList* bindings = OBJECT_CAST(malList, list->item(1));
+                malSequence* bindings = OBJECT_CAST(malSequence, list->item(1));
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
                     malSymbol* sym = OBJECT_CAST(malSymbol, bindings->item(i));
