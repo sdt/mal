@@ -21,12 +21,14 @@ extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
+#define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
+
 malObjectPtr builtIn_ADD(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("+", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, lhs);
+    ARG(malInteger, rhs);
 
     return mal::integer(lhs->value() + rhs->value());
 }
@@ -57,16 +59,16 @@ malObjectPtr builtIn_COUNT(
         return mal::integer(0);
     }
 
-    malSequence* arg = OBJECT_CAST(malSequence, *argsBegin);
-    return mal::integer(arg->count());
+    ARG(malSequence, seq);
+    return mal::integer(seq->count());
 }
 
 malObjectPtr builtIn_DIV(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("/", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, lhs);
+    ARG(malInteger, rhs);
 
     return mal::integer(lhs->value() / rhs->value());
 }
@@ -74,10 +76,10 @@ malObjectPtr builtIn_DIV(
 malObjectPtr builtIn_EMPTY_Q(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
-    CHECK_ARGS_IS("=", 1);
-    malSequence* arg = OBJECT_CAST(malSequence, *argsBegin++);
+    CHECK_ARGS_IS("empty?", 1);
+    ARG(malSequence, seq);
 
-    return mal::boolean(arg->isEmpty());
+    return mal::boolean(seq->isEmpty());
 }
 
 
@@ -102,8 +104,8 @@ malObjectPtr builtIn_LE(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("*", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, lhs);
+    ARG(malInteger, rhs);
 
     return mal::boolean(lhs->value() <= rhs->value());
 }
@@ -119,8 +121,8 @@ malObjectPtr builtIn_MUL(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     CHECK_ARGS_IS("*", 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, lhs);
+    ARG(malInteger, rhs);
 
     return mal::integer(lhs->value() * rhs->value());
 }
@@ -155,12 +157,12 @@ malObjectPtr builtIn_SUB(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
     int argCount = CHECK_ARGS_BETWEEN("-", 1, 2);
-    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, lhs);
     if (argCount == 1) {
         return mal::integer(- lhs->value());
     }
 
-    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+    ARG(malInteger, rhs);
     return mal::integer(lhs->value() - rhs->value());
 }
 
