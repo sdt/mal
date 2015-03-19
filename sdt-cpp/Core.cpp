@@ -94,6 +94,16 @@ malObjectPtr builtIn_EVAL(
     return EVAL(*argsBegin, env->getRoot());
 }
 
+malObjectPtr builtIn_LE(
+    malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+{
+    CHECK_ARGS_IS("*", 2);
+    malInteger* lhs = OBJECT_CAST(malInteger, *argsBegin++);
+    malInteger* rhs = OBJECT_CAST(malInteger, *argsBegin++);
+
+    return mal::boolean(lhs->value() <= rhs->value());
+}
+
 malObjectPtr builtIn_LIST_Q(
     malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 {
@@ -137,6 +147,7 @@ static Handler handlerTable[] = {
     { builtIn_EQUALS,           "="                                 },
     { builtIn_EMPTY_Q,          "empty?"                            },
     { builtIn_EVAL,             "eval"                              },
+    { builtIn_LE,               "<="                                },
     { builtIn_LIST_Q,           "list?"                             },
     { builtIn_MUL,              "*"                                 },
     { builtIn_SUB,              "-"                                 },
@@ -145,6 +156,9 @@ static Handler handlerTable[] = {
 static const char* malFunctionTable[] = {
     "(def! list (fn* (& items) items))",
     "(def! not (fn* (cond) (if cond false true)))",
+    "(def! >= (fn* (a b) (<= b a)))",
+    "(def! < (fn* (a b) (not (<= b a))))",
+    "(def! > (fn* (a b) (not (<= a b))))",
 };
 
 void install_core(malEnvPtr env) {
