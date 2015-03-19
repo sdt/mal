@@ -14,6 +14,7 @@ malObjectPtr read_str(const String& input);
 void install_core(malEnvPtr env);
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
+static void safe_rep(const String& input, malEnvPtr env);
 
 int main(int argc, char* argv[])
 {
@@ -25,23 +26,28 @@ int main(int argc, char* argv[])
     makeArgv(repl_env, argc - 2, argv + 2);
     if (argc > 1) {
         String filename = escape(argv[1]);
-        rep(STRF("(load-file %s)", filename.c_str()), repl_env);
+        safe_rep(STRF("(load-file %s)", filename.c_str()), repl_env);
         return 0;
     }
     while (readline.get(prompt, input)) {
-        String out;
-        try {
-            out = rep(input, repl_env);
-        }
-        catch (malEmptyInputException&) {
-            continue;
-        }
-        catch (String& s) {
-            out = s;
-        };
-        std::cout << out << "\n";
+        safe_rep(input, repl_env);
     }
     return 0;
+}
+
+static void safe_rep(const String& input, malEnvPtr env)
+{
+    String out;
+    try {
+        out = rep(input, env);
+    }
+    catch (malEmptyInputException&) {
+        return;
+    }
+    catch (String& s) {
+        out = s;
+    };
+    std::cout << out << "\n";
 }
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[])
