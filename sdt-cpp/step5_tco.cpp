@@ -93,17 +93,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 check_args_between("if", 2, 3, argCount);
 
                 malObjectPtr cond = EVAL(list->item(1), env);
-                if (!(cond == mal::falseObject() || cond == mal::nil())) {
-                    // then
-                    ast = list->item(2);
-                    continue; // TCO
-                }
-                if (argCount == 2) {
-                    // no else case
+                bool isTrue = (cond != mal::falseObject())
+                            && (cond != mal::nil());
+
+                if (!isTrue && (argCount == 2)) {
                     return mal::nil();
                 }
-                // else case
-                ast = list->item(3);
+                ast = list->item(isTrue ? 2 : 3);
                 continue; // TCO
             }
 
