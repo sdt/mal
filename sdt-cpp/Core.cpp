@@ -134,6 +134,11 @@ BUILTIN(EVAL)
     return EVAL(*argsBegin, env->getRoot());
 }
 
+BUILTIN(HASH_MAP)
+{
+    return mal::hash(argsBegin, argsEnd);
+}
+
 BUILTIN(LE)
 {
     CHECK_ARGS_IS(2);
@@ -233,6 +238,7 @@ static Handler handlerTable[] = {
     { builtIn_EQUALS,           "="                                 },
     { builtIn_EMPTY_Q,          "empty?"                            },
     { builtIn_EVAL,             "eval"                              },
+    { builtIn_HASH_MAP,         "hash-map"                          },
     { builtIn_LE,               "<="                                },
     { builtIn_LIST_Q,           "list?"                             },
     { builtIn_MUL,              "*"                                 },

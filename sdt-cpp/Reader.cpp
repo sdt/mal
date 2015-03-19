@@ -80,7 +80,8 @@ void Tokeniser::skipWhitespace()
 
 static malObjectPtr read_atom(Tokeniser& tokeniser);
 static malObjectPtr read_form(Tokeniser& tokeniser);
-static malObjectVec read_list(Tokeniser& tokeniser, const String& end);
+static void read_list(Tokeniser& tokeniser, malObjectVec& items,
+                      const String& end);
 static malObjectPtr process_macro(Tokeniser& tokeniser, const String& symbol);
 
 malObjectPtr read_str(const String& input)
@@ -101,18 +102,22 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 
     if (token == "(") {
         tokeniser.next();
-        malObjectVec items = read_list(tokeniser, ")");
+        malObjectVec items;
+        read_list(tokeniser, items, ")");
         return mal::list(items);
     }
     if (token == "[") {
         tokeniser.next();
-        malObjectVec items = read_list(tokeniser, "]");
+        malObjectVec items;
+        read_list(tokeniser, items, "]");
         return mal::vector(items);
     }
     if (token == "{") {
         tokeniser.next();
-        malObjectVec items = read_list(tokeniser, "}");
-        return mal::hash(items);
+        malObjectVec items;
+        items.push_back(mal::symbol("hash-map"));
+        read_list(tokeniser, items, "}");
+        return mal::list(items);
     }
     return read_atom(tokeniser);
 }
@@ -167,14 +172,14 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     return mal::symbol(token);
 }
 
-static malObjectVec read_list(Tokeniser& tokeniser, const String& end)
+static void read_list(Tokeniser& tokeniser, malObjectVec& items,
+                      const String& end)
 {
-    malObjectVec items;
     while (1) {
         ASSERT(!tokeniser.eof(), "Expected \"%s\", got EOF", end.c_str());
         if (tokeniser.peek() == end) {
             tokeniser.next();
-            return items;
+            return;
         }
         items.push_back(read_form(tokeniser));
     }

@@ -199,7 +199,7 @@ public:
 
 class malHash : public malObject {
 public:
-    malHash(const malObjectVec& items);
+    malHash(malObjectIter argsBegin, malObjectIter argsEnd);
 
     virtual String print(bool readably);
 
@@ -273,7 +273,7 @@ namespace mal {
     malObjectPtr boolean(bool value);
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
     malObjectPtr falseObject();
-    malObjectPtr hash(const malObjectVec& items);
+    malObjectPtr hash(malObjectIter argsBegin, malObjectIter argsEnd);
     malObjectPtr integer(int value);
     malObjectPtr integer(const String& token);
     malObjectPtr keyword(const String& token);

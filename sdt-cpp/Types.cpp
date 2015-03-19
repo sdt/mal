@@ -19,8 +19,8 @@ namespace mal {
         return malObjectPtr(c);
     };
 
-    malObjectPtr hash(const malObjectVec& items) {
-        return malObjectPtr(new malHash(items));
+    malObjectPtr hash(malObjectIter argsBegin, malObjectIter argsEnd) {
+        return malObjectPtr(new malHash(argsBegin, argsEnd));
     }
 
     malObjectPtr integer(int value) {
@@ -89,10 +89,12 @@ static String makeHashKey(malObjectPtr key)
     ASSERT(false, "%s is not a string or keyword", key->print(true).c_str());
 }
 
-malHash::malHash(const malObjectVec& items)
+malHash::malHash(malObjectIter argsBegin, malObjectIter argsEnd)
 {
-    ASSERT(items.size() % 2 == 0, "hash-map requires even-sized list");
-    for (auto it = items.begin(), end = items.end(); it != end; ++it) {
+    // This is intended to be called with pre-evaluated arguments.
+    int itemCount = std::distance(argsBegin, argsEnd);
+    ASSERT(itemCount % 2 == 0, "hash-map requires even-sized list");
+    for (auto it = argsBegin; it != argsEnd; ++it) {
         String key = makeHashKey(*it++);
         m_map[key] = *it;
     }
