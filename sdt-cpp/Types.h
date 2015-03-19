@@ -34,7 +34,7 @@ public:
 
     bool isEqualTo(malObjectPtr rhs);
 
-    virtual malObjectPtr eval(malEnvPtr env) = 0;
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print(bool readably) = 0;
 
@@ -55,7 +55,6 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
 class malConstant : public malObject {
 public:
     malConstant(String name) : m_name(name) { }
-    virtual malObjectPtr eval(malEnvPtr env)  { return malObjectPtr(this); }
     virtual String print(bool readably) { return m_name; }
 
     virtual bool doIsEqualTo(malObject* rhs) {
@@ -70,8 +69,6 @@ class malInteger : public malObject {
 public:
     malInteger(int value) : m_value(value) { }
     virtual ~malInteger() { }
-
-    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print(bool readably) {
         return std::to_string(m_value);
@@ -92,8 +89,6 @@ public:
     malString(const String& token);
     virtual ~malString() { }
 
-    virtual malObjectPtr eval(malEnvPtr env);
-
     virtual String print(bool readably);
 
     String value() { return m_value; }
@@ -111,8 +106,6 @@ class malKeyword : public malObject {
 public:
     malKeyword(const String& token) : m_value(token) { }
     virtual ~malKeyword() { }
-
-    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print(bool readably) {
         return m_value;
@@ -183,9 +176,8 @@ public:
     malVector(const malObjectVec& items) : malSequence(items) { }
     virtual ~malVector() { }
 
-    virtual String print(bool readably);
-
     virtual malObjectPtr eval(malEnvPtr env);
+    virtual String print(bool readably);
 };
 
 class malApplicable : public malObject {
@@ -202,8 +194,6 @@ public:
     malHash(malObjectIter argsBegin, malObjectIter argsEnd);
 
     virtual String print(bool readably);
-
-    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual bool doIsEqualTo(malObject* rhs);
 
@@ -227,8 +217,6 @@ public:
                                malObjectIter argsEnd,
                                malEnvPtr env);
 
-    virtual malObjectPtr eval(malEnvPtr env);
-
     virtual String print(bool readably) {
         return STRF("#builtin-function(%s)", m_name.c_str());
     }
@@ -249,8 +237,6 @@ public:
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
                                malEnvPtr env);
-
-    virtual malObjectPtr eval(malEnvPtr env);
 
     malObjectPtr getBody() { return m_body; }
     malEnvPtr makeEnv(malObjectIter argsBegin, malObjectIter argsEnd);

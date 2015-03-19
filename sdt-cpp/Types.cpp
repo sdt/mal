@@ -73,11 +73,6 @@ malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
     return m_handler(m_name, argsBegin, argsEnd, env);
 }
 
-malObjectPtr malBuiltIn::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
-}
-
 static String makeHashKey(malObjectPtr key)
 {
     if (malString* skey = DYNAMIC_CAST(malString, key)) {
@@ -98,11 +93,6 @@ malHash::malHash(malObjectIter argsBegin, malObjectIter argsEnd)
         String key = makeHashKey(*it++);
         m_map[key] = *it;
     }
-}
-
-malObjectPtr malHash::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
 }
 
 String malHash::print(bool readably)
@@ -141,16 +131,6 @@ bool malHash::doIsEqualTo(malObject* rhs)
     return true;
 }
 
-malObjectPtr malInteger::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
-}
-
-malObjectPtr malKeyword::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
-}
-
 malLambda::malLambda(const StringVec& bindings,
                      malObjectPtr body, malEnvPtr env)
 : m_bindings(bindings)
@@ -165,11 +145,6 @@ malObjectPtr malLambda::apply(malObjectIter argsBegin,
                               malEnvPtr)
 {
     return EVAL(m_body, makeEnv(argsBegin, argsEnd));
-}
-
-malObjectPtr malLambda::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
 }
 
 malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd)
@@ -192,6 +167,12 @@ malObjectPtr malList::eval(malEnvPtr env)
 
 String malList::print(bool readably) {
     return '(' + malSequence::print(readably) + ')';
+}
+
+malObjectPtr malObject::eval(malEnvPtr env)
+{
+    // Default case of eval is just to return the object itself.
+    return malObjectPtr(this);
 }
 
 bool malObject::isEqualTo(malObjectPtr rhs) {
@@ -252,11 +233,6 @@ malString::malString(const String& token)
 
 }
 
-malObjectPtr malString::eval(malEnvPtr env)
-{
-    return malObjectPtr(this);
-}
-
 String malString::escapedValue()
 {
     return escape(m_value);
@@ -274,6 +250,9 @@ malObjectPtr malSymbol::eval(malEnvPtr env)
 
 malObjectPtr malVector::eval(malEnvPtr env)
 {
+    //TODO: check if vectors can be handled like hashes
+    //      ie. [ V ] -> (vector V)
+    // I suspect not when they are used as parameter lists for fn*
     malObjectVec items = eval_items(env);
     return mal::vector(items);
 }
