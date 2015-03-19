@@ -27,9 +27,61 @@ String stringPrintf(const char* fmt, ...) {
     return str;
 }
 
-String CopyAndFree(char* mallocedString)
+String copyAndFree(char* mallocedString)
 {
     String ret(mallocedString);
     free(mallocedString);
     return ret;
 }
+
+String escape(const String& in)
+{
+    String out;
+    out.reserve(in.size() * 2 + 2); // each char may get escaped + two "'s
+    out += '"';
+    for (auto it = in.begin(), end = in.end(); it != end; ++it) {
+        char c = *it;
+        switch (c) {
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '"':  out += "\\\""; break;
+            default:   out += c;      break;
+        };
+    }
+    out += '"';
+    out.shrink_to_fit();
+    return out;
+}
+
+static char unescape(char c)
+{
+    switch (c) {
+        case '\\':  return '\\';
+        case 'n':   return '\n';
+        case '"':   return '"';
+        default:    return c;
+    }
+}
+
+String unescape(const String& in)
+{
+    String out;
+    out.reserve(in.size()); // unescaped string will always be shorter
+
+    // in will have double-quotes at either end, so move the iterators in
+    for (auto it = in.begin()+1, end = in.end()-1; it != end; ++it) {
+        char c = *it;
+        if (c == '\\') {
+            ++it;
+            if (it != end) {
+                out += unescape(*it);
+            }
+        }
+        else {
+            out += c;
+        }
+    }
+    out.shrink_to_fit();
+    return out;
+}
+

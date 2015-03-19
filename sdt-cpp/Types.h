@@ -84,6 +84,26 @@ private:
     int m_value;
 };
 
+class malString : public malObject {
+public:
+    malString(const String& token);
+    virtual ~malString() { }
+
+    virtual malObjectPtr eval(malEnvPtr env);
+
+    virtual String print(bool readably);
+
+    String value() { return m_value; }
+    String escapedValue();
+
+    virtual bool doIsEqualTo(malObject* rhs) {
+        return m_value == static_cast<malString*>(rhs)->m_value;
+    }
+
+private:
+    String m_value;
+};
+
 class malSymbol : public malObject {
 public:
     malSymbol(const String& token) : m_value(token) { }
@@ -96,6 +116,7 @@ public:
     }
 
     String value() { return m_value; }
+    String escapedValue();
 
     virtual bool doIsEqualTo(malObject* rhs) {
         return m_value == static_cast<malSymbol*>(rhs)->m_value;
@@ -217,6 +238,7 @@ namespace mal {
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
     malObjectPtr list(const malObjectVec& items);
     malObjectPtr nil();
+    malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);
     malObjectPtr trueObject();
     malObjectPtr vector(const malObjectVec& items);

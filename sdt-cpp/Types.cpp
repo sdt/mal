@@ -40,6 +40,10 @@ namespace mal {
         return malObjectPtr(c);
     };
 
+    malObjectPtr string(const String& token) {
+        return malObjectPtr(new malString(token));
+    }
+
     malObjectPtr symbol(const String& token) {
         return malObjectPtr(new malSymbol(token));
     };
@@ -163,6 +167,27 @@ String malSequence::print(bool readably) {
     return str;
 }
 
+malString::malString(const String& token)
+: m_value(unescape(token))
+{
+
+}
+
+malObjectPtr malString::eval(malEnvPtr env)
+{
+    return malObjectPtr(this);
+}
+
+String malString::escapedValue()
+{
+    return escape(m_value);
+}
+
+String malString::print(bool readably)
+{
+    return readably ? escapedValue() : m_value;
+}
+
 malObjectPtr malSymbol::eval(malEnvPtr env)
 {
     return env->get(m_value);
@@ -177,4 +202,3 @@ malObjectPtr malVector::eval(malEnvPtr env)
 String malVector::print(bool readably) {
     return '[' + malSequence::print(readably) + ']';
 }
-

@@ -12,5 +12,7 @@ typedef std::vector<String> StringVec;
 
 extern String stringPrintf(const char* fmt, ...);
 extern String copyAndFree(char* mallocedString);
+extern String escape(const String& s);
+extern String unescape(const String& s);
 
 #endif // INCLUDE_STRING_H

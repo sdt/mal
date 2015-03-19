@@ -123,6 +123,9 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     if (token == "nil"){
         return mal::nil();
     }
+    if (token[0] == '"') {
+        return mal::string(token);
+    }
     if (std::regex_match(token, intRegex)) {
         return mal::integer(token);
     }
