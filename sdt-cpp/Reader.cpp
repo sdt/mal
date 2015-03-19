@@ -81,6 +81,7 @@ void Tokeniser::skipWhitespace()
 static malObjectPtr read_atom(Tokeniser& tokeniser);
 static malObjectPtr read_form(Tokeniser& tokeniser);
 static malObjectVec read_list(Tokeniser& tokeniser, const String& end);
+static malObjectPtr process_macro(Tokeniser& tokeniser, const String& symbol);
 
 malObjectPtr read_str(const String& input)
 {
@@ -113,6 +114,20 @@ static malObjectPtr read_form(Tokeniser& tokeniser)
 
 static malObjectPtr read_atom(Tokeniser& tokeniser)
 {
+    struct ReaderMacro {
+        const char* token;
+        const char* symbol;
+    };
+    ReaderMacro macroTable[] = {
+        { "@",   "deref" },
+        { "`",   "quasiquote" },
+        { "'",   "quote" },
+        { "~@",  "splice-unquote" },
+        { "~",   "unquote" },
+        { "^",   "with-meta" },
+    };
+    int macroCount = sizeof(macroTable) / sizeof(macroTable[0]);
+
     String token = tokeniser.next();
     if (token == "true"){
         return mal::trueObject();
@@ -125,6 +140,12 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     }
     if (token[0] == '"') {
         return mal::string(unescape(token));
+    }
+    for (ReaderMacro *it = macroTable, *end = macroTable + macroCount;
+        it < end; ++it) {
+        if (token == it->token) {
+            return process_macro(tokeniser, it->symbol);
+        }
     }
     if (std::regex_match(token, intRegex)) {
         return mal::integer(token);
@@ -143,4 +164,13 @@ static malObjectVec read_list(Tokeniser& tokeniser, const String& end)
         }
         items.push_back(read_form(tokeniser));
     }
+}
+
+static malObjectPtr process_macro(Tokeniser& tokeniser, const String& symbol)
+{
+    ASSERT(!tokeniser.eof(), "Expected form, got EOF");
+    malObjectVec items;
+    items.push_back(mal::symbol(symbol));
+    items.push_back(read_form(tokeniser));
+    return mal::list(items);
 }
