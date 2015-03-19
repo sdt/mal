@@ -6,14 +6,17 @@
 
 #include <iostream>
 
-#define CHECK_ARGS_IS(name, expected) \
-    check_args_is(name, expected, std::distance(argsBegin, argsEnd))
+#define CHECK_ARGS_IS(expected) \
+    check_args_is(name.c_str(), expected, \
+                  std::distance(argsBegin, argsEnd))
 
-#define CHECK_ARGS_BETWEEN(name, min, max) \
-    check_args_between(name, min, max, std::distance(argsBegin, argsEnd))
+#define CHECK_ARGS_BETWEEN(min, max) \
+    check_args_between(name.c_str(), min, max, \
+                       std::distance(argsBegin, argsEnd))
 
-#define CHECK_ARGS_AT_LEAST(name, expected) \
-    check_args_at_least(name, expected, std::distance(argsBegin, argsEnd))
+#define CHECK_ARGS_AT_LEAST(expected) \
+    check_args_at_least(name.c_str(), expected, \
+                        std::distance(argsBegin, argsEnd))
 
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
@@ -22,13 +25,13 @@ static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
 #define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
-#define BUILTIN(name) \
-    malObjectPtr builtIn_##name( \
+#define BUILTIN(func) \
+    malObjectPtr builtIn_##func(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 
 BUILTIN(ADD)
 {
-    CHECK_ARGS_IS("+", 2);
+    CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
     ARG(malInteger, rhs);
 
@@ -37,7 +40,7 @@ BUILTIN(ADD)
 
 BUILTIN(APPLY)
 {
-    CHECK_ARGS_AT_LEAST("apply", 2);
+    CHECK_ARGS_AT_LEAST(2);
     malObjectPtr op = *argsBegin++; // this gets checked in APPLY
 
     // Copy the first N-1 arguments in.
@@ -54,7 +57,7 @@ BUILTIN(APPLY)
 
 BUILTIN(COUNT)
 {
-    CHECK_ARGS_IS("=", 1);
+    CHECK_ARGS_IS(1);
     if (*argsBegin == mal::nil()) {
         return mal::integer(0);
     }
@@ -65,7 +68,7 @@ BUILTIN(COUNT)
 
 BUILTIN(DIV)
 {
-    CHECK_ARGS_IS("/", 2);
+    CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
     ARG(malInteger, rhs);
 
@@ -74,7 +77,7 @@ BUILTIN(DIV)
 
 BUILTIN(EMPTY_Q)
 {
-    CHECK_ARGS_IS("empty?", 1);
+    CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
 
     return mal::boolean(seq->isEmpty());
@@ -83,7 +86,7 @@ BUILTIN(EMPTY_Q)
 
 BUILTIN(EQUALS)
 {
-    CHECK_ARGS_IS("=", 2);
+    CHECK_ARGS_IS(2);
     malObject* lhs = (*argsBegin++).ptr();
     malObject* rhs = (*argsBegin++).ptr();
 
@@ -92,13 +95,13 @@ BUILTIN(EQUALS)
 
 BUILTIN(EVAL)
 {
-    CHECK_ARGS_IS("eval", 1);
+    CHECK_ARGS_IS(1);
     return EVAL(*argsBegin, env->getRoot());
 }
 
 BUILTIN(LE)
 {
-    CHECK_ARGS_IS("*", 2);
+    CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
     ARG(malInteger, rhs);
 
@@ -107,13 +110,13 @@ BUILTIN(LE)
 
 BUILTIN(LIST_Q)
 {
-    CHECK_ARGS_IS("list?", 1);
+    CHECK_ARGS_IS(1);
     return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
 BUILTIN(MUL)
 {
-    CHECK_ARGS_IS("*", 2);
+    CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
     ARG(malInteger, rhs);
 
@@ -144,7 +147,7 @@ BUILTIN(STR)
 
 BUILTIN(SUB)
 {
-    int argCount = CHECK_ARGS_BETWEEN("-", 1, 2);
+    int argCount = CHECK_ARGS_BETWEEN(1, 2);
     ARG(malInteger, lhs);
     if (argCount == 1) {
         return mal::integer(- lhs->value());

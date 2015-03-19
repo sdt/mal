@@ -62,7 +62,7 @@ malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
                                malEnvPtr env)
 {
-    return m_handler(argsBegin, argsEnd, env);
+    return m_handler(m_name, argsBegin, argsEnd, env);
 }
 
 malObjectPtr malBuiltIn::eval(malEnvPtr env)

@@ -176,7 +176,8 @@ public:
 
 class malBuiltIn : public malApplicable {
 public:
-    typedef malObjectPtr (ApplyFunc)(malObjectIter argsBegin,
+    typedef malObjectPtr (ApplyFunc)(const String& name,
+                                     malObjectIter argsBegin,
                                      malObjectIter argsEnd,
                                      malEnvPtr env);
 
