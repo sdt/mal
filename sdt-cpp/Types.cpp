@@ -120,9 +120,12 @@ String malList::print(bool readably) {
 
 bool malObject::isEqualTo(malObjectPtr rhs) {
     malObject* rhsp = rhs.ptr();
-    // Check matching types, and then hand off to the apples vs apples
-    // comparisons.
-    return (typeid(*this) == typeid(*rhsp)) && doIsEqualTo(rhs.ptr());
+
+    // Special-case. Vectors and Lists can be compared.
+    bool matchingTypes = (typeid(*this) == typeid(*rhsp)) ||
+        (dynamic_cast<malSequence*>(this) && dynamic_cast<malSequence*>(rhsp));
+
+    return matchingTypes && doIsEqualTo(rhs.ptr());
 }
 
 bool malSequence::doIsEqualTo(malObject* rhs)
