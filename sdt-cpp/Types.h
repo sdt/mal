@@ -164,9 +164,6 @@ public:
 
     virtual bool doIsEqualTo(malObject* rhs);
 
-protected:
-    malObjectVec items() { return m_items; }
-
 private:
     malObjectVec m_items;
 };

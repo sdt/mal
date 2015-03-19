@@ -210,7 +210,7 @@ bool malSequence::doIsEqualTo(malObject* rhs)
     }
 
     for (malObjectIter it0 = m_items.begin(),
-                       it1 = rhsSeq->items().begin(),
+                       it1 = rhsSeq->begin(),
                        end = m_items.end(); it0 != end; ++it0, ++it1) {
 
         if (! (*it0)->isEqualTo(*it1)) {
