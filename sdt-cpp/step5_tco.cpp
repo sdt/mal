@@ -54,6 +54,8 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             return ast->eval(env);
         }
 
+        // From here on down we are evaluating a non-empty list.
+        // First handle the special forms.
         if (malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
             String special = symbol->value();
             int argCount = list->count() - 1;
@@ -125,6 +127,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
         }
 
+        // Now we're left with the case of a regular list to be evaluated.
         malObjectVec items = list->eval_items(env);
         if (malLambda* lambda = DYNAMIC_CAST(malLambda, items[0])) {
             ast = lambda->getBody();
