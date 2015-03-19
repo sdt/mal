@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "Validation.h"
 
+#include <fstream>
 #include <iostream>
 
 #define CHECK_ARGS_IS(expected) \
@@ -150,6 +151,24 @@ BUILTIN(READ_STRING)
     return read_str(str->value());
 }
 
+BUILTIN(SLURP)
+{
+    CHECK_ARGS_IS(1);
+    ARG(malString, filename);
+
+    std::ios_base::openmode openmode =
+        std::ios::ate | std::ios::in | std::ios::binary;
+    std::ifstream file(filename->value().c_str(), openmode);
+
+    String data;
+    data.reserve(file.tellg());
+    file.seekg(0, std::ios::beg);
+    data.append(std::istreambuf_iterator<char>(file.rdbuf()),
+                std::istreambuf_iterator<char>());
+
+    return mal::string(data);
+}
+
 BUILTIN(STR)
 {
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
@@ -187,6 +206,7 @@ static Handler handlerTable[] = {
     { builtIn_PRINTLN,          "println"                           },
     { builtIn_PRN,              "prn"                               },
     { builtIn_READ_STRING,      "read-string"                       },
+    { builtIn_SLURP,            "slurp"                             },
     { builtIn_STR,              "str"                               },
     { builtIn_SUB,              "-"                                 },
 };
@@ -197,6 +217,8 @@ static const char* malFunctionTable[] = {
     "(def! >= (fn* (a b) (<= b a)))",
     "(def! < (fn* (a b) (not (<= b a))))",
     "(def! > (fn* (a b) (not (<= a b))))",
+    "(def! load-file (fn* (filename) \
+        (eval (read-string (str \"(do \" (slurp filename) \")\")))))",
 };
 
 void install_core(malEnvPtr env) {
