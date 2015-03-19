@@ -168,7 +168,7 @@ String malSequence::print(bool readably) {
 }
 
 malString::malString(const String& token)
-: m_value(unescape(token))
+: m_value(token)
 {
 
 }
