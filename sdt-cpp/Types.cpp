@@ -174,6 +174,12 @@ bool malObject::isEqualTo(malObjectPtr rhs) const
     return matchingTypes && doIsEqualTo(rhs.ptr());
 }
 
+bool malObject::isTrue() const
+{
+    return (this != mal::falseObject().ptr())
+        && (this != mal::nil().ptr());
+}
+
 bool malSequence::doIsEqualTo(const malObject* rhs) const
 {
     const malSequence* rhsSeq = static_cast<const malSequence*>(rhs);

@@ -32,6 +32,8 @@ public:
         TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
+    bool isTrue() const;
+
     bool isEqualTo(malObjectPtr rhs) const;
 
     virtual malObjectPtr eval(malEnvPtr env) const;
