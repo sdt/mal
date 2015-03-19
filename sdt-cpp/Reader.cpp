@@ -126,26 +126,32 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
         { "~",   "unquote" },
         { "^",   "with-meta" },
     };
-    int macroCount = ARRAY_SIZE(macroTable);
+    const ReaderMacro* macroTableEnd = macroTable + ARRAY_SIZE(macroTable);
+
+    struct Constant {
+        const char* token;
+        malObjectPtr value;
+    };
+    Constant constTable[] = {
+        { "false",  mal::falseObject()  },
+        { "nil",    mal::nil()          },
+        { "true",   mal::trueObject()   },
+    };
+    const Constant* constTableEnd = constTable + ARRAY_SIZE(constTable);
 
     String token = tokeniser.next();
-    if (token == "true"){
-        return mal::trueObject();
-    }
-    if (token == "false"){
-        return mal::falseObject();
-    }
-    if (token == "nil"){
-        return mal::nil();
-    }
     if (token[0] == '"') {
         return mal::string(unescape(token));
     }
     if (token[0] == ':') {
         return mal::keyword(token);
     }
-    for (ReaderMacro *it = macroTable, *end = macroTable + macroCount;
-        it < end; ++it) {
+    for (Constant* it = constTable; it != constTableEnd; ++it) {
+        if (token == it->token) {
+            return it->value;
+        }
+    }
+    for (ReaderMacro *it = macroTable; it < macroTableEnd; ++it) {
         if (token == it->token) {
             return process_macro(tokeniser, it->symbol);
         }
