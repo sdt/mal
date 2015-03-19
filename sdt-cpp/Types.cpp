@@ -19,6 +19,10 @@ namespace mal {
         return malObjectPtr(c);
     };
 
+    malObjectPtr hash(const malObjectVec& items) {
+        return malObjectPtr(new malHash(items));
+    }
+
     malObjectPtr integer(int value) {
         return malObjectPtr(new malInteger(value));
     };
@@ -72,6 +76,67 @@ malObjectPtr malBuiltIn::apply(malObjectIter argsBegin,
 malObjectPtr malBuiltIn::eval(malEnvPtr env)
 {
     return malObjectPtr(this);
+}
+
+static String makeHashKey(malObjectPtr key)
+{
+    if (malString* skey = DYNAMIC_CAST(malString, key)) {
+        return skey->print(true);
+    }
+    else if (malKeyword* kkey = DYNAMIC_CAST(malKeyword, key)) {
+        return kkey->print(true);
+    }
+    ASSERT(false, "%s is not a string or keyword", key->print(true).c_str());
+}
+
+malHash::malHash(const malObjectVec& items)
+{
+    ASSERT(items.size() % 2 == 0, "hash-map requires even-sized list");
+    for (auto it = items.begin(), end = items.end(); it != end; ++it) {
+        String key = makeHashKey(*it++);
+        m_map[key] = *it;
+    }
+}
+
+malObjectPtr malHash::eval(malEnvPtr env)
+{
+    return malObjectPtr(this);
+}
+
+String malHash::print(bool readably)
+{
+    String s = "{";
+
+    auto it = m_map.begin(), end = m_map.end();
+    if (it != end) {
+        s += it->first + " " + it->second->print(readably);
+        ++it;
+    }
+    for ( ; it != end; ++it) {
+        s += " " + it->first + " " + it->second->print(readably);
+    }
+
+    return s + "}";
+}
+
+bool malHash::doIsEqualTo(malObject* rhs)
+{
+    malHash::Map& r_map = static_cast<malHash*>(rhs)->m_map;
+    if (m_map.size() != r_map.size()) {
+        return false;
+    }
+
+    for (auto it0 = m_map.begin(), end0 = m_map.end(), it1 = r_map.begin();
+         it0 != end0; ++it0, ++it1) {
+
+        if (it0->first != it1->first) {
+            return false;
+        }
+        if (!it0->second->isEqualTo(it1->second)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 malObjectPtr malInteger::eval(malEnvPtr env)

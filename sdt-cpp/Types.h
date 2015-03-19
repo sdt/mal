@@ -8,6 +8,7 @@
 #include "Validation.h"
 
 #include <exception>
+#include <map>
 #include <vector>
 
 class malObject;
@@ -196,6 +197,22 @@ public:
                                malEnvPtr env) = 0;
 };
 
+class malHash : public malObject {
+public:
+    malHash(const malObjectVec& items);
+
+    virtual String print(bool readably);
+
+    virtual malObjectPtr eval(malEnvPtr env);
+
+    virtual bool doIsEqualTo(malObject* rhs);
+
+private:
+
+    typedef std::map<String, malObjectPtr> Map;
+    Map m_map;
+};
+
 class malBuiltIn : public malApplicable {
 public:
     typedef malObjectPtr (ApplyFunc)(const String& name,
@@ -256,6 +273,7 @@ namespace mal {
     malObjectPtr boolean(bool value);
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
     malObjectPtr falseObject();
+    malObjectPtr hash(const malObjectVec& items);
     malObjectPtr integer(int value);
     malObjectPtr integer(const String& token);
     malObjectPtr keyword(const String& token);
