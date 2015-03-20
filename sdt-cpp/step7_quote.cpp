@@ -144,7 +144,9 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "quasiquote") {
                 check_args_is("quasiquote", 1, argCount);
+                //TRACE("Before QQ: %s\n", ast->print(true).c_str());
                 ast = quasiquote(list->item(1));
+                //TRACE("After  QQ: %s\n", ast->print(true).c_str());
                 continue; // TCO
             }
 
@@ -191,7 +193,7 @@ static malObjectPtr quasiquote(malObjectPtr obj)
 {
     const malList* list = DYNAMIC_CAST(malList, obj);
     // (quasiquote atom) -> (quote atom)
-    if (!list) {
+    if (!list || list->isEmpty()) {
         malObjectVec items;
         items.push_back(mal::symbol("quote"));
         items.push_back(obj);
@@ -199,9 +201,17 @@ static malObjectPtr quasiquote(malObjectPtr obj)
     }
 
     if (isSymbol(list->item(0), "unquote")) {
-        // (quasiquote (unquote form)) -> form
+        // (qq (uq form)) -> form
+        check_args_is("unquote", 1, list->count() - 1);
         return list->item(1);
     }
-
-    return obj;
+    else {
+        // (qq a b c) -> (list (qq a) (qq b) (qq c))
+        malObjectVec items;
+        items.push_back(mal::symbol("list"));
+        for (auto it = list->begin(), end = list->end(); it != end; ++it) {
+            items.push_back(quasiquote(*it));
+        }
+        return mal::list(items);
+    }
 }
