@@ -13,10 +13,12 @@ String rep(const String& input, malEnvPtr env);
 malObjectPtr read_str(const String& input);
 void install_core(malEnvPtr env);
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
+
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safe_rep(const String& input, malEnvPtr env);
 static malObjectPtr quasiquote(malObjectPtr obj);
-malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env);
+static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env);
+static void install_macros(malEnvPtr env);
 
 int main(int argc, char* argv[])
 {
@@ -25,6 +27,7 @@ int main(int argc, char* argv[])
     String input;
     malEnvPtr repl_env(new malEnv);
     install_core(repl_env);
+    install_macros(repl_env);
     makeArgv(repl_env, argc - 2, argv + 2);
     if (argc > 1) {
         String filename = escape(argv[1]);
@@ -265,11 +268,23 @@ static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
     return NULL;
 }
 
-malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env)
+static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env)
 {
     while (const malLambda* macro = isMacroApplication(obj, env)) {
         const malSequence* seq = STATIC_CAST(malSequence, obj);
         obj = macro->apply(seq->begin() + 1, seq->end(), env);
     }
     return obj;
+}
+
+static const char* macroTable[] = {
+    "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
+    "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
+};
+
+static void install_macros(malEnvPtr env)
+{
+    for (int i = 0; i < ARRAY_SIZE(macroTable); i++) {
+        rep(macroTable[i], env);
+    }
 }

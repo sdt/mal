@@ -291,14 +291,12 @@ static const char* malFunctionTable[] = {
 };
 
 void install_core(malEnvPtr env) {
-    int handlerCount = ARRAY_SIZE(handlerTable);
-    for (Handler *it = &handlerTable[0],
-                 *end = &handlerTable[handlerCount]; it < end; ++it) {
+    for (int i = 0; i < ARRAY_SIZE(handlerTable); i++) {
+        Handler *it = &handlerTable[i];
         env->set(it->name, mal::builtin(it->name, it->handler));
     }
 
-    int nativeCount = ARRAY_SIZE(malFunctionTable);
-    for (int i = 0; i < nativeCount; i++) {
+    for (int i = 0; i < ARRAY_SIZE(malFunctionTable); i++) {
         rep(malFunctionTable[i], env);
     }
 }
