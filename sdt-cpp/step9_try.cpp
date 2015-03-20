@@ -178,6 +178,34 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 check_args_is("quote", 1, argCount);
                 return list->item(1);
             }
+
+            if (special == "try*") {
+                check_args_is("try*", 2, argCount);
+                malObjectPtr tryBody = list->item(1);
+                const malList* catchBlock = OBJECT_CAST(malList, list->item(2));
+
+                check_args_is("catch*", 2, catchBlock->count() - 1);
+                ASSERT(OBJECT_CAST(malSymbol,
+                    catchBlock->item(0))->value() == "catch*",
+                    "catch block must begin with catch*");
+                const malSymbol* excSym =
+                    OBJECT_CAST(malSymbol, catchBlock->item(1));
+                malObjectPtr excVal;
+
+                try {
+                    return EVAL(tryBody, env);
+                }
+                catch(String& s) {
+                    excVal = mal::string(s);
+                }
+                catch(malObjectPtr& o) {
+                    excVal = o;
+                };
+
+                malEnvPtr innerEnv(new malEnv(env));
+                innerEnv->set(excSym->value(), excVal);
+                return EVAL(catchBlock->item(2), innerEnv);
+            }
         }
 
         // Now we're left with the case of a regular list to be evaluated.
