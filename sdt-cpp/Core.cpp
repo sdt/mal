@@ -249,6 +249,12 @@ BUILTIN(SUB)
     return mal::integer(lhs->value() - rhs->value());
 }
 
+BUILTIN(THROW)
+{
+    CHECK_ARGS_IS(1);
+    throw *argsBegin;
+}
+
 struct Handler {
     malBuiltIn::ApplyFunc* handler;
     const char* name;
@@ -278,6 +284,7 @@ static Handler handlerTable[] = {
     { builtIn_SLURP,            "slurp"                             },
     { builtIn_STR,              "str"                               },
     { builtIn_SUB,              "-"                                 },
+    { builtIn_THROW,            "throw"                             },
 };
 
 static const char* malFunctionTable[] = {
