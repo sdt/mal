@@ -163,7 +163,7 @@ public:
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
     malObjectPtr first() const;
-    virtual malObjectPtr rest() const = 0;
+    virtual malObjectPtr rest() const;
 
 private:
     malObjectVec m_items;
@@ -177,7 +177,6 @@ public:
     virtual ~malList() { }
 
     virtual String print(bool readably) const;
-    virtual malObjectPtr rest() const;
 };
 
 class malVector : public malSequence {
@@ -189,7 +188,6 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env) const;
     virtual String print(bool readably) const;
-    virtual malObjectPtr rest() const;
 };
 
 class malApplicable : public malObject {

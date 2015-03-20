@@ -137,8 +137,8 @@ BUILTIN(EVAL)
 BUILTIN(FIRST)
 {
     CHECK_ARGS_IS(1);
-    ARG(malList, list);
-    return list->first();
+    ARG(malSequence, seq);
+    return seq->first();
 }
 
 BUILTIN(HASH_MAP)
@@ -210,8 +210,8 @@ BUILTIN(READ_STRING)
 BUILTIN(REST)
 {
     CHECK_ARGS_IS(1);
-    ARG(malList, list);
-    return list->rest();
+    ARG(malSequence, seq);
+    return seq->rest();
 }
 
 BUILTIN(SLURP)

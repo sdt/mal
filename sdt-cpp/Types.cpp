@@ -166,12 +166,6 @@ String malList::print(bool readably) const
     return '(' + malSequence::print(readably) + ')';
 }
 
-malObjectPtr malList::rest() const
-{
-    ASSERT(count() > 0, "Cannot take rest of an empty list");
-    return mal::list(begin() + 1, end());
-}
-
 malObjectPtr malObject::eval(malEnvPtr env) const
 {
     // Default case of eval is just to return the object itself.
@@ -225,8 +219,7 @@ malObjectVec malSequence::eval_items(malEnvPtr env) const
 
 malObjectPtr malSequence::first() const
 {
-    ASSERT(count() > 0, "Cannot take first of an empty vector");
-    return item(0);
+    return count() == 0 ? mal::nil() : item(0);
 }
 
 String malSequence::print(bool readably) const
@@ -243,6 +236,12 @@ String malSequence::print(bool readably) const
         str += (*it)->print(readably);
     }
     return str;
+}
+
+malObjectPtr malSequence::rest() const
+{
+    malObjectIter start = (count() > 0) ? begin() + 1 : end();
+    return mal::list(start, end());
 }
 
 malString::malString(const String& token)
@@ -278,10 +277,4 @@ malObjectPtr malVector::eval(malEnvPtr env) const
 String malVector::print(bool readably) const
 {
     return '[' + malSequence::print(readably) + ']';
-}
-
-malObjectPtr malVector::rest() const
-{
-    ASSERT(count() > 0, "Cannot take rest of empty vector");
-    return mal::vector(begin() + 1, end());
 }
