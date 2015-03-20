@@ -43,6 +43,10 @@ namespace mal {
         return malObjectPtr(new malList(items));
     };
 
+    malObjectPtr list(malObjectIter begin, malObjectIter end) {
+        return malObjectPtr(new malList(begin, end));
+    };
+
     malObjectPtr nil() {
         static malObjectPtr c(new malConstant("nil"));
         return malObjectPtr(c);
@@ -63,6 +67,10 @@ namespace mal {
 
     malObjectPtr vector(const malObjectVec& items) {
         return malObjectPtr(new malVector(items));
+    };
+
+    malObjectPtr vector(malObjectIter begin, malObjectIter end) {
+        return malObjectPtr(new malVector(begin, end));
     };
 };
 

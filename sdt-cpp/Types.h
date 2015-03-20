@@ -148,6 +148,8 @@ private:
 class malSequence : public malObject {
 public:
     malSequence(const malObjectVec& items) : m_items(items) { }
+    malSequence(malObjectIter begin, malObjectIter end)
+        : m_items(begin, end) { }
     virtual String print(bool readably) const;
 
     malObjectVec eval_items(malEnvPtr env) const;
@@ -167,6 +169,8 @@ private:
 class malList : public malSequence {
 public:
     malList(const malObjectVec& items) : malSequence(items) { }
+    malList(malObjectIter begin, malObjectIter end)
+        : malSequence(begin, end) { }
     virtual ~malList() { }
 
     virtual String print(bool readably) const;
@@ -178,6 +182,8 @@ public:
 class malVector : public malSequence {
 public:
     malVector(const malObjectVec& items) : malSequence(items) { }
+    malVector(malObjectIter begin, malObjectIter end)
+        : malSequence(begin, end) { }
     virtual ~malVector() { }
 
     virtual malObjectPtr eval(malEnvPtr env) const;
@@ -269,11 +275,13 @@ namespace mal {
     malObjectPtr keyword(const String& token);
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
     malObjectPtr list(const malObjectVec& items);
+    malObjectPtr list(malObjectIter begin, malObjectIter end);
     malObjectPtr nil();
     malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);
     malObjectPtr trueObject();
     malObjectPtr vector(const malObjectVec& items);
+    malObjectPtr vector(malObjectIter begin, malObjectIter end);
 };
 
 #endif // INCLUDE_TYPES_H
