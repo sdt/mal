@@ -160,11 +160,14 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 continue; // TCO
             }
 
+            if (special == "macroexpand") {
+                check_args_is("macroexpand", 1, argCount);
+                return macro_expand(list->item(1), env);
+            }
+
             if (special == "quasiquote") {
                 check_args_is("quasiquote", 1, argCount);
-                //TRACE("Before QQ: %s\n", ast->print(true).c_str());
                 ast = quasiquote(list->item(1));
-                //TRACE("After  QQ: %s\n", ast->print(true).c_str());
                 continue; // TCO
             }
 
