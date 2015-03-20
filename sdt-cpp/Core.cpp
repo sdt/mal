@@ -134,6 +134,13 @@ BUILTIN(EVAL)
     return EVAL(*argsBegin, env->getRoot());
 }
 
+BUILTIN(FIRST)
+{
+    CHECK_ARGS_IS(1);
+    ARG(malList, list);
+    return list->first();
+}
+
 BUILTIN(HASH_MAP)
 {
     return mal::hash(argsBegin, argsEnd);
@@ -188,6 +195,13 @@ BUILTIN(READ_STRING)
     return read_str(str->value());
 }
 
+BUILTIN(REST)
+{
+    CHECK_ARGS_IS(1);
+    ARG(malList, list);
+    return list->rest();
+}
+
 BUILTIN(SLURP)
 {
     CHECK_ARGS_IS(1);
@@ -238,6 +252,7 @@ static Handler handlerTable[] = {
     { builtIn_EQUALS,           "="                                 },
     { builtIn_EMPTY_Q,          "empty?"                            },
     { builtIn_EVAL,             "eval"                              },
+    { builtIn_FIRST,            "first"                             },
     { builtIn_HASH_MAP,         "hash-map"                          },
     { builtIn_LE,               "<="                                },
     { builtIn_LIST_Q,           "list?"                             },
@@ -246,6 +261,7 @@ static Handler handlerTable[] = {
     { builtIn_PRINTLN,          "println"                           },
     { builtIn_PRN,              "prn"                               },
     { builtIn_READ_STRING,      "read-string"                       },
+    { builtIn_REST,             "rest"                              },
     { builtIn_SLURP,            "slurp"                             },
     { builtIn_STR,              "str"                               },
     { builtIn_SUB,              "-"                                 },

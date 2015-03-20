@@ -170,6 +170,9 @@ public:
     virtual ~malList() { }
 
     virtual String print(bool readably) const;
+
+    malObjectPtr first() const;
+    malObjectPtr rest()  const;
 };
 
 class malVector : public malSequence {
