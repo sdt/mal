@@ -189,11 +189,16 @@ static bool isSymbol(malObjectPtr obj, const String& text)
     return sym && (sym->value() == text);
 }
 
-static malObjectPtr quasiquote(malObjectPtr obj)
+static const malList* isPair(malObjectPtr obj)
 {
     const malList* list = DYNAMIC_CAST(malList, obj);
-    // (quasiquote atom) -> (quote atom)
-    if (!list || list->isEmpty()) {
+    return list && !list->isEmpty() ? list : NULL;
+}
+
+static malObjectPtr quasiquote(malObjectPtr obj)
+{
+    const malList* list = isPair(obj);
+    if (!list) {
         malObjectVec items;
         items.push_back(mal::symbol("quote"));
         items.push_back(obj);
@@ -201,17 +206,24 @@ static malObjectPtr quasiquote(malObjectPtr obj)
     }
 
     if (isSymbol(list->item(0), "unquote")) {
-        // (uq form) -> form
+        // (qq (uq form)) -> form
         check_args_is("unquote", 1, list->count() - 1);
         return list->item(1);
     }
+
+    malObjectVec items;
+    const malList* innerList = isPair(list->item(0));
+    if (innerList && isSymbol(innerList->item(0), "splice-unquote")) {
+        // (qq (sq '(a b c))) -> a b c
+        items.push_back(mal::symbol("concat"));
+        items.push_back(innerList->item(1));
+    }
     else {
-        // (qq a b c) -> (list (qq a) (qq b) (qq c))
-        // (qq xs   ) -> (cons (qq (car xs)) (qq (cdr xs)))
-        malObjectVec items;
+        // (qq (a b c)) -> (list (qq a) (qq b) (qq c))
+        // (qq xs     ) -> (cons (qq (car xs)) (qq (cdr xs)))
         items.push_back(mal::symbol("cons"));
         items.push_back(quasiquote(list->first()));
-        items.push_back(quasiquote(list->rest()));
-        return mal::list(items);
     }
+    items.push_back(quasiquote(list->rest()));
+    return mal::list(items);
 }
