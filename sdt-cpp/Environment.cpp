@@ -21,8 +21,7 @@ malEnv::malEnv(malEnvPtr outer, const StringVec& bindings,
         if (bindings[i] == "&") {
             ASSERT(i == n - 2, "There must be one parameter after the &");
 
-            malObjectVec args(it, argsEnd);
-            set(bindings[n-1], mal::list(args));
+            set(bindings[n-1], mal::list(it, argsEnd));
             return;
         }
         ASSERT(it != argsEnd, "Not enough parameters");

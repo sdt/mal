@@ -174,8 +174,7 @@ String malList::print(bool readably) const
 malObjectPtr malList::rest() const
 {
     ASSERT(count() > 0, "Cannot take rest of empty list");
-    malObjectVec items(begin() + 1, end());
-    return mal::list(items);
+    return mal::list(begin() + 1, end());
 }
 
 malObjectPtr malObject::eval(malEnvPtr env) const
