@@ -47,6 +47,10 @@ namespace mal {
         return malObjectPtr(new malList(begin, end));
     };
 
+    malObjectPtr macro(const malLambda* lambda) {
+        return malObjectPtr(new malMacro(lambda));
+    };
+
     malObjectPtr nil() {
         static malObjectPtr c(new malConstant("nil"));
         return malObjectPtr(c);
@@ -139,12 +143,23 @@ bool malHash::doIsEqualTo(const malObject* rhs) const
     return true;
 }
 
+malMacro::malMacro(const malLambda* lambda)
+: m_lambda(lambda)
+{
+}
+
+malObjectPtr malMacro::apply(malObjectIter argsBegin,
+                             malObjectIter argsEnd,
+                             malEnvPtr env) const
+{
+    return m_lambda->apply(argsBegin, argsEnd, env);
+}
+
 malLambda::malLambda(const StringVec& bindings,
                      malObjectPtr body, malEnvPtr env)
 : m_bindings(bindings)
 , m_body(body)
 , m_env(env)
-, m_isMacro(false)
 {
 
 }

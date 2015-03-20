@@ -16,6 +16,7 @@ typedef RefCountedPtr<const malObject>    malObjectPtr;
 typedef std::vector<malObjectPtr>         malObjectVec;
 typedef malObjectVec::const_iterator      malObjectIter;
 
+
 #define ARRAY_SIZE(a)   (sizeof(a)/(sizeof(*(a))))
 
 class malEnv;
@@ -259,14 +260,30 @@ public:
         return STRF("#user-function(%p)", this);
     }
 
-    void setMacro(bool isMacro) const { m_isMacro = isMacro; } //TODO: hack!
-    bool isMacro() const { return m_isMacro; }
-
 private:
     StringVec    m_bindings;
     malObjectPtr m_body;
     malEnvPtr    m_env;
-    mutable bool m_isMacro; //TODO: hack!
+};
+
+class malMacro : public malObject {
+public:
+    malMacro(const malLambda* lambda);
+
+    malObjectPtr apply(malObjectIter argsBegin, malObjectIter argsEnd,
+                       malEnvPtr env) const;
+
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return this == rhs; // do we need to do a deep inspection?
+    }
+
+    virtual String print(bool readably) const {
+        return STRF("#user-macro(%p)", this);
+    }
+
+private:
+    typedef RefCountedPtr<const malLambda> malLambdaPtr;
+    malLambdaPtr m_lambda;
 };
 
 namespace mal {
@@ -280,6 +297,7 @@ namespace mal {
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
     malObjectPtr list(const malObjectVec& items);
     malObjectPtr list(malObjectIter begin, malObjectIter end);
+    malObjectPtr macro(const malLambda* lambda);
     malObjectPtr nil();
     malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);

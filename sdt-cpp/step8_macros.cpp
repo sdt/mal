@@ -105,10 +105,8 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
                 const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 malObjectPtr body = EVAL(list->item(2), env);
-                if (const malLambda* macro = DYNAMIC_CAST(malLambda, body)) {
-                    macro->setMacro(true); //TODO: hack
-                }
-                return env->set(id->value(), body);
+                const malLambda* lambda = OBJECT_CAST(malLambda, body);
+                return env->set(id->value(), mal::macro(lambda));
             }
 
             if (special == "do") {
@@ -253,15 +251,13 @@ static malObjectPtr quasiquote(malObjectPtr obj)
     return mal::list(items);
 }
 
-static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
+static const malMacro* isMacroApplication(malObjectPtr obj, malEnvPtr env)
 {
     if (const malSequence* seq = isPair(obj)) {
         if (const malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
             if ((env = env->find(sym->value())) != NULL) {
                 malObjectPtr value = sym->eval(env);
-                if (const malLambda* macro = DYNAMIC_CAST(malLambda, value)) {
-                    return macro->isMacro() ? macro : NULL;
-                }
+                return DYNAMIC_CAST(malMacro, value);
             }
         }
     }
@@ -270,7 +266,7 @@ static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
 
 static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env)
 {
-    while (const malLambda* macro = isMacroApplication(obj, env)) {
+    while (const malMacro* macro = isMacroApplication(obj, env)) {
         const malSequence* seq = STATIC_CAST(malSequence, obj);
         obj = macro->apply(seq->begin() + 1, seq->end(), env);
     }
