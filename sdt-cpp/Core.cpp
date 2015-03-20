@@ -295,6 +295,8 @@ static const char* malFunctionTable[] = {
     "(def! > (fn* (a b) (not (<= a b))))",
     "(def! load-file (fn* (filename) \
         (eval (read-string (str \"(do \" (slurp filename) \")\")))))",
+    "(def! map (fn* (f xs) (if (empty? xs) xs \
+        (cons (f (first xs)) (map f (rest xs))))))",
 };
 
 void install_core(malEnvPtr env) {
