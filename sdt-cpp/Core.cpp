@@ -170,6 +170,18 @@ BUILTIN(MUL)
     return mal::integer(lhs->value() * rhs->value());
 }
 
+BUILTIN(NTH)
+{
+    CHECK_ARGS_IS(2);
+    ARG(malSequence, seq);
+    ARG(malInteger,  index);
+
+    int i = index->value();
+    ASSERT(i >= 0 && i < seq->count(), "Index out of range");
+
+    return seq->item(i);
+}
+
 BUILTIN(PR_STR)
 {
     return mal::string(printObjects(argsBegin, argsEnd, " ", true));
@@ -257,6 +269,7 @@ static Handler handlerTable[] = {
     { builtIn_LE,               "<="                                },
     { builtIn_LIST_Q,           "list?"                             },
     { builtIn_MUL,              "*"                                 },
+    { builtIn_NTH,              "nth"                               },
     { builtIn_PR_STR,           "pr-str"                            },
     { builtIn_PRINTLN,          "println"                           },
     { builtIn_PRN,              "prn"                               },
