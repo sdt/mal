@@ -16,6 +16,7 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safe_rep(const String& input, malEnvPtr env);
 static malObjectPtr quasiquote(malObjectPtr obj);
+malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env);
 
 int main(int argc, char* argv[])
 {
@@ -78,6 +79,12 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             return ast->eval(env);
         }
 
+        ast = macro_expand(ast, env);
+        list = DYNAMIC_CAST(malList, ast);
+        if (!list || (list->count() == 0)) {
+            return ast->eval(env);
+        }
+
         // From here on down we are evaluating a non-empty list.
         // First handle the special forms.
         if (const malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
@@ -88,6 +95,17 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 check_args_is("def!", 2, argCount);
                 const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
+            }
+
+            if (special == "defmacro!") {
+                check_args_is("defmacro!", 2, argCount);
+
+                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                malObjectPtr body = EVAL(list->item(2), env);
+                if (const malLambda* macro = DYNAMIC_CAST(malLambda, body)) {
+                    macro->setMacro(true); //TODO: hack
+                }
+                return env->set(id->value(), body);
             }
 
             if (special == "do") {
@@ -227,4 +245,28 @@ static malObjectPtr quasiquote(malObjectPtr obj)
     }
     items.push_back(quasiquote(seq->rest()));
     return mal::list(items);
+}
+
+static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
+{
+    if (const malSequence* seq = isPair(obj)) {
+        if (const malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
+            if ((env = env->find(sym->value())) != NULL) {
+                malObjectPtr value = sym->eval(env);
+                if (const malLambda* macro = DYNAMIC_CAST(malLambda, value)) {
+                    return macro->isMacro() ? macro : NULL;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env)
+{
+    while (const malLambda* macro = isMacroApplication(obj, env)) {
+        const malSequence* seq = STATIC_CAST(malSequence, obj);
+        obj = macro->apply(seq->begin() + 1, seq->end(), env);
+    }
+    return obj;
 }

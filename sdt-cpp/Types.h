@@ -261,10 +261,14 @@ public:
         return STRF("#user-function(%p)", this);
     }
 
+    void setMacro(bool isMacro) const { m_isMacro = isMacro; } //TODO: hack!
+    bool isMacro() const { return m_isMacro; }
+
 private:
     StringVec    m_bindings;
     malObjectPtr m_body;
     malEnvPtr    m_env;
+    mutable bool m_isMacro; //TODO: hack!
 };
 
 namespace mal {

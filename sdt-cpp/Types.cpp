@@ -144,6 +144,7 @@ malLambda::malLambda(const StringVec& bindings,
 : m_bindings(bindings)
 , m_body(body)
 , m_env(env)
+, m_isMacro(false)
 {
 
 }
