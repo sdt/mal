@@ -160,12 +160,6 @@ malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) con
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
-malObjectPtr malList::first() const
-{
-    ASSERT(count() > 0, "Cannot take first of empty list");
-    return item(0);
-}
-
 String malList::print(bool readably) const
 {
     return '(' + malSequence::print(readably) + ')';
@@ -173,7 +167,7 @@ String malList::print(bool readably) const
 
 malObjectPtr malList::rest() const
 {
-    ASSERT(count() > 0, "Cannot take rest of empty list");
+    ASSERT(count() > 0, "Cannot take rest of an empty list");
     return mal::list(begin() + 1, end());
 }
 
@@ -228,6 +222,12 @@ malObjectVec malSequence::eval_items(malEnvPtr env) const
     return items;
 }
 
+malObjectPtr malSequence::first() const
+{
+    ASSERT(count() > 0, "Cannot take first of an empty vector");
+    return item(0);
+}
+
 String malSequence::print(bool readably) const
 {
     String str;
@@ -277,4 +277,10 @@ malObjectPtr malVector::eval(malEnvPtr env) const
 String malVector::print(bool readably) const
 {
     return '[' + malSequence::print(readably) + ']';
+}
+
+malObjectPtr malVector::rest() const
+{
+    ASSERT(count() > 0, "Cannot take rest of empty vector");
+    return mal::vector(begin() + 1, end());
 }
