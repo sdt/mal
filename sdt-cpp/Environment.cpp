@@ -54,7 +54,7 @@ malObjectPtr malEnv::get(const String& symbol)
             return it->second;
         }
     }
-    ASSERT(false, "\"%s\" not found", symbol.c_str());
+    ASSERT(false, "'%s' not found", symbol.c_str());
 }
 
 malObjectPtr malEnv::set(const String& symbol, malObjectPtr value)
