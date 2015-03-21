@@ -22,6 +22,7 @@
 extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 extern malObjectPtr read_str(const String& input);
+extern malObjectPtr readline(const String& prompt);
 
 extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
@@ -323,6 +324,14 @@ BUILTIN("read-string")
     ARG(malString, str);
 
     return read_str(str->value());
+}
+
+BUILTIN("readline")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malString, str);
+
+    return readline(str->value());
 }
 
 BUILTIN("rest")

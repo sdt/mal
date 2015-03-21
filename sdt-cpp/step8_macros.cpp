@@ -20,9 +20,10 @@ static malObjectPtr quasiquote(malObjectPtr obj);
 static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env);
 static void install_macros(malEnvPtr env);
 
+static ReadLine s_readLine("~/.mal-history");
+
 int main(int argc, char* argv[])
 {
-    ReadLine readline("~/.mal-history");
     String prompt = "user> ";
     String input;
     malEnvPtr repl_env(new malEnv);
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
         safe_rep(STRF("(load-file %s)", filename.c_str()), repl_env);
         return 0;
     }
-    while (readline.get(prompt, input)) {
+    while (s_readLine.get(prompt, input)) {
         safe_rep(input, repl_env);
     }
     return 0;
@@ -283,4 +284,13 @@ static void install_macros(malEnvPtr env)
     for (int i = 0; i < ARRAY_SIZE(macroTable); i++) {
         rep(macroTable[i], env);
     }
+}
+
+malObjectPtr readline(const String& prompt)
+{
+    String input;
+    if (s_readLine.get(prompt, input)) {
+        return mal::string(input);
+    }
+    return mal::nil();
 }

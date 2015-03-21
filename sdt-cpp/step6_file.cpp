@@ -15,9 +15,10 @@ void install_core(malEnvPtr env);
 malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 
+static ReadLine s_readLine("~/.mal-history");
+
 int main(int argc, char* argv[])
 {
-    ReadLine readline("~/.mal-history");
     String prompt = "user> ";
     String input;
     malEnvPtr repl_env(new malEnv);
@@ -28,7 +29,7 @@ int main(int argc, char* argv[])
         rep(STRF("(load-file %s)", filename.c_str()), repl_env);
         return 0;
     }
-    while (readline.get(prompt, input)) {
+    while (s_readLine.get(prompt, input)) {
         String out;
         try {
             out = rep(input, repl_env);
@@ -166,4 +167,13 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
     ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
+}
+
+malObjectPtr readline(const String& prompt)
+{
+    String input;
+    if (s_readLine.get(prompt, input)) {
+        return mal::string(input);
+    }
+    return mal::nil();
 }

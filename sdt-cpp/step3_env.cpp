@@ -13,14 +13,15 @@ String rep(const String& input, malEnvPtr env);
 malObjectPtr read_str(const String& input);
 void install_core(malEnvPtr env);
 
+static ReadLine s_readLine("~/.mal-history");
+
 int main(int argc, char* argv[])
 {
-    ReadLine readline("~/.mal-history");
     String prompt = "user> ";
     String input;
     malEnvPtr repl_env(new malEnv);
     install_core(repl_env);
-    while (readline.get(prompt, input)) {
+    while (s_readLine.get(prompt, input)) {
         String out;
         try {
             out = rep(input, repl_env);
@@ -91,4 +92,13 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
                             op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
+}
+
+malObjectPtr readline(const String& prompt)
+{
+    String input;
+    if (s_readLine.get(prompt, input)) {
+        return mal::string(input);
+    }
+    return mal::nil();
 }
