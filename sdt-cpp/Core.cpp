@@ -62,6 +62,19 @@ HandlerRecord* HandlerRecord::first = NULL;
 
 #define BUILTIN(symbol)  BUILTIN_DEF(__LINE__, symbol)
 
+#define BUILTIN_ISA(symbol, type) \
+    BUILTIN(symbol) { \
+        CHECK_ARGS_IS(1); \
+        return mal::boolean(DYNAMIC_CAST(type, *argsBegin)); \
+    }
+
+BUILTIN_ISA("keyword?",             malKeyword);
+BUILTIN_ISA("list?",                malList);
+BUILTIN_ISA("map?",                 malHash);
+BUILTIN_ISA("sequential?",          malSequence);
+BUILTIN_ISA("symbol?",              malSymbol);
+BUILTIN_ISA("vector?",              malVector);
+
 BUILTIN("+")
 {
     CHECK_ARGS_IS(2);
@@ -183,12 +196,6 @@ BUILTIN("<=")
     ARG(malInteger, rhs);
 
     return mal::boolean(lhs->value() <= rhs->value());
-}
-
-BUILTIN("list?")
-{
-    CHECK_ARGS_IS(1);
-    return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
 BUILTIN("*")
