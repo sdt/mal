@@ -105,6 +105,14 @@ BUILTIN("apply")
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
+BUILTIN("assoc")
+{
+    CHECK_ARGS_AT_LEAST(1);
+    ARG(malHash, hash);
+
+    return hash->assoc(argsBegin, argsEnd);
+}
+
 BUILTIN("concat")
 {
     int count = 0;
@@ -137,6 +145,16 @@ BUILTIN("cons")
     return mal::list(items);
 }
 
+BUILTIN("contains?")
+{
+    CHECK_ARGS_IS(2);
+    if (*argsBegin == mal::nil()) {
+        return *argsBegin;
+    }
+    ARG(malHash, hash);
+    return mal::boolean(hash->contains(*argsBegin));
+}
+
 BUILTIN("count")
 {
     CHECK_ARGS_IS(1);
@@ -146,6 +164,14 @@ BUILTIN("count")
 
     ARG(malSequence, seq);
     return mal::integer(seq->count());
+}
+
+BUILTIN("dissoc")
+{
+    CHECK_ARGS_AT_LEAST(1);
+    ARG(malHash, hash);
+
+    return hash->dissoc(argsBegin, argsEnd);
 }
 
 BUILTIN("empty?")
@@ -178,9 +204,26 @@ BUILTIN("first")
     return seq->first();
 }
 
+BUILTIN("get")
+{
+    CHECK_ARGS_IS(2);
+    if (*argsBegin == mal::nil()) {
+        return *argsBegin;
+    }
+    ARG(malHash, hash);
+    return hash->get(*argsBegin);
+}
+
 BUILTIN("hash-map")
 {
     return mal::hash(argsBegin, argsEnd);
+}
+
+BUILTIN("keys")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malHash, hash);
+    return hash->keys();
 }
 
 BUILTIN("<=")
@@ -275,6 +318,13 @@ BUILTIN("throw")
 {
     CHECK_ARGS_IS(1);
     throw *argsBegin;
+}
+
+BUILTIN("vals")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malHash, hash);
+    return hash->values();
 }
 
 static const char* malFunctionTable[] = {

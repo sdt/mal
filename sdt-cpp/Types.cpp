@@ -19,6 +19,10 @@ namespace mal {
         return malObjectPtr(c);
     };
 
+    malObjectPtr hash(const malHash::Map& map) {
+        return malObjectPtr(new malHash(map));
+    }
+
     malObjectPtr hash(malObjectIter argsBegin, malObjectIter argsEnd) {
         return malObjectPtr(new malHash(argsBegin, argsEnd));
     }
@@ -96,15 +100,93 @@ static String makeHashKey(malObjectPtr key)
     ASSERT(false, "%s is not a string or keyword", key->print(true).c_str());
 }
 
-malHash::malHash(malObjectIter argsBegin, malObjectIter argsEnd)
+static malHash::Map addToMap(malHash::Map& map,
+    malObjectIter argsBegin, malObjectIter argsEnd)
 {
     // This is intended to be called with pre-evaluated arguments.
-    int itemCount = std::distance(argsBegin, argsEnd);
-    ASSERT(itemCount % 2 == 0, "hash-map requires even-sized list");
     for (auto it = argsBegin; it != argsEnd; ++it) {
         String key = makeHashKey(*it++);
-        m_map[key] = *it;
+        map[key] = *it;
     }
+
+    return map;
+}
+
+static malHash::Map createMap(malObjectIter argsBegin, malObjectIter argsEnd)
+{
+    ASSERT(std::distance(argsBegin, argsEnd) % 2 == 0,
+            "hash-map requires an even-sized list");
+
+    malHash::Map map;
+    return addToMap(map, argsBegin, argsEnd);
+}
+
+malHash::malHash(malObjectIter argsBegin, malObjectIter argsEnd)
+: m_map(createMap(argsBegin, argsEnd))
+{
+
+}
+
+malHash::malHash(const malHash::Map& map)
+: m_map(map)
+{
+
+}
+
+malObjectPtr
+malHash::assoc(malObjectIter argsBegin, malObjectIter argsEnd) const
+{
+    ASSERT(std::distance(argsBegin, argsEnd) % 2 == 0,
+            "assoc requires an even-sized list");
+
+    malHash::Map map(m_map);
+    return mal::hash(addToMap(map, argsBegin, argsEnd));
+}
+
+bool malHash::contains(malObjectPtr key) const
+{
+    auto it = m_map.find(makeHashKey(key));
+    return it != m_map.end();
+}
+
+malObjectPtr
+malHash::dissoc(malObjectIter argsBegin, malObjectIter argsEnd) const
+{
+    malHash::Map map(m_map);
+    for (auto it = argsBegin; it != argsEnd; ++it) {
+        String key = makeHashKey(*it);
+        map.erase(key);
+    }
+    return mal::hash(map);
+}
+
+malObjectPtr malHash::get(malObjectPtr key) const
+{
+    auto it = m_map.find(makeHashKey(key));
+    return it == m_map.end() ? mal::nil() : it->second;
+}
+
+malObjectPtr malHash::keys() const
+{
+    malObjectVec keys;
+    for (auto it = m_map.begin(), end = m_map.end(); it != end; ++it) {
+        if (it->first[0] == '"') {
+            keys.push_back(mal::string(unescape(it->first)));
+        }
+        else {
+            keys.push_back(mal::keyword(it->first));
+        }
+    }
+    return mal::list(keys);
+}
+
+malObjectPtr malHash::values() const
+{
+    malObjectVec keys;
+    for (auto it = m_map.begin(), end = m_map.end(); it != end; ++it) {
+        keys.push_back(it->second);
+    }
+    return mal::list(keys);
 }
 
 String malHash::print(bool readably) const

@@ -202,16 +202,24 @@ public:
 
 class malHash : public malObject {
 public:
+    typedef std::map<String, malObjectPtr> Map;
+
     malHash(malObjectIter argsBegin, malObjectIter argsEnd);
+    malHash(const malHash::Map& map);
+
+    malObjectPtr assoc(malObjectIter argsBegin, malObjectIter argsEnd) const;
+    malObjectPtr dissoc(malObjectIter argsBegin, malObjectIter argsEnd) const;
+    bool contains(malObjectPtr key) const;
+    malObjectPtr get(malObjectPtr key) const;
+    malObjectPtr keys() const;
+    malObjectPtr values() const;
 
     virtual String print(bool readably) const;
 
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
 private:
-
-    typedef std::map<String, malObjectPtr> Map;
-    Map m_map;
+    const Map m_map;
 };
 
 class malBuiltIn : public malApplicable {
@@ -291,6 +299,7 @@ namespace mal {
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
     malObjectPtr falseObject();
     malObjectPtr hash(malObjectIter argsBegin, malObjectIter argsEnd);
+    malObjectPtr hash(const malHash::Map& map);
     malObjectPtr integer(int value);
     malObjectPtr integer(const String& token);
     malObjectPtr keyword(const String& token);
