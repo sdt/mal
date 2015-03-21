@@ -230,6 +230,12 @@ malMacro::malMacro(const malLambda* lambda)
 {
 }
 
+malMacro::malMacro(const malMacro& that, malHashPtr meta)
+: malObject(meta)
+, m_lambda(that.m_lambda)
+{
+}
+
 malObjectPtr malMacro::apply(malObjectIter argsBegin,
                              malObjectIter argsEnd,
                              malEnvPtr env) const
@@ -242,6 +248,15 @@ malLambda::malLambda(const StringVec& bindings,
 : m_bindings(bindings)
 , m_body(body)
 , m_env(env)
+{
+
+}
+
+malLambda::malLambda(const malLambda& that, malHashPtr meta)
+: malApplicable(meta)
+, m_bindings(that.m_bindings)
+, m_body(that.m_body)
+, m_env(that.m_env)
 {
 
 }

@@ -16,6 +16,9 @@ typedef RefCountedPtr<const malObject>    malObjectPtr;
 typedef std::vector<malObjectPtr>         malObjectVec;
 typedef malObjectVec::const_iterator      malObjectIter;
 
+class malHash;
+typedef RefCountedPtr<const malHash>      malHashPtr;
+
 
 #define ARRAY_SIZE(a)   (sizeof(a)/(sizeof(*(a))))
 
@@ -27,6 +30,9 @@ class malEmptyInputException : public std::exception { };
 class malObject : public RefCounted {
 public:
     malObject() {
+        TRACE_OBJECT("Creating malObject %p\n", this);
+    }
+    malObject(malHashPtr meta) : m_meta(meta) {
         TRACE_OBJECT("Creating malObject %p\n", this);
     }
     virtual ~malObject() {
@@ -43,6 +49,8 @@ public:
 
 protected:
     virtual bool doIsEqualTo(const malObject* rhs) const = 0;
+
+    malHashPtr m_meta;
 };
 
 template<class T>
@@ -59,6 +67,9 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
 class malConstant : public malObject {
 public:
     malConstant(String name) : m_name(name) { }
+    malConstant(const malConstant& that, malHashPtr meta)
+        : malObject(meta), m_name(that.m_name) { }
+
     virtual String print(bool readably) const { return m_name; }
 
     virtual bool doIsEqualTo(const malObject* rhs) const {
@@ -72,7 +83,8 @@ private:
 class malInteger : public malObject {
 public:
     malInteger(int value) : m_value(value) { }
-    virtual ~malInteger() { }
+    malInteger(const malInteger& that, malHashPtr meta)
+        : malObject(meta), m_value(that.m_value) { }
 
     virtual String print(bool readably) const {
         return std::to_string(m_value);
@@ -91,7 +103,8 @@ private:
 class malString : public malObject {
 public:
     malString(const String& token);
-    virtual ~malString() { }
+    malString(const malString& that, malHashPtr meta)
+        : malObject(meta), m_value(that.m_value) { }
 
     virtual String print(bool readably) const;
 
@@ -109,7 +122,8 @@ private:
 class malKeyword : public malObject {
 public:
     malKeyword(const String& token) : m_value(token) { }
-    virtual ~malKeyword() { }
+    malKeyword(const malKeyword& that, malHashPtr meta)
+        : malObject(meta), m_value(that.m_value) { }
 
     virtual String print(bool readably) const {
         return m_value;
@@ -128,7 +142,8 @@ private:
 class malSymbol : public malObject {
 public:
     malSymbol(const String& token) : m_value(token) { }
-    virtual ~malSymbol() { }
+    malSymbol(const malSymbol& that, malHashPtr meta)
+        : malObject(meta), m_value(that.m_value) { }
 
     virtual malObjectPtr eval(malEnvPtr env) const;
 
@@ -151,6 +166,9 @@ public:
     malSequence(const malObjectVec& items) : m_items(items) { }
     malSequence(malObjectIter begin, malObjectIter end)
         : m_items(begin, end) { }
+    malSequence(const malSequence& that, malHashPtr meta)
+        : malObject(meta), m_items(that.m_items) { }
+
     virtual String print(bool readably) const;
 
     malObjectVec eval_items(malEnvPtr env) const;
@@ -175,7 +193,6 @@ public:
     malList(const malObjectVec& items) : malSequence(items) { }
     malList(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
-    virtual ~malList() { }
 
     virtual String print(bool readably) const;
 };
@@ -185,7 +202,6 @@ public:
     malVector(const malObjectVec& items) : malSequence(items) { }
     malVector(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
-    virtual ~malVector() { }
 
     virtual malObjectPtr eval(malEnvPtr env) const;
     virtual String print(bool readably) const;
@@ -193,7 +209,8 @@ public:
 
 class malApplicable : public malObject {
 public:
-    virtual ~malApplicable() { }
+    malApplicable() { }
+    malApplicable(malHashPtr meta) : malObject(meta) { }
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
@@ -206,6 +223,8 @@ public:
 
     malHash(malObjectIter argsBegin, malObjectIter argsEnd);
     malHash(const malHash::Map& map);
+    malHash(const malHash& that, malHashPtr meta)
+        : malObject(meta), m_map(that.m_map) { }
 
     malObjectPtr assoc(malObjectIter argsBegin, malObjectIter argsEnd) const;
     malObjectPtr dissoc(malObjectIter argsBegin, malObjectIter argsEnd) const;
@@ -232,6 +251,9 @@ public:
     malBuiltIn(const String& name, ApplyFunc* handler)
     : m_name(name), m_handler(handler) { }
 
+    malBuiltIn(const malBuiltIn& that, malHashPtr meta)
+    : malApplicable(meta), m_name(that.m_name), m_handler(that.m_handler) { }
+
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
                                malEnvPtr env) const;
@@ -252,6 +274,7 @@ private:
 class malLambda : public malApplicable {
 public:
     malLambda(const StringVec& bindings, malObjectPtr body, malEnvPtr env);
+    malLambda(const malLambda& that, malHashPtr meta);
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
@@ -277,6 +300,7 @@ private:
 class malMacro : public malObject {
 public:
     malMacro(const malLambda* lambda);
+    malMacro(const malMacro& that, malHashPtr meta);
 
     malObjectPtr apply(malObjectIter argsBegin, malObjectIter argsEnd,
                        malEnvPtr env) const;
