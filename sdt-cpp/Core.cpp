@@ -68,6 +68,12 @@ HandlerRecord* HandlerRecord::first = NULL;
         return mal::boolean(DYNAMIC_CAST(type, *argsBegin)); \
     }
 
+#define BUILTIN_IS(op, constant) \
+    BUILTIN(op) { \
+        CHECK_ARGS_IS(1); \
+        return mal::boolean(*argsBegin == mal::constant()); \
+    }
+
 #define BUILTIN_INTOP(op) \
     BUILTIN(#op) { \
         CHECK_ARGS_IS(2); \
@@ -87,6 +93,10 @@ BUILTIN_INTOP(+);
 BUILTIN_INTOP(/);
 BUILTIN_INTOP(*);
 BUILTIN_INTOP(%);
+
+BUILTIN_IS("true?",     trueObject);
+BUILTIN_IS("false?",    falseObject);
+BUILTIN_IS("nil?",      nil);
 
 BUILTIN("apply")
 {
@@ -226,6 +236,13 @@ BUILTIN("keys")
     return hash->keys();
 }
 
+BUILTIN("keyword")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malString, token);
+    return mal::keyword(":" + token->value());
+}
+
 BUILTIN("<=")
 {
     CHECK_ARGS_IS(2);
@@ -302,6 +319,13 @@ BUILTIN("str")
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
 }
 
+BUILTIN("symbol")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malString, token);
+    return mal::symbol(token->value());
+}
+
 BUILTIN("-")
 {
     int argCount = CHECK_ARGS_BETWEEN(1, 2);
@@ -325,6 +349,11 @@ BUILTIN("vals")
     CHECK_ARGS_IS(1);
     ARG(malHash, hash);
     return hash->values();
+}
+
+BUILTIN("vector")
+{
+    return mal::vector(argsBegin, argsEnd);
 }
 
 static const char* malFunctionTable[] = {
