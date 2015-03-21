@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    String m_name;
+    const String m_name;
 };
 
 class malInteger : public malObject {
@@ -85,7 +85,7 @@ public:
     }
 
 private:
-    int m_value;
+    const int m_value;
 };
 
 class malString : public malObject {
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    String m_value;
+    const String m_value;
 };
 
 class malKeyword : public malObject {
@@ -122,7 +122,7 @@ public:
     }
 
 private:
-    String m_value;
+    const String m_value;
 };
 
 class malSymbol : public malObject {
@@ -143,7 +143,7 @@ public:
     }
 
 private:
-    String m_value;
+    const String m_value;
 };
 
 class malSequence : public malObject {
@@ -167,7 +167,7 @@ public:
     virtual malObjectPtr rest() const;
 
 private:
-    malObjectVec m_items;
+    const malObjectVec m_items;
 };
 
 class malList : public malSequence {
@@ -245,7 +245,7 @@ public:
     }
 
 private:
-    String     m_name;
+    const String     m_name;
     ApplyFunc* m_handler;
 };
 
@@ -269,9 +269,9 @@ public:
     }
 
 private:
-    StringVec    m_bindings;
-    malObjectPtr m_body;
-    malEnvPtr    m_env;
+    const StringVec    m_bindings;
+    const malObjectPtr m_body;
+    const malEnvPtr    m_env;
 };
 
 class malMacro : public malObject {
@@ -291,7 +291,7 @@ public:
 
 private:
     typedef RefCountedPtr<const malLambda> malLambdaPtr;
-    malLambdaPtr m_lambda;
+    const malLambdaPtr m_lambda;
 };
 
 namespace mal {
