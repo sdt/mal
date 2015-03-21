@@ -68,6 +68,14 @@ HandlerRecord* HandlerRecord::first = NULL;
         return mal::boolean(DYNAMIC_CAST(type, *argsBegin)); \
     }
 
+#define BUILTIN_INTOP(op) \
+    BUILTIN(#op) { \
+        CHECK_ARGS_IS(2); \
+        ARG(malInteger, lhs); \
+        ARG(malInteger, rhs); \
+        return mal::integer(lhs->value() op rhs->value()); \
+    }
+
 BUILTIN_ISA("keyword?",             malKeyword);
 BUILTIN_ISA("list?",                malList);
 BUILTIN_ISA("map?",                 malHash);
@@ -75,14 +83,10 @@ BUILTIN_ISA("sequential?",          malSequence);
 BUILTIN_ISA("symbol?",              malSymbol);
 BUILTIN_ISA("vector?",              malVector);
 
-BUILTIN("+")
-{
-    CHECK_ARGS_IS(2);
-    ARG(malInteger, lhs);
-    ARG(malInteger, rhs);
-
-    return mal::integer(lhs->value() + rhs->value());
-}
+BUILTIN_INTOP(+);
+BUILTIN_INTOP(/);
+BUILTIN_INTOP(*);
+BUILTIN_INTOP(%);
 
 BUILTIN("apply")
 {
@@ -144,15 +148,6 @@ BUILTIN("count")
     return mal::integer(seq->count());
 }
 
-BUILTIN("/")
-{
-    CHECK_ARGS_IS(2);
-    ARG(malInteger, lhs);
-    ARG(malInteger, rhs);
-
-    return mal::integer(lhs->value() / rhs->value());
-}
-
 BUILTIN("empty?")
 {
     CHECK_ARGS_IS(1);
@@ -160,7 +155,6 @@ BUILTIN("empty?")
 
     return mal::boolean(seq->isEmpty());
 }
-
 
 BUILTIN("=")
 {
@@ -196,15 +190,6 @@ BUILTIN("<=")
     ARG(malInteger, rhs);
 
     return mal::boolean(lhs->value() <= rhs->value());
-}
-
-BUILTIN("*")
-{
-    CHECK_ARGS_IS(2);
-    ARG(malInteger, lhs);
-    ARG(malInteger, rhs);
-
-    return mal::integer(lhs->value() * rhs->value());
 }
 
 BUILTIN("nth")
