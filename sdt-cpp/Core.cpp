@@ -252,6 +252,14 @@ BUILTIN("<=")
     return mal::boolean(lhs->value() <= rhs->value());
 }
 
+BUILTIN("meta")
+{
+    CHECK_ARGS_IS(1);
+    malObjectPtr obj = *argsBegin++;
+
+    return obj->meta();
+}
+
 BUILTIN("nth")
 {
     CHECK_ARGS_IS(2);
@@ -354,6 +362,14 @@ BUILTIN("vals")
 BUILTIN("vector")
 {
     return mal::vector(argsBegin, argsEnd);
+}
+
+BUILTIN("with-meta")
+{
+    CHECK_ARGS_IS(2);
+    malObjectPtr obj  = *argsBegin++;
+    malObjectPtr meta = *argsBegin++;
+    return obj->withMeta(meta);
 }
 
 static const char* malFunctionTable[] = {

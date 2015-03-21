@@ -230,7 +230,7 @@ malMacro::malMacro(const malLambda* lambda)
 {
 }
 
-malMacro::malMacro(const malMacro& that, malHashPtr meta)
+malMacro::malMacro(const malMacro& that, malObjectPtr meta)
 : malObject(meta)
 , m_lambda(that.m_lambda)
 {
@@ -243,7 +243,7 @@ malObjectPtr malMacro::apply(malObjectIter argsBegin,
     return m_lambda->apply(argsBegin, argsEnd, env);
 }
 
-malObjectPtr malMacro::doWithMeta(malHashPtr meta)
+malObjectPtr malMacro::doWithMeta(malObjectPtr meta) const
 {
     return new malMacro(*this, meta);
 }
@@ -257,7 +257,7 @@ malLambda::malLambda(const StringVec& bindings,
 
 }
 
-malLambda::malLambda(const malLambda& that, malHashPtr meta)
+malLambda::malLambda(const malLambda& that, malObjectPtr meta)
 : malApplicable(meta)
 , m_bindings(that.m_bindings)
 , m_body(that.m_body)
@@ -273,7 +273,7 @@ malObjectPtr malLambda::apply(malObjectIter argsBegin,
     return EVAL(m_body, makeEnv(argsBegin, argsEnd));
 }
 
-malObjectPtr malLambda::doWithMeta(malHashPtr meta)
+malObjectPtr malLambda::doWithMeta(malObjectPtr meta) const
 {
     return new malLambda(*this, meta);
 }
@@ -310,6 +310,16 @@ bool malObject::isTrue() const
 {
     return (this != mal::falseObject().ptr())
         && (this != mal::nil().ptr());
+}
+
+malObjectPtr malObject::meta() const
+{
+    return m_meta.ptr() == NULL ? mal::nil() : m_meta;
+}
+
+malObjectPtr malObject::withMeta(malObjectPtr meta) const
+{
+    return doWithMeta(meta);
 }
 
 bool malSequence::doIsEqualTo(const malObject* rhs) const

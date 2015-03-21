@@ -95,6 +95,7 @@ malObjectPtr read_str(const String& input)
 
 static malObjectPtr read_form(Tokeniser& tokeniser)
 {
+    ASSERT(!tokeniser.eof(), "Expected form, got EOF");
     String token = tokeniser.peek();
 
     ASSERT(!std::regex_match(token, closeRegex),
@@ -134,7 +135,6 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
         { "'",   "quote" },
         { "~@",  "splice-unquote" },
         { "~",   "unquote" },
-        { "^",   "with-meta" },
     };
     const ReaderMacro* macroTableEnd = macroTable + ARRAY_SIZE(macroTable);
 
@@ -155,6 +155,15 @@ static malObjectPtr read_atom(Tokeniser& tokeniser)
     }
     if (token[0] == ':') {
         return mal::keyword(token);
+    }
+    if (token == "^") {
+        malObjectVec items;
+        items.push_back(mal::symbol("with-meta"));
+        malObjectPtr meta = read_form(tokeniser);
+        malObjectPtr object = read_form(tokeniser);
+        items.push_back(object);
+        items.push_back(meta);
+        return mal::list(items);
     }
     for (Constant* it = constTable; it != constTableEnd; ++it) {
         if (token == it->token) {
@@ -187,7 +196,6 @@ static void read_list(Tokeniser& tokeniser, malObjectVec& items,
 
 static malObjectPtr process_macro(Tokeniser& tokeniser, const String& symbol)
 {
-    ASSERT(!tokeniser.eof(), "Expected form, got EOF");
     malObjectVec items;
     items.push_back(mal::symbol(symbol));
     items.push_back(read_form(tokeniser));
