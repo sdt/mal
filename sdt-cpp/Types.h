@@ -349,7 +349,30 @@ private:
     const malLambdaPtr m_lambda;
 };
 
+class malAtom : public malObject {
+public:
+    malAtom(malObjectPtr value) : m_value(value) { }
+    malAtom(const malAtom& that, malObjectPtr meta)
+        : malObject(meta), m_value(that.m_value) { }
+
+    virtual bool doIsEqualTo(const malObject* rhs) const {
+        return this->m_value->isEqualTo(rhs);
+    }
+
+    virtual String print(bool readably) const {
+        return "(atom " + m_value->print(readably) + ")";
+    };
+
+    malObjectPtr deref() const { return m_value; }
+
+    WITH_META(malAtom);
+
+private:
+    malObjectPtr m_value;
+};
+
 namespace mal {
+    malObjectPtr atom(malObjectPtr value);
     malObjectPtr boolean(bool value);
     malObjectPtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
     malObjectPtr falseObject();

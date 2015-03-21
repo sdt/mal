@@ -6,6 +6,10 @@ extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
 
 namespace mal {
+    malObjectPtr atom(malObjectPtr value) {
+        return malObjectPtr(new malAtom(value));
+    };
+
     malObjectPtr boolean(bool value) {
         return value ? trueObject() : falseObject();
     }

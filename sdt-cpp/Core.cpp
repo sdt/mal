@@ -82,6 +82,7 @@ HandlerRecord* HandlerRecord::first = NULL;
         return mal::integer(lhs->value() op rhs->value()); \
     }
 
+BUILTIN_ISA("atom?",                malAtom);
 BUILTIN_ISA("keyword?",             malKeyword);
 BUILTIN_ISA("list?",                malList);
 BUILTIN_ISA("map?",                 malHash);
@@ -121,6 +122,13 @@ BUILTIN("assoc")
     ARG(malHash, hash);
 
     return hash->assoc(argsBegin, argsEnd);
+}
+
+BUILTIN("atom")
+{
+    CHECK_ARGS_IS(1);
+
+    return mal::atom(*argsBegin);
 }
 
 BUILTIN("concat")
@@ -174,6 +182,14 @@ BUILTIN("count")
 
     ARG(malSequence, seq);
     return mal::integer(seq->count());
+}
+
+BUILTIN("deref")
+{
+    CHECK_ARGS_IS(1);
+    ARG(malAtom, atom);
+
+    return atom->deref();
 }
 
 BUILTIN("dissoc")
