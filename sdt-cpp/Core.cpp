@@ -99,6 +99,36 @@ BUILTIN_IS("true?",     trueObject);
 BUILTIN_IS("false?",    falseObject);
 BUILTIN_IS("nil?",      nil);
 
+BUILTIN("-")
+{
+    int argCount = CHECK_ARGS_BETWEEN(1, 2);
+    ARG(malInteger, lhs);
+    if (argCount == 1) {
+        return mal::integer(- lhs->value());
+    }
+
+    ARG(malInteger, rhs);
+    return mal::integer(lhs->value() - rhs->value());
+}
+
+BUILTIN("<=")
+{
+    CHECK_ARGS_IS(2);
+    ARG(malInteger, lhs);
+    ARG(malInteger, rhs);
+
+    return mal::boolean(lhs->value() <= rhs->value());
+}
+
+BUILTIN("=")
+{
+    CHECK_ARGS_IS(2);
+    const malObject* lhs = (*argsBegin++).ptr();
+    const malObject* rhs = (*argsBegin++).ptr();
+
+    return mal::boolean(lhs->isEqualTo(rhs));
+}
+
 BUILTIN("apply")
 {
     CHECK_ARGS_AT_LEAST(2);
@@ -208,15 +238,6 @@ BUILTIN("empty?")
     return mal::boolean(seq->isEmpty());
 }
 
-BUILTIN("=")
-{
-    CHECK_ARGS_IS(2);
-    const malObject* lhs = (*argsBegin++).ptr();
-    const malObject* rhs = (*argsBegin++).ptr();
-
-    return mal::boolean(lhs->isEqualTo(rhs));
-}
-
 BUILTIN("eval")
 {
     CHECK_ARGS_IS(1);
@@ -257,15 +278,6 @@ BUILTIN("keyword")
     CHECK_ARGS_IS(1);
     ARG(malString, token);
     return mal::keyword(":" + token->value());
-}
-
-BUILTIN("<=")
-{
-    CHECK_ARGS_IS(2);
-    ARG(malInteger, lhs);
-    ARG(malInteger, rhs);
-
-    return mal::boolean(lhs->value() <= rhs->value());
 }
 
 BUILTIN("meta")
@@ -348,18 +360,6 @@ BUILTIN("symbol")
     CHECK_ARGS_IS(1);
     ARG(malString, token);
     return mal::symbol(token->value());
-}
-
-BUILTIN("-")
-{
-    int argCount = CHECK_ARGS_BETWEEN(1, 2);
-    ARG(malInteger, lhs);
-    if (argCount == 1) {
-        return mal::integer(- lhs->value());
-    }
-
-    ARG(malInteger, rhs);
-    return mal::integer(lhs->value() - rhs->value());
 }
 
 BUILTIN("throw")
