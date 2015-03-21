@@ -39,6 +39,10 @@ public:
         TRACE_OBJECT("Destroying malObject %p\n", this);
     }
 
+    malObjectPtr withMeta(malHashPtr meta);
+    //{ return malObjectPtr(doWithMeta(meta)); }
+    virtual malObjectPtr doWithMeta(malHashPtr meta) = 0;
+
     bool isTrue() const;
 
     bool isEqualTo(malObjectPtr rhs) const;
@@ -64,6 +68,11 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
 #define DYNAMIC_CAST(Type, Object)  (dynamic_cast<const Type*>((Object).ptr()))
 #define STATIC_CAST(Type, Object)   (static_cast<const Type*>((Object).ptr()))
 
+#define WITH_META(Type) \
+    virtual malObjectPtr doWithMeta(malHashPtr meta) { \
+        return new Type(*this, meta); \
+    } \
+
 class malConstant : public malObject {
 public:
     malConstant(String name) : m_name(name) { }
@@ -75,6 +84,8 @@ public:
     virtual bool doIsEqualTo(const malObject* rhs) const {
         return this == rhs; // these are singletons
     }
+
+    WITH_META(malConstant);
 
 private:
     const String m_name;
@@ -96,6 +107,8 @@ public:
         return m_value == static_cast<const malInteger*>(rhs)->m_value;
     }
 
+    WITH_META(malInteger);
+
 private:
     const int m_value;
 };
@@ -114,6 +127,8 @@ public:
     virtual bool doIsEqualTo(const malObject* rhs) const {
         return m_value == static_cast<const malString*>(rhs)->m_value;
     }
+
+    WITH_META(malString);
 
 private:
     const String m_value;
@@ -134,6 +149,8 @@ public:
     virtual bool doIsEqualTo(const malObject* rhs) const {
         return m_value == static_cast<const malKeyword*>(rhs)->m_value;
     }
+
+    WITH_META(malKeyword);
 
 private:
     const String m_value;
@@ -156,6 +173,8 @@ public:
     virtual bool doIsEqualTo(const malObject* rhs) const {
         return m_value == static_cast<const malSymbol*>(rhs)->m_value;
     }
+
+    WITH_META(malSymbol);
 
 private:
     const String m_value;
@@ -193,8 +212,12 @@ public:
     malList(const malObjectVec& items) : malSequence(items) { }
     malList(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
+    malList(const malList& that, malHashPtr meta)
+        : malSequence(that, meta) { }
 
     virtual String print(bool readably) const;
+
+    WITH_META(malList);
 };
 
 class malVector : public malSequence {
@@ -202,9 +225,13 @@ public:
     malVector(const malObjectVec& items) : malSequence(items) { }
     malVector(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
+    malVector(const malVector& that, malHashPtr meta)
+        : malSequence(that, meta) { }
 
     virtual malObjectPtr eval(malEnvPtr env) const;
     virtual String print(bool readably) const;
+
+    WITH_META(malVector);
 };
 
 class malApplicable : public malObject {
@@ -237,6 +264,8 @@ public:
 
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
+    WITH_META(malHash);
+
 private:
     const Map m_map;
 };
@@ -266,6 +295,8 @@ public:
         return this == rhs; // these are singletons
     }
 
+    WITH_META(malBuiltIn);
+
 private:
     const String     m_name;
     ApplyFunc* m_handler;
@@ -291,6 +322,8 @@ public:
         return STRF("#user-function(%p)", this);
     }
 
+    virtual malObjectPtr doWithMeta(malHashPtr meta);
+
 private:
     const StringVec    m_bindings;
     const malObjectPtr m_body;
@@ -312,6 +345,8 @@ public:
     virtual String print(bool readably) const {
         return STRF("#user-macro(%p)", this);
     }
+
+    virtual malObjectPtr doWithMeta(malHashPtr meta);
 
 private:
     typedef RefCountedPtr<const malLambda> malLambdaPtr;

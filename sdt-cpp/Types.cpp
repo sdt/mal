@@ -243,6 +243,11 @@ malObjectPtr malMacro::apply(malObjectIter argsBegin,
     return m_lambda->apply(argsBegin, argsEnd, env);
 }
 
+malObjectPtr malMacro::doWithMeta(malHashPtr meta)
+{
+    return new malMacro(*this, meta);
+}
+
 malLambda::malLambda(const StringVec& bindings,
                      malObjectPtr body, malEnvPtr env)
 : m_bindings(bindings)
@@ -266,6 +271,11 @@ malObjectPtr malLambda::apply(malObjectIter argsBegin,
                               malEnvPtr) const
 {
     return EVAL(m_body, makeEnv(argsBegin, argsEnd));
+}
+
+malObjectPtr malLambda::doWithMeta(malHashPtr meta)
+{
+    return new malLambda(*this, meta);
 }
 
 malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) const
