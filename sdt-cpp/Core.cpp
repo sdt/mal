@@ -51,13 +51,18 @@ private:
 HandlerRecord* HandlerRecord::first = NULL;
 
 #define ARG(type, name) const type* name = OBJECT_CAST(type, *argsBegin++)
-#define BUILTIN(func, symbol) \
-    static malBuiltIn::ApplyFunc builtIn_##func; \
-    static HandlerRecord handlerRecord_##func(symbol, builtIn_##func); \
-    malObjectPtr builtIn_##func(const String& name, \
+
+#define FUNCNAME(uniq) builtIn ## uniq
+#define HRECNAME(uniq) handler ## uniq
+#define BUILTIN_DEF(uniq, symbol) \
+    static malBuiltIn::ApplyFunc FUNCNAME(uniq); \
+    static HandlerRecord HRECNAME(uniq)(symbol, FUNCNAME(uniq)); \
+    malObjectPtr FUNCNAME(uniq)(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 
-BUILTIN(ADD, "+")
+#define BUILTIN(symbol)  BUILTIN_DEF(__LINE__, symbol)
+
+BUILTIN("+")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -66,7 +71,7 @@ BUILTIN(ADD, "+")
     return mal::integer(lhs->value() + rhs->value());
 }
 
-BUILTIN(APPLY, "apply")
+BUILTIN("apply")
 {
     CHECK_ARGS_AT_LEAST(2);
     malObjectPtr op = *argsBegin++; // this gets checked in APPLY
@@ -83,7 +88,7 @@ BUILTIN(APPLY, "apply")
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
-BUILTIN(CONCAT, "concat")
+BUILTIN("concat")
 {
     int count = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
@@ -102,7 +107,7 @@ BUILTIN(CONCAT, "concat")
     return mal::list(items);
 }
 
-BUILTIN(CONS, "cons")
+BUILTIN("cons")
 {
     CHECK_ARGS_IS(2);
     malObjectPtr first = *argsBegin++;
@@ -115,7 +120,7 @@ BUILTIN(CONS, "cons")
     return mal::list(items);
 }
 
-BUILTIN(COUNT, "count")
+BUILTIN("count")
 {
     CHECK_ARGS_IS(1);
     if (*argsBegin == mal::nil()) {
@@ -126,7 +131,7 @@ BUILTIN(COUNT, "count")
     return mal::integer(seq->count());
 }
 
-BUILTIN(DIV, "/")
+BUILTIN("/")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -135,7 +140,7 @@ BUILTIN(DIV, "/")
     return mal::integer(lhs->value() / rhs->value());
 }
 
-BUILTIN(EMPTY_Q, "empty?")
+BUILTIN("empty?")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
@@ -144,7 +149,7 @@ BUILTIN(EMPTY_Q, "empty?")
 }
 
 
-BUILTIN(EQUALS, "=")
+BUILTIN("=")
 {
     CHECK_ARGS_IS(2);
     const malObject* lhs = (*argsBegin++).ptr();
@@ -153,25 +158,25 @@ BUILTIN(EQUALS, "=")
     return mal::boolean(lhs->isEqualTo(rhs));
 }
 
-BUILTIN(EVAL, "eval")
+BUILTIN("eval")
 {
     CHECK_ARGS_IS(1);
     return EVAL(*argsBegin, env->getRoot());
 }
 
-BUILTIN(FIRST, "first")
+BUILTIN("first")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
     return seq->first();
 }
 
-BUILTIN(HASH_MAP, "hash-map")
+BUILTIN("hash-map")
 {
     return mal::hash(argsBegin, argsEnd);
 }
 
-BUILTIN(LE, "<=")
+BUILTIN("<=")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -180,13 +185,13 @@ BUILTIN(LE, "<=")
     return mal::boolean(lhs->value() <= rhs->value());
 }
 
-BUILTIN(LIST_Q, "list?")
+BUILTIN("list?")
 {
     CHECK_ARGS_IS(1);
     return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
-BUILTIN(MUL, "*")
+BUILTIN("*")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -195,7 +200,7 @@ BUILTIN(MUL, "*")
     return mal::integer(lhs->value() * rhs->value());
 }
 
-BUILTIN(NTH, "nth")
+BUILTIN("nth")
 {
     CHECK_ARGS_IS(2);
     ARG(malSequence, seq);
@@ -207,24 +212,24 @@ BUILTIN(NTH, "nth")
     return seq->item(i);
 }
 
-BUILTIN(PR_STR, "pr-str")
+BUILTIN("pr-str")
 {
     return mal::string(printObjects(argsBegin, argsEnd, " ", true));
 }
 
-BUILTIN(PRINTLN, "println")
+BUILTIN("println")
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", false) << "\n";
     return mal::nil();
 }
 
-BUILTIN(PRN, "prn")
+BUILTIN("prn")
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", true) << "\n";
     return mal::nil();
 }
 
-BUILTIN(READ_STRING, "read-string")
+BUILTIN("read-string")
 {
     CHECK_ARGS_IS(1);
     ARG(malString, str);
@@ -232,14 +237,14 @@ BUILTIN(READ_STRING, "read-string")
     return read_str(str->value());
 }
 
-BUILTIN(REST, "rest")
+BUILTIN("rest")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
     return seq->rest();
 }
 
-BUILTIN(SLURP, "slurp")
+BUILTIN("slurp")
 {
     CHECK_ARGS_IS(1);
     ARG(malString, filename);
@@ -257,12 +262,12 @@ BUILTIN(SLURP, "slurp")
     return mal::string(data);
 }
 
-BUILTIN(STR, "str")
+BUILTIN("str")
 {
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
 }
 
-BUILTIN(SUB, "-")
+BUILTIN("-")
 {
     int argCount = CHECK_ARGS_BETWEEN(1, 2);
     ARG(malInteger, lhs);
@@ -274,7 +279,7 @@ BUILTIN(SUB, "-")
     return mal::integer(lhs->value() - rhs->value());
 }
 
-BUILTIN(THROW, "throw")
+BUILTIN("throw")
 {
     CHECK_ARGS_IS(1);
     throw *argsBegin;
