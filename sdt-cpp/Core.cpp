@@ -27,12 +27,37 @@ extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
+class HandlerRecord {
+public:
+    HandlerRecord(const char* name, malBuiltIn::ApplyFunc * handler)
+    : name(name), handler(handler), next(first)
+    {
+        first = this;
+    }
+
+    static void installAll(malEnvPtr env) {
+        for (HandlerRecord* it = first; it != NULL; it = it->next) {
+            env->set(it->name, mal::builtin(it->name, it->handler));
+        }
+    }
+
+private:
+    const char* name;
+    malBuiltIn::ApplyFunc* handler;
+    static HandlerRecord* first;
+    HandlerRecord* next;
+};
+
+HandlerRecord* HandlerRecord::first = NULL;
+
 #define ARG(type, name) const type* name = OBJECT_CAST(type, *argsBegin++)
-#define BUILTIN(func) \
+#define BUILTIN(func, symbol) \
+    static malBuiltIn::ApplyFunc builtIn_##func; \
+    static HandlerRecord handlerRecord_##func(symbol, builtIn_##func); \
     malObjectPtr builtIn_##func(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 
-BUILTIN(ADD)
+BUILTIN(ADD, "+")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -41,7 +66,7 @@ BUILTIN(ADD)
     return mal::integer(lhs->value() + rhs->value());
 }
 
-BUILTIN(APPLY)
+BUILTIN(APPLY, "apply")
 {
     CHECK_ARGS_AT_LEAST(2);
     malObjectPtr op = *argsBegin++; // this gets checked in APPLY
@@ -58,7 +83,7 @@ BUILTIN(APPLY)
     return APPLY(op, args.begin(), args.end(), env->getRoot());
 }
 
-BUILTIN(CONCAT)
+BUILTIN(CONCAT, "concat")
 {
     int count = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
@@ -77,7 +102,7 @@ BUILTIN(CONCAT)
     return mal::list(items);
 }
 
-BUILTIN(CONS)
+BUILTIN(CONS, "cons")
 {
     CHECK_ARGS_IS(2);
     malObjectPtr first = *argsBegin++;
@@ -90,7 +115,7 @@ BUILTIN(CONS)
     return mal::list(items);
 }
 
-BUILTIN(COUNT)
+BUILTIN(COUNT, "count")
 {
     CHECK_ARGS_IS(1);
     if (*argsBegin == mal::nil()) {
@@ -101,7 +126,7 @@ BUILTIN(COUNT)
     return mal::integer(seq->count());
 }
 
-BUILTIN(DIV)
+BUILTIN(DIV, "/")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -110,7 +135,7 @@ BUILTIN(DIV)
     return mal::integer(lhs->value() / rhs->value());
 }
 
-BUILTIN(EMPTY_Q)
+BUILTIN(EMPTY_Q, "empty?")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
@@ -119,7 +144,7 @@ BUILTIN(EMPTY_Q)
 }
 
 
-BUILTIN(EQUALS)
+BUILTIN(EQUALS, "=")
 {
     CHECK_ARGS_IS(2);
     const malObject* lhs = (*argsBegin++).ptr();
@@ -128,25 +153,25 @@ BUILTIN(EQUALS)
     return mal::boolean(lhs->isEqualTo(rhs));
 }
 
-BUILTIN(EVAL)
+BUILTIN(EVAL, "eval")
 {
     CHECK_ARGS_IS(1);
     return EVAL(*argsBegin, env->getRoot());
 }
 
-BUILTIN(FIRST)
+BUILTIN(FIRST, "first")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
     return seq->first();
 }
 
-BUILTIN(HASH_MAP)
+BUILTIN(HASH_MAP, "hash-map")
 {
     return mal::hash(argsBegin, argsEnd);
 }
 
-BUILTIN(LE)
+BUILTIN(LE, "<=")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -155,13 +180,13 @@ BUILTIN(LE)
     return mal::boolean(lhs->value() <= rhs->value());
 }
 
-BUILTIN(LIST_Q)
+BUILTIN(LIST_Q, "list?")
 {
     CHECK_ARGS_IS(1);
     return mal::boolean(DYNAMIC_CAST(malList, *argsBegin));
 }
 
-BUILTIN(MUL)
+BUILTIN(MUL, "*")
 {
     CHECK_ARGS_IS(2);
     ARG(malInteger, lhs);
@@ -170,7 +195,7 @@ BUILTIN(MUL)
     return mal::integer(lhs->value() * rhs->value());
 }
 
-BUILTIN(NTH)
+BUILTIN(NTH, "nth")
 {
     CHECK_ARGS_IS(2);
     ARG(malSequence, seq);
@@ -182,24 +207,24 @@ BUILTIN(NTH)
     return seq->item(i);
 }
 
-BUILTIN(PR_STR)
+BUILTIN(PR_STR, "pr-str")
 {
     return mal::string(printObjects(argsBegin, argsEnd, " ", true));
 }
 
-BUILTIN(PRINTLN)
+BUILTIN(PRINTLN, "println")
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", false) << "\n";
     return mal::nil();
 }
 
-BUILTIN(PRN)
+BUILTIN(PRN, "prn")
 {
     std::cout << printObjects(argsBegin, argsEnd, " ", true) << "\n";
     return mal::nil();
 }
 
-BUILTIN(READ_STRING)
+BUILTIN(READ_STRING, "read-string")
 {
     CHECK_ARGS_IS(1);
     ARG(malString, str);
@@ -207,14 +232,14 @@ BUILTIN(READ_STRING)
     return read_str(str->value());
 }
 
-BUILTIN(REST)
+BUILTIN(REST, "rest")
 {
     CHECK_ARGS_IS(1);
     ARG(malSequence, seq);
     return seq->rest();
 }
 
-BUILTIN(SLURP)
+BUILTIN(SLURP, "slurp")
 {
     CHECK_ARGS_IS(1);
     ARG(malString, filename);
@@ -232,12 +257,12 @@ BUILTIN(SLURP)
     return mal::string(data);
 }
 
-BUILTIN(STR)
+BUILTIN(STR, "str")
 {
     return mal::string(printObjects(argsBegin, argsEnd, "", false));
 }
 
-BUILTIN(SUB)
+BUILTIN(SUB, "-")
 {
     int argCount = CHECK_ARGS_BETWEEN(1, 2);
     ARG(malInteger, lhs);
@@ -249,43 +274,11 @@ BUILTIN(SUB)
     return mal::integer(lhs->value() - rhs->value());
 }
 
-BUILTIN(THROW)
+BUILTIN(THROW, "throw")
 {
     CHECK_ARGS_IS(1);
     throw *argsBegin;
 }
-
-struct Handler {
-    malBuiltIn::ApplyFunc* handler;
-    const char* name;
-};
-
-static Handler handlerTable[] = {
-    { builtIn_ADD,              "+"                                 },
-    { builtIn_APPLY,            "apply"                             },
-    { builtIn_CONCAT,           "concat",                           },
-    { builtIn_CONS,             "cons"                              },
-    { builtIn_COUNT,            "count"                             },
-    { builtIn_DIV,              "/"                                 },
-    { builtIn_EQUALS,           "="                                 },
-    { builtIn_EMPTY_Q,          "empty?"                            },
-    { builtIn_EVAL,             "eval"                              },
-    { builtIn_FIRST,            "first"                             },
-    { builtIn_HASH_MAP,         "hash-map"                          },
-    { builtIn_LE,               "<="                                },
-    { builtIn_LIST_Q,           "list?"                             },
-    { builtIn_MUL,              "*"                                 },
-    { builtIn_NTH,              "nth"                               },
-    { builtIn_PR_STR,           "pr-str"                            },
-    { builtIn_PRINTLN,          "println"                           },
-    { builtIn_PRN,              "prn"                               },
-    { builtIn_READ_STRING,      "read-string"                       },
-    { builtIn_REST,             "rest"                              },
-    { builtIn_SLURP,            "slurp"                             },
-    { builtIn_STR,              "str"                               },
-    { builtIn_SUB,              "-"                                 },
-    { builtIn_THROW,            "throw"                             },
-};
 
 static const char* malFunctionTable[] = {
     "(def! list (fn* (& items) items))",
@@ -300,10 +293,7 @@ static const char* malFunctionTable[] = {
 };
 
 void install_core(malEnvPtr env) {
-    for (int i = 0; i < ARRAY_SIZE(handlerTable); i++) {
-        Handler *it = &handlerTable[i];
-        env->set(it->name, mal::builtin(it->name, it->handler));
-    }
+    HandlerRecord::installAll(env);
 
     for (int i = 0; i < ARRAY_SIZE(malFunctionTable); i++) {
         rep(malFunctionTable[i], env);
