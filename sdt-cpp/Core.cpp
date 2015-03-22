@@ -334,6 +334,13 @@ BUILTIN("readline")
     return readline(str->value());
 }
 
+BUILTIN("reset!")
+{
+    CHECK_ARGS_IS(2);
+    ARG(malAtom, atom);
+    return atom->reset(*argsBegin);
+}
+
 BUILTIN("rest")
 {
     CHECK_ARGS_IS(1);
@@ -407,6 +414,7 @@ static const char* malFunctionTable[] = {
         (eval (read-string (str \"(do \" (slurp filename) \")\")))))",
     "(def! map (fn* (f xs) (if (empty? xs) xs \
         (cons (f (first xs)) (map f (rest xs))))))",
+    "(def! swap! (fn* (atom f & args) (reset! atom (apply f @atom args))))",
 };
 
 void install_core(malEnvPtr env) {

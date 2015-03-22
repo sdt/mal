@@ -366,10 +366,13 @@ public:
 
     malObjectPtr deref() const { return m_value; }
 
+    //TODO: oh this is just wrong wrong wrong
+    malObjectPtr reset(malObjectPtr value) const { return m_value = value; }
+
     WITH_META(malAtom);
 
 private:
-    malObjectPtr m_value;
+    mutable malObjectPtr m_value; //TODO: :/
 };
 
 namespace mal {
