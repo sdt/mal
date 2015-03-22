@@ -1,0 +1,8 @@
+#!/bin/bash
+
+MAL_ROOT=$( dirname $0 )
+#MAL_CMD="$MAL_ROOT/sdt-cpp/stepA_mal $MAL_ROOT/mal/stepA_mal.mal"
+#MAL_CMD="$MAL_ROOT/sdt-cpp/stepA_mal $MAL_ROOT/mal/step4*.mal"
+#MAL_CMD="$MAL_ROOT/sdt-cpp/stepA_mal"
+echo "$MAL_ROOT"/runtest.py "$1" -- $MAL_CMD
+"$MAL_ROOT"/runtest.py "$1" -- $MAL_CMD

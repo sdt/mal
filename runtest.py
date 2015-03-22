@@ -10,6 +10,9 @@ from select import select
 # Pseudo-TTY and terminal manipulation
 import pty, array, fcntl, termios
 
+# Unbuffered writes to stdout
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
 IS_PY_3 = sys.version_info[0] == 3
 
 # TODO: do we need to support '\n' too
@@ -139,7 +142,7 @@ def read_test(data):
         elif line[0:3] == ";;;":       # ignore comment
             continue
         elif line[0:2] == ";;":        # output comment
-            print(line[3:])
+            print("#" + line[3:])
             continue
         elif line[0:2] == ";":         # unexpected comment
             print("Test data error at line %d:\n%s" % (test_idx, line))
@@ -176,6 +179,17 @@ def assert_prompt(timeout):
         print("    Got      : %s" % repr(r.buf))
         sys.exit(1)
 
+def strip_prefix(s, prefix):
+    if s.startswith(prefix):
+        return s[len(prefix):]
+    else:
+        return s
+
+def format_result(res, prefix, sep):
+    if not res:
+      return "None"
+    linesep = sep + "#          : "
+    return strip_prefix(res, prefix).replace(sep, linesep)
 
 # Wait for the initial prompt
 assert_prompt(args.start_timeout)
@@ -188,13 +202,15 @@ if args.pre_eval:
 
 fail_cnt = 0
 
+test_num = 0
 while test_data:
     form, out, ret, line_num = read_test(test_data)
     if form == None:
         break
-    sys.stdout.write("TEST: %s -> [%s,%s]" % (form, repr(out), repr(ret)))
-    sys.stdout.flush()
+    test_num = test_num + 1
+    message = "ok %s - %s -> [%s,%s]" % (test_num, form, repr(out), repr(ret))
     expected = "%s%s%s%s" % (form, sep, out, ret)
+
 
     r.writeline(form)
     try:
@@ -203,11 +219,13 @@ while test_data:
                                 timeout=args.test_timeout)
         #print "%s,%s,%s" % (idx, repr(p.before), repr(p.after))
         if ret == "*" or res == expected:
-            print(" -> SUCCESS")
+            print(message)
         else:
-            print(" -> FAIL (line %d):" % line_num)
-            print("    Expected : %s" % repr(expected))
-            print("    Got      : %s" % repr(res))
+            print("not " + message)
+            prefix = "%s%s" % (form, sep)
+            print("# FAIL (line %d):" % line_num)
+            print("# Expected : %s" % format_result(expected, prefix, sep))
+            print("# Got      : %s" % format_result(res, prefix, sep))
             fail_cnt += 1
     except:
         _, exc, _ = sys.exc_info()
@@ -215,7 +233,8 @@ while test_data:
         print("Output before exception:\n%s" % r.buf)
         sys.exit(1)
 
-if fail_cnt > 0:
-    print("FAILURES: %d" % fail_cnt)
-    sys.exit(2)
+print("1..%s" % (test_num))
+#if fail_cnt > 0:
+#    print("# FAILURES: %d" % fail_cnt)
+#    sys.exit(2)
 sys.exit(0)
