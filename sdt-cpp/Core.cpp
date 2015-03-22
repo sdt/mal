@@ -423,6 +423,7 @@ static const char* malFunctionTable[] = {
     "(def! map (fn* (f xs) (if (empty? xs) xs \
         (cons (f (first xs)) (map f (rest xs))))))",
     "(def! swap! (fn* (atom f & args) (reset! atom (apply f @atom args))))",
+    "(def! *host-language* \"sdt-cpp\")",
 };
 
 void install_core(malEnvPtr env) {
