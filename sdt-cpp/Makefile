@@ -1,9 +1,8 @@
 RLPATH=/usr/local/Cellar/readline/6.3.8
 
 DEBUG=-ggdb
-CFLAGS=-Wall $(DEBUG)
-CXXFLAGS=-Wall $(DEBUG) -std=c++11 -I$(RLPATH)/include
-LDFLAGS=$(DEBUG) -L$(RLPATH)/lib -L. -lreadline -lhistory -lmal
+CXXFLAGS=-O3 -Wall $(DEBUG) -std=c++11 -I$(RLPATH)/include
+LDFLAGS=-O3 $(DEBUG) -L$(RLPATH)/lib -L. -lreadline -lhistory -lmal
 CXX=g++
 LD=g++
 
