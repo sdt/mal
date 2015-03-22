@@ -196,6 +196,9 @@ public:
 
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
+    virtual malObjectPtr conj(malObjectIter argsBegin,
+                              malObjectIter argsEnd) const = 0;
+
     malObjectPtr first() const;
     virtual malObjectPtr rest() const;
 
@@ -214,6 +217,9 @@ public:
     virtual String print(bool readably) const;
     virtual malObjectPtr eval(malEnvPtr env) const;
 
+    virtual malObjectPtr conj(malObjectIter argsBegin,
+                              malObjectIter argsEnd) const;
+
     WITH_META(malList);
 };
 
@@ -227,6 +233,9 @@ public:
 
     virtual malObjectPtr eval(malEnvPtr env) const;
     virtual String print(bool readably) const;
+
+    virtual malObjectPtr conj(malObjectIter argsBegin,
+                              malObjectIter argsEnd) const;
 
     WITH_META(malVector);
 };

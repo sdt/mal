@@ -181,6 +181,14 @@ BUILTIN("concat")
     return mal::list(items);
 }
 
+BUILTIN("conj")
+{
+    CHECK_ARGS_AT_LEAST(1);
+    ARG(malSequence, seq);
+
+    return seq->conj(argsBegin, argsEnd);
+}
+
 BUILTIN("cons")
 {
     CHECK_ARGS_IS(2);

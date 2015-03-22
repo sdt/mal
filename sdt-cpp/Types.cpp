@@ -287,6 +287,19 @@ malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) con
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
+malObjectPtr malList::conj(malObjectIter argsBegin,
+                           malObjectIter argsEnd) const
+{
+    int oldItemCount = std::distance(begin(), end());
+    int newItemCount = std::distance(argsBegin, argsEnd);
+
+    malObjectVec items(oldItemCount + newItemCount);
+    std::reverse_copy(argsBegin, argsEnd, items.begin());
+    std::copy(begin(), end(), items.begin() + newItemCount);
+
+    return mal::list(items);
+}
+
 malObjectPtr malList::eval(malEnvPtr env) const
 {
     // Note, this isn't actually called since the TCO updates, but
@@ -413,6 +426,19 @@ String malString::print(bool readably) const
 malObjectPtr malSymbol::eval(malEnvPtr env) const
 {
     return env->get(m_value);
+}
+
+malObjectPtr malVector::conj(malObjectIter argsBegin,
+                             malObjectIter argsEnd) const
+{
+    int oldItemCount = std::distance(begin(), end());
+    int newItemCount = std::distance(argsBegin, argsEnd);
+
+    malObjectVec items(oldItemCount + newItemCount);
+    std::copy(begin(), end(), items.begin());
+    std::copy(argsBegin, argsEnd, items.begin() + oldItemCount);
+
+    return mal::vector(items);
 }
 
 malObjectPtr malVector::eval(malEnvPtr env) const
