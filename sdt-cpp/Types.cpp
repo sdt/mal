@@ -287,6 +287,20 @@ malEnvPtr malLambda::makeEnv(malObjectIter argsBegin, malObjectIter argsEnd) con
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
+malObjectPtr malList::eval(malEnvPtr env) const
+{
+    // Note, this isn't actually called since the TCO updates, but
+    // is required for the earlier steps, so don't get rid of it.
+    if (count() == 0) {
+        return malObjectPtr(this);
+    }
+
+    malObjectVec items = eval_items(env);
+    auto it = items.begin();
+    malObjectPtr op = *it;
+    return APPLY(op, ++it, items.end(), env);
+}
+
 String malList::print(bool readably) const
 {
     return '(' + malSequence::print(readably) + ')';

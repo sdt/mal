@@ -212,6 +212,7 @@ public:
         : malSequence(that, meta) { }
 
     virtual String print(bool readably) const;
+    virtual malObjectPtr eval(malEnvPtr env) const;
 
     WITH_META(malList);
 };
