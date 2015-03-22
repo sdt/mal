@@ -139,7 +139,7 @@ BUILTIN("apply")
     malObjectVec args(argsBegin, argsEnd-1);
 
     // Then append the argument as a list.
-    const malList* lastArg = OBJECT_CAST(malList, *(argsEnd-1));
+    const malSequence* lastArg = OBJECT_CAST(malSequence, *(argsEnd-1));
     for (int i = 0; i < lastArg->count(); i++) {
         args.push_back(lastArg->item(i));
     }
