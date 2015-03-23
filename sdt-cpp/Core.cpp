@@ -75,11 +75,14 @@ HandlerRecord* HandlerRecord::first = NULL;
         return mal::boolean(*argsBegin == mal::constant()); \
     }
 
-#define BUILTIN_INTOP(op) \
+#define BUILTIN_INTOP(op, checkDivByZero) \
     BUILTIN(#op) { \
         CHECK_ARGS_IS(2); \
         ARG(malInteger, lhs); \
         ARG(malInteger, rhs); \
+        if (checkDivByZero) { \
+            ASSERT(rhs->value() != 0, "Division by zero"); \
+        } \
         return mal::integer(lhs->value() op rhs->value()); \
     }
 
@@ -91,10 +94,10 @@ BUILTIN_ISA("sequential?",          malSequence);
 BUILTIN_ISA("symbol?",              malSymbol);
 BUILTIN_ISA("vector?",              malVector);
 
-BUILTIN_INTOP(+);
-BUILTIN_INTOP(/);
-BUILTIN_INTOP(*);
-BUILTIN_INTOP(%);
+BUILTIN_INTOP(+, false);
+BUILTIN_INTOP(/, true);
+BUILTIN_INTOP(*, false);
+BUILTIN_INTOP(%, true);
 
 BUILTIN_IS("true?",     trueObject);
 BUILTIN_IS("false?",    falseObject);
