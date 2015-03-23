@@ -33,7 +33,7 @@ String rep(const String& input)
 
 malObjectPtr READ(const String& input)
 {
-    return read_str(input);
+    return readStr(input);
 }
 
 malObjectPtr EVAL(malObjectPtr ast)

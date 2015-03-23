@@ -305,7 +305,7 @@ malObjectPtr malList::eval(malEnvPtr env) const
         return malObjectPtr(this);
     }
 
-    malObjectVec items = eval_items(env);
+    malObjectVec items = evalItems(env);
     auto it = items.begin();
     malObjectPtr op = *it;
     return APPLY(op, ++it, items.end(), env);
@@ -368,7 +368,7 @@ bool malSequence::doIsEqualTo(const malObject* rhs) const
     return true;
 }
 
-malObjectVec malSequence::eval_items(malEnvPtr env) const
+malObjectVec malSequence::evalItems(malEnvPtr env) const
 {
     malObjectVec items;
     for (auto it = m_items.begin(), end = m_items.end(); it != end; ++it) {
@@ -437,7 +437,7 @@ malObjectPtr malVector::eval(malEnvPtr env) const
     //TODO: check if vectors can be handled like hashes
     //      ie. [ V ] -> (vector V)
     // I suspect not when they are used as parameter lists for fn*
-    malObjectVec items = eval_items(env);
+    malObjectVec items = evalItems(env);
     return mal::vector(items);
 }
 

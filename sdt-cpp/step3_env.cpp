@@ -15,12 +15,12 @@ int main(int argc, char* argv[])
 {
     String prompt = "user> ";
     String input;
-    malEnvPtr repl_env(new malEnv);
-    install_core(repl_env);
+    malEnvPtr replEnv(new malEnv);
+    installCore(replEnv);
     while (s_readLine.get(prompt, input)) {
         String out;
         try {
-            out = rep(input, repl_env);
+            out = rep(input, replEnv);
         }
         catch (String& s) {
             out = s;
@@ -36,11 +36,11 @@ String rep(const String& input, malEnvPtr env)
 
 malObjectPtr READ(const String& input)
 {
-    return read_str(input);
+    return readStr(input);
 }
 
 #define CHECK_ARGS_IS(name, expected) \
-    check_args_is(name, expected, argCount)
+    checkArgsIs(name, expected, argCount)
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 {
@@ -62,7 +62,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 CHECK_ARGS_IS("let*", 2);
                 const malSequence* bindings =
                   OBJECT_CAST(malSequence, list->item(1));
-                int count = check_args_even("let*", bindings->count());
+                int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
                     const malSymbol* var =

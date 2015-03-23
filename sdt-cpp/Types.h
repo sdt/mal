@@ -169,7 +169,7 @@ public:
 
     virtual String print(bool readably) const;
 
-    malObjectVec eval_items(malEnvPtr env) const;
+    malObjectVec evalItems(malEnvPtr env) const;
     int count() const { return m_items.size(); }
     bool isEmpty() const { return m_items.empty(); }
     malObjectPtr item(int index) const { return m_items[index]; }

@@ -24,9 +24,9 @@ extern malObjectPtr readline(const String& prompt);
 extern String rep(const String& input, malEnvPtr env);
 
 // Core.cpp
-extern void install_core(malEnvPtr env);
+extern void installCore(malEnvPtr env);
 
 // Reader.cpp
-extern malObjectPtr read_str(const String& input);
+extern malObjectPtr readStr(const String& input);
 
 #endif // INCLUDE_MAL_H

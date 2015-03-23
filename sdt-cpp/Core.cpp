@@ -6,15 +6,15 @@
 #include <iostream>
 
 #define CHECK_ARGS_IS(expected) \
-    check_args_is(name.c_str(), expected, \
+    checkArgsIs(name.c_str(), expected, \
                   std::distance(argsBegin, argsEnd))
 
 #define CHECK_ARGS_BETWEEN(min, max) \
-    check_args_between(name.c_str(), min, max, \
+    checkArgsBetween(name.c_str(), min, max, \
                        std::distance(argsBegin, argsEnd))
 
 #define CHECK_ARGS_AT_LEAST(expected) \
-    check_args_at_least(name.c_str(), expected, \
+    checkArgsAtLeast(name.c_str(), expected, \
                         std::distance(argsBegin, argsEnd))
 
 static String printObjects(malObjectIter begin, malObjectIter end,
@@ -326,7 +326,7 @@ BUILTIN("read-string")
     CHECK_ARGS_IS(1);
     ARG(malString, str);
 
-    return read_str(str->value());
+    return readStr(str->value());
 }
 
 BUILTIN("readline")
@@ -422,7 +422,7 @@ static const char* malFunctionTable[] = {
     "(def! *host-language* \"sdt-cpp\")",
 };
 
-void install_core(malEnvPtr env) {
+void installCore(malEnvPtr env) {
     HandlerRecord::installAll(env);
 
     for (int i = 0; i < ARRAY_SIZE(malFunctionTable); i++) {

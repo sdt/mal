@@ -16,18 +16,18 @@ int main(int argc, char* argv[])
 {
     String prompt = "user> ";
     String input;
-    malEnvPtr repl_env(new malEnv);
-    install_core(repl_env);
-    makeArgv(repl_env, argc - 2, argv + 2);
+    malEnvPtr replEnv(new malEnv);
+    installCore(replEnv);
+    makeArgv(replEnv, argc - 2, argv + 2);
     if (argc > 1) {
         String filename = escape(argv[1]);
-        rep(STRF("(load-file %s)", filename.c_str()), repl_env);
+        rep(STRF("(load-file %s)", filename.c_str()), replEnv);
         return 0;
     }
     while (s_readLine.get(prompt, input)) {
         String out;
         try {
-            out = rep(input, repl_env);
+            out = rep(input, replEnv);
         }
         catch (malEmptyInputException&) {
             continue;
@@ -56,7 +56,7 @@ String rep(const String& input, malEnvPtr env)
 
 malObjectPtr READ(const String& input)
 {
-    return read_str(input);
+    return readStr(input);
 }
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
@@ -74,13 +74,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             int argCount = list->count() - 1;
 
             if (special == "def!") {
-                check_args_is("def!", 2, argCount);
+                checkArgsIs("def!", 2, argCount);
                 const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
             if (special == "do") {
-                check_args_at_least("do", 1, argCount);
+                checkArgsAtLeast("do", 1, argCount);
 
                 for (int i = 1; i < argCount; i++) {
                     EVAL(list->item(i), env);
@@ -90,7 +90,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "fn*") {
-                check_args_is("fn*", 2, argCount);
+                checkArgsIs("fn*", 2, argCount);
 
                 const malSequence* bindings =
                     OBJECT_CAST(malSequence, list->item(1));
@@ -105,7 +105,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "if") {
-                check_args_between("if", 2, 3, argCount);
+                checkArgsBetween("if", 2, 3, argCount);
 
                 bool isTrue = EVAL(list->item(1), env)->isTrue();
                 if (!isTrue && (argCount == 2)) {
@@ -116,10 +116,10 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "let*") {
-                check_args_is("let*", 2, argCount);
+                checkArgsIs("let*", 2, argCount);
                 const malSequence* bindings =
                     OBJECT_CAST(malSequence, list->item(1));
-                int count = check_args_even("let*", bindings->count());
+                int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
                     const malSymbol* var =
@@ -132,13 +132,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "quote") {
-                check_args_is("quote", 1, argCount);
+                checkArgsIs("quote", 1, argCount);
                 return list->item(1);
             }
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        malObjectVec items = list->eval_items(env);
+        malObjectVec items = list->evalItems(env);
         malObjectPtr op = items[0];
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();

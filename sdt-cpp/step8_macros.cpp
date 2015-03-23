@@ -10,10 +10,10 @@ malObjectPtr READ(const String& input);
 String PRINT(malObjectPtr ast);
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
-static void safe_rep(const String& input, malEnvPtr env);
+static void safeRep(const String& input, malEnvPtr env);
 static malObjectPtr quasiquote(malObjectPtr obj);
-static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env);
-static void install_macros(malEnvPtr env);
+static malObjectPtr macroExpand(malObjectPtr obj, malEnvPtr env);
+static void installMacros(malEnvPtr env);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -21,22 +21,22 @@ int main(int argc, char* argv[])
 {
     String prompt = "user> ";
     String input;
-    malEnvPtr repl_env(new malEnv);
-    install_core(repl_env);
-    install_macros(repl_env);
-    makeArgv(repl_env, argc - 2, argv + 2);
+    malEnvPtr replEnv(new malEnv);
+    installCore(replEnv);
+    installMacros(replEnv);
+    makeArgv(replEnv, argc - 2, argv + 2);
     if (argc > 1) {
         String filename = escape(argv[1]);
-        safe_rep(STRF("(load-file %s)", filename.c_str()), repl_env);
+        safeRep(STRF("(load-file %s)", filename.c_str()), replEnv);
         return 0;
     }
     while (s_readLine.get(prompt, input)) {
-        safe_rep(input, repl_env);
+        safeRep(input, replEnv);
     }
     return 0;
 }
 
-static void safe_rep(const String& input, malEnvPtr env)
+static void safeRep(const String& input, malEnvPtr env)
 {
     String out;
     try {
@@ -67,7 +67,7 @@ String rep(const String& input, malEnvPtr env)
 
 malObjectPtr READ(const String& input)
 {
-    return read_str(input);
+    return readStr(input);
 }
 
 malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
@@ -78,7 +78,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             return ast->eval(env);
         }
 
-        ast = macro_expand(ast, env);
+        ast = macroExpand(ast, env);
         list = DYNAMIC_CAST(malList, ast);
         if (!list || (list->count() == 0)) {
             return ast->eval(env);
@@ -91,13 +91,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             int argCount = list->count() - 1;
 
             if (special == "def!") {
-                check_args_is("def!", 2, argCount);
+                checkArgsIs("def!", 2, argCount);
                 const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
             if (special == "defmacro!") {
-                check_args_is("defmacro!", 2, argCount);
+                checkArgsIs("defmacro!", 2, argCount);
 
                 const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
                 malObjectPtr body = EVAL(list->item(2), env);
@@ -106,7 +106,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "do") {
-                check_args_at_least("do", 1, argCount);
+                checkArgsAtLeast("do", 1, argCount);
 
                 for (int i = 1; i < argCount; i++) {
                     EVAL(list->item(i), env);
@@ -116,7 +116,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "fn*") {
-                check_args_is("fn*", 2, argCount);
+                checkArgsIs("fn*", 2, argCount);
 
                 const malSequence* bindings =
                     OBJECT_CAST(malSequence, list->item(1));
@@ -131,7 +131,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "if") {
-                check_args_between("if", 2, 3, argCount);
+                checkArgsBetween("if", 2, 3, argCount);
 
                 bool isTrue = EVAL(list->item(1), env)->isTrue();
                 if (!isTrue && (argCount == 2)) {
@@ -142,10 +142,10 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "let*") {
-                check_args_is("let*", 2, argCount);
+                checkArgsIs("let*", 2, argCount);
                 const malSequence* bindings =
                     OBJECT_CAST(malSequence, list->item(1));
-                int count = check_args_even("let*", bindings->count());
+                int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
                     const malSymbol* var =
@@ -158,24 +158,24 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             }
 
             if (special == "macroexpand") {
-                check_args_is("macroexpand", 1, argCount);
-                return macro_expand(list->item(1), env);
+                checkArgsIs("macroexpand", 1, argCount);
+                return macroExpand(list->item(1), env);
             }
 
             if (special == "quasiquote") {
-                check_args_is("quasiquote", 1, argCount);
+                checkArgsIs("quasiquote", 1, argCount);
                 ast = quasiquote(list->item(1));
                 continue; // TCO
             }
 
             if (special == "quote") {
-                check_args_is("quote", 1, argCount);
+                checkArgsIs("quote", 1, argCount);
                 return list->item(1);
             }
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        malObjectVec items = list->eval_items(env);
+        malObjectVec items = list->evalItems(env);
         malObjectPtr op = items[0];
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
@@ -225,14 +225,14 @@ static malObjectPtr quasiquote(malObjectPtr obj)
 
     if (isSymbol(seq->item(0), "unquote")) {
         // (qq (uq form)) -> form
-        check_args_is("unquote", 1, seq->count() - 1);
+        checkArgsIs("unquote", 1, seq->count() - 1);
         return seq->item(1);
     }
 
     malObjectVec items;
     const malSequence* innerSeq = isPair(seq->item(0));
     if (innerSeq && isSymbol(innerSeq->item(0), "splice-unquote")) {
-        check_args_is("splice-unquote", 1, innerSeq->count() - 1);
+        checkArgsIs("splice-unquote", 1, innerSeq->count() - 1);
         // (qq (sq '(a b c))) -> a b c
         items.push_back(mal::symbol("concat"));
         items.push_back(innerSeq->item(1));
@@ -260,7 +260,7 @@ static const malMacro* isMacroApplication(malObjectPtr obj, malEnvPtr env)
     return NULL;
 }
 
-static malObjectPtr macro_expand(malObjectPtr obj, malEnvPtr env)
+static malObjectPtr macroExpand(malObjectPtr obj, malEnvPtr env)
 {
     while (const malMacro* macro = isMacroApplication(obj, env)) {
         const malSequence* seq = STATIC_CAST(malSequence, obj);
@@ -274,7 +274,7 @@ static const char* macroTable[] = {
     "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
 };
 
-static void install_macros(malEnvPtr env)
+static void installMacros(malEnvPtr env)
 {
     for (int i = 0; i < ARRAY_SIZE(macroTable); i++) {
         rep(macroTable[i], env);
