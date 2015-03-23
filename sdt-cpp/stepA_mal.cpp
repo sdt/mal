@@ -192,6 +192,9 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 catch(String& s) {
                     excVal = mal::string(s);
                 }
+                catch (malEmptyInputException&) {
+                    return mal::nil();
+                }
                 catch(malObjectPtr& o) {
                     excVal = o;
                 };
