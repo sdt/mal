@@ -367,6 +367,7 @@ BUILTIN("slurp")
     std::ios_base::openmode openmode =
         std::ios::ate | std::ios::in | std::ios::binary;
     std::ifstream file(filename->value().c_str(), openmode);
+    ASSERT(!file.fail(), "Cannot open %s", filename->value().c_str());
 
     String data;
     data.reserve(file.tellg());
