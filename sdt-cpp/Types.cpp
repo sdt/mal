@@ -55,8 +55,8 @@ namespace mal {
         return malObjectPtr(new malList(begin, end));
     };
 
-    malObjectPtr macro(const malLambda* lambda) {
-        return malObjectPtr(new malMacro(lambda));
+    malObjectPtr macro(const malLambda& lambda) {
+        return malObjectPtr(new malLambda(lambda, true));
     };
 
     malObjectPtr nil() {
@@ -229,34 +229,12 @@ bool malHash::doIsEqualTo(const malObject* rhs) const
     return true;
 }
 
-malMacro::malMacro(const malLambda* lambda)
-: m_lambda(lambda)
-{
-}
-
-malMacro::malMacro(const malMacro& that, malObjectPtr meta)
-: malObject(meta)
-, m_lambda(that.m_lambda)
-{
-}
-
-malObjectPtr malMacro::apply(malObjectIter argsBegin,
-                             malObjectIter argsEnd,
-                             malEnvPtr env) const
-{
-    return m_lambda->apply(argsBegin, argsEnd, env);
-}
-
-malObjectPtr malMacro::doWithMeta(malObjectPtr meta) const
-{
-    return new malMacro(*this, meta);
-}
-
 malLambda::malLambda(const StringVec& bindings,
                      malObjectPtr body, malEnvPtr env)
 : m_bindings(bindings)
 , m_body(body)
 , m_env(env)
+, m_isMacro(false)
 {
 
 }
@@ -266,6 +244,17 @@ malLambda::malLambda(const malLambda& that, malObjectPtr meta)
 , m_bindings(that.m_bindings)
 , m_body(that.m_body)
 , m_env(that.m_env)
+, m_isMacro(that.m_isMacro)
+{
+
+}
+
+malLambda::malLambda(const malLambda& that, bool isMacro)
+: malApplicable(that.m_meta)
+, m_bindings(that.m_bindings)
+, m_body(that.m_body)
+, m_env(that.m_env)
+, m_isMacro(isMacro)
 {
 
 }

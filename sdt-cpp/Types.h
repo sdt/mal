@@ -295,6 +295,7 @@ class malLambda : public malApplicable {
 public:
     malLambda(const StringVec& bindings, malObjectPtr body, malEnvPtr env);
     malLambda(const malLambda& that, malObjectPtr meta);
+    malLambda(const malLambda& that, bool isMacro);
 
     virtual malObjectPtr apply(malObjectIter argsBegin,
                                malObjectIter argsEnd,
@@ -308,8 +309,10 @@ public:
     }
 
     virtual String print(bool readably) const {
-        return STRF("#user-function(%p)", this);
+        return STRF("#user-%s(%p)", m_isMacro ? "macro" : "function", this);
     }
+
+    bool isMacro() const { return m_isMacro; }
 
     virtual malObjectPtr doWithMeta(malObjectPtr meta) const;
 
@@ -317,29 +320,7 @@ private:
     const StringVec    m_bindings;
     const malObjectPtr m_body;
     const malEnvPtr    m_env;
-};
-
-class malMacro : public malObject {
-public:
-    malMacro(const malLambda* lambda);
-    malMacro(const malMacro& that, malObjectPtr meta);
-
-    malObjectPtr apply(malObjectIter argsBegin, malObjectIter argsEnd,
-                       malEnvPtr env) const;
-
-    virtual bool doIsEqualTo(const malObject* rhs) const {
-        return this == rhs; // do we need to do a deep inspection?
-    }
-
-    virtual String print(bool readably) const {
-        return STRF("#user-macro(%p)", this);
-    }
-
-    virtual malObjectPtr doWithMeta(malObjectPtr meta) const;
-
-private:
-    typedef RefCountedPtr<const malLambda> malLambdaPtr;
-    const malLambdaPtr m_lambda;
+    const bool         m_isMacro;
 };
 
 class malAtom : public malObject {
@@ -380,7 +361,7 @@ namespace mal {
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
     malObjectPtr list(const malObjectVec& items);
     malObjectPtr list(malObjectIter begin, malObjectIter end);
-    malObjectPtr macro(const malLambda* lambda);
+    malObjectPtr macro(const malLambda& lambda);
     malObjectPtr nil();
     malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);
