@@ -407,25 +407,19 @@ malObjectPtr malSequence::rest() const
     return mal::list(start, end());
 }
 
-malString::malString(const String& token)
-: m_value(token)
-{
-
-}
-
 String malString::escapedValue() const
 {
-    return escape(m_value);
+    return escape(value());
 }
 
 String malString::print(bool readably) const
 {
-    return readably ? escapedValue() : m_value;
+    return readably ? escapedValue() : value();
 }
 
 malObjectPtr malSymbol::eval(malEnvPtr env) const
 {
-    return env->get(m_value);
+    return env->get(value());
 }
 
 malObjectPtr malVector::conj(malObjectIter argsBegin,

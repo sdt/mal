@@ -109,71 +109,67 @@ private:
     const int m_value;
 };
 
-class malString : public malObject {
+class malStringBase : public malObject {
 public:
-    malString(const String& token);
+    malStringBase(const String& token)
+        : m_value(token) { }
+    malStringBase(const malStringBase& that, malObjectPtr meta)
+        : malObject(meta), m_value(that.value()) { }
+
+    virtual String print(bool readably) const { return m_value; }
+
+    String value() const { return m_value; }
+
+private:
+    const String m_value;
+};
+
+class malString : public malStringBase {
+public:
+    malString(const String& token)
+        : malStringBase(token) { }
     malString(const malString& that, malObjectPtr meta)
-        : malObject(meta), m_value(that.m_value) { }
+        : malStringBase(that, meta) { }
 
     virtual String print(bool readably) const;
 
-    String value() const { return m_value; }
     String escapedValue() const;
 
     virtual bool doIsEqualTo(const malObject* rhs) const {
-        return m_value == static_cast<const malString*>(rhs)->m_value;
+        return value() == static_cast<const malString*>(rhs)->value();
     }
 
     WITH_META(malString);
-
-private:
-    const String m_value;
 };
 
-class malKeyword : public malObject {
+class malKeyword : public malStringBase {
 public:
-    malKeyword(const String& token) : m_value(token) { }
+    malKeyword(const String& token)
+        : malStringBase(token) { }
     malKeyword(const malKeyword& that, malObjectPtr meta)
-        : malObject(meta), m_value(that.m_value) { }
-
-    virtual String print(bool readably) const {
-        return m_value;
-    }
-
-    String value() const { return m_value; }
+        : malStringBase(that, meta) { }
 
     virtual bool doIsEqualTo(const malObject* rhs) const {
-        return m_value == static_cast<const malKeyword*>(rhs)->m_value;
+        return value() == static_cast<const malKeyword*>(rhs)->value();
     }
 
     WITH_META(malKeyword);
-
-private:
-    const String m_value;
 };
 
-class malSymbol : public malObject {
+class malSymbol : public malStringBase {
 public:
-    malSymbol(const String& token) : m_value(token) { }
+    malSymbol(const String& token)
+        : malStringBase(token) { }
     malSymbol(const malSymbol& that, malObjectPtr meta)
-        : malObject(meta), m_value(that.m_value) { }
+        : malStringBase(that, meta) { }
 
     virtual malObjectPtr eval(malEnvPtr env) const;
 
-    virtual String print(bool readably) const {
-        return m_value;
-    }
-
-    String value() const { return m_value; }
-
     virtual bool doIsEqualTo(const malObject* rhs) const {
-        return m_value == static_cast<const malSymbol*>(rhs)->m_value;
+        return value() == static_cast<const malSymbol*>(rhs)->value();
     }
 
     WITH_META(malSymbol);
-
-private:
-    const String m_value;
 };
 
 class malSequence : public malObject {
