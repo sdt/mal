@@ -1,20 +1,9 @@
 #ifndef INCLUDE_ENVIRONMENT_H
 #define INCLUDE_ENVIRONMENT_H
 
-#include "Debug.h"
-#include "RefCounted.h"
-#include "RefCountedPtr.h"
-#include "String.h"
-#include "Types.h"
+#include "MAL.h"
 
 #include <map>
-
-class malEnv;
-typedef RefCountedPtr<malEnv> malEnvPtr;
-
-class malObject;
-typedef RefCountedPtr<const malObject> malObjectPtr;
-
 
 class malEnv : public RefCounted {
 public:

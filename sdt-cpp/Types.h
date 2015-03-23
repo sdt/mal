@@ -1,25 +1,12 @@
 #ifndef INCLUDE_TYPES_H
 #define INCLUDE_TYPES_H
 
-#include "Debug.h"
-#include "RefCounted.h"
-#include "RefCountedPtr.h"
-#include "String.h"
-#include "Validation.h"
+#include "MAL.h"
 
 #include <exception>
 #include <map>
-#include <vector>
-
-class malObject;
-typedef RefCountedPtr<const malObject>    malObjectPtr;
-typedef std::vector<malObjectPtr>         malObjectVec;
-typedef malObjectVec::const_iterator      malObjectIter;
 
 #define ARRAY_SIZE(a)   (sizeof(a)/(sizeof(*(a))))
-
-class malEnv;
-typedef RefCountedPtr<malEnv> malEnvPtr;
 
 class malEmptyInputException : public std::exception { };
 

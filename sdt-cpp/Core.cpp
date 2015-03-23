@@ -1,8 +1,6 @@
-#include "Debug.h"
+#include "MAL.h"
 #include "Environment.h"
-#include "String.h"
 #include "Types.h"
-#include "Validation.h"
 
 #include <fstream>
 #include <iostream>
@@ -19,12 +17,6 @@
     check_args_at_least(name.c_str(), expected, \
                         std::distance(argsBegin, argsEnd))
 
-extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
-extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
-extern malObjectPtr read_str(const String& input);
-extern malObjectPtr readline(const String& prompt);
-
-extern String rep(const String& input, malEnvPtr env);
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 

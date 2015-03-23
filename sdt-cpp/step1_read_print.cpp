@@ -8,7 +8,6 @@ malObjectPtr READ(const String& input);
 malObjectPtr EVAL(malObjectPtr ast);
 String PRINT(malObjectPtr ast);
 String rep(const String& input);
-malObjectPtr read_str(const String& input);
 
 int main(int argc, char* argv[])
 {

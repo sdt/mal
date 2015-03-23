@@ -1,16 +1,13 @@
+#include "MAL.h"
+
 #include "Environment.h"
 #include "ReadLine.h"
-#include "String.h"
 #include "Types.h"
 
 #include <iostream>
 
 malObjectPtr READ(const String& input);
-malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
 String PRINT(malObjectPtr ast);
-String rep(const String& input, malEnvPtr env);
-malObjectPtr read_str(const String& input);
-void install_core(malEnvPtr env);
 
 static ReadLine s_readLine("~/.mal-history");
 
