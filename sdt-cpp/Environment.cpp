@@ -1,6 +1,8 @@
 #include "Environment.h"
 #include "Types.h"
 
+#include <algorithm>
+
 malEnv::malEnv(malEnvPtr outer)
 : m_outer(outer)
 {

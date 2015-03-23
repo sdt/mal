@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Adapted from: http://stackoverflow.com/questions/2342162
 String stringPrintf(const char* fmt, ...) {

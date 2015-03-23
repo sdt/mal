@@ -2,6 +2,9 @@
 #include "Environment.h"
 #include "Types.h"
 
+#include <algorithm>
+#include <typeinfo>
+
 namespace mal {
     malObjectPtr atom(malObjectPtr value) {
         return malObjectPtr(new malAtom(value));
