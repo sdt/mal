@@ -102,22 +102,22 @@ static malObjectPtr readForm(Tokeniser& tokeniser)
 
     if (token == "(") {
         tokeniser.next();
-        malObjectVec* items = new malObjectVec();
-        readList(tokeniser, items, ")");
-        return mal::list(items);
+        std::unique_ptr<malObjectVec> items(new malObjectVec);
+        readList(tokeniser, items.get(), ")");
+        return mal::list(items.release());
     }
     if (token == "[") {
         tokeniser.next();
-        malObjectVec* items = new malObjectVec();
-        readList(tokeniser, items, "]");
-        return mal::vector(items);
+        std::unique_ptr<malObjectVec> items(new malObjectVec);
+        readList(tokeniser, items.get(), "]");
+        return mal::vector(items.release());
     }
     if (token == "{") {
         tokeniser.next();
-        malObjectVec* items = new malObjectVec();
+        std::unique_ptr<malObjectVec> items(new malObjectVec);
         items->push_back(mal::symbol("hash-map"));
-        readList(tokeniser, items, "}");
-        return mal::list(items);
+        readList(tokeniser, items.get(), "}");
+        return mal::list(items.release());
     }
     return readAtom(tokeniser);
 }
