@@ -280,8 +280,8 @@ static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
 {
     if (const malSequence* seq = isPair(obj)) {
         if (const malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
-            if ((env = env->find(sym->value())) != NULL) {
-                malObjectPtr value = sym->eval(env);
+            if (malEnvPtr symEnv = env->find(sym->value())) {
+                malObjectPtr value = sym->eval(symEnv);
                 if (const malLambda* lambda = DYNAMIC_CAST(malLambda, value)) {
                     return lambda->isMacro() ? lambda : NULL;
                 }

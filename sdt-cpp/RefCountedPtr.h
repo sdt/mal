@@ -30,7 +30,7 @@ public:
         return m_object != rhs.m_object;
     }
 
-    operator bool () {
+    operator bool () const {
         return m_object != NULL;
     }
 
