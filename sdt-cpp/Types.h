@@ -161,14 +161,14 @@ public:
 
 class malSequence : public malObject {
 public:
-    malSequence(const malObjectVec& items);
+    malSequence(const malObjectVec* items);
     malSequence(malObjectIter begin, malObjectIter end);
     malSequence(const malSequence& that, malObjectPtr meta);
     virtual ~malSequence();
 
     virtual String print(bool readably) const;
 
-    malObjectVec evalItems(malEnvPtr env) const;
+    malObjectVec* evalItems(malEnvPtr env) const;
     int count() const { return m_items->size(); }
     bool isEmpty() const { return m_items->empty(); }
     malObjectPtr item(int index) const { return (*m_items)[index]; }
@@ -190,7 +190,7 @@ private:
 
 class malList : public malSequence {
 public:
-    malList(const malObjectVec& items) : malSequence(items) { }
+    malList(const malObjectVec* items) : malSequence(items) { }
     malList(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
     malList(const malList& that, malObjectPtr meta)
@@ -207,7 +207,7 @@ public:
 
 class malVector : public malSequence {
 public:
-    malVector(const malObjectVec& items) : malSequence(items) { }
+    malVector(const malObjectVec* items) : malSequence(items) { }
     malVector(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
     malVector(const malVector& that, malObjectPtr meta)
@@ -358,14 +358,17 @@ namespace mal {
     malObjectPtr integer(const String& token);
     malObjectPtr keyword(const String& token);
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
-    malObjectPtr list(const malObjectVec& items);
+    malObjectPtr list(const malObjectVec* items);
     malObjectPtr list(malObjectIter begin, malObjectIter end);
+    malObjectPtr list(malObjectPtr a);
+    malObjectPtr list(malObjectPtr a, malObjectPtr b);
+    malObjectPtr list(malObjectPtr a, malObjectPtr b, malObjectPtr c);
     malObjectPtr macro(const malLambda& lambda);
     malObjectPtr nil();
     malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);
     malObjectPtr trueObject();
-    malObjectPtr vector(const malObjectVec& items);
+    malObjectPtr vector(const malObjectVec* items);
     malObjectPtr vector(malObjectIter begin, malObjectIter end);
 };
 

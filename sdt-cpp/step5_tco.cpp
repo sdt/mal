@@ -5,6 +5,7 @@
 #include "Types.h"
 
 #include <iostream>
+#include <memory>
 
 malObjectPtr READ(const String& input);
 String PRINT(malObjectPtr ast);
@@ -121,15 +122,15 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        malObjectVec items = list->evalItems(env);
-        malObjectPtr op = items[0];
+        std::unique_ptr<malObjectVec> items(list->evalItems(env));
+        malObjectPtr op = items->at(0);
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
-            env = lambda->makeEnv(items.begin()+1, items.end());
+            env = lambda->makeEnv(items->begin()+1, items->end());
             continue; // TCO
         }
         else {
-            return APPLY(op, items.begin()+1, items.end(), env);
+            return APPLY(op, items->begin()+1, items->end(), env);
         }
     }
 }

@@ -165,11 +165,11 @@ BUILTIN("concat")
         count += seq->count();
     }
 
-    malObjectVec items(count);
+    malObjectVec* items = new malObjectVec(count);
     int offset = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
         const malSequence* seq = STATIC_CAST(malSequence, *it);
-        std::copy(seq->begin(), seq->end(), items.begin() + offset);
+        std::copy(seq->begin(), seq->end(), items->begin() + offset);
         offset += seq->count();
     }
 
@@ -190,9 +190,9 @@ BUILTIN("cons")
     malObjectPtr first = *argsBegin++;
     ARG(malSequence, rest);
 
-    malObjectVec items(1 + rest->count());
-    items[0] = first;
-    std::copy(rest->begin(), rest->end(), items.begin() + 1);
+    malObjectVec* items = new malObjectVec(1 + rest->count());
+    items->at(0) = first;
+    std::copy(rest->begin(), rest->end(), items->begin() + 1);
 
     return mal::list(items);
 }

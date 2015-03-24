@@ -5,6 +5,7 @@
 #include "Types.h"
 
 #include <iostream>
+#include <memory>
 
 malObjectPtr READ(const String& input);
 String PRINT(malObjectPtr ast);
@@ -53,9 +54,9 @@ static void safeRep(const String& input, malEnvPtr env)
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[])
 {
-    malObjectVec args;
+    malObjectVec* args = new malObjectVec();
     for (int i = 0; i < argc; i++) {
-        args.push_back(mal::string(argv[i]));
+        args->push_back(mal::string(argv[i]));
     }
     env->set("*ARGV*", mal::list(args));
 }
@@ -206,15 +207,15 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        malObjectVec items = list->evalItems(env);
-        malObjectPtr op = items[0];
+        std::unique_ptr<malObjectVec> items(list->evalItems(env));
+        malObjectPtr op = items->at(0);
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
-            env = lambda->makeEnv(items.begin()+1, items.end());
+            env = lambda->makeEnv(items->begin()+1, items->end());
             continue; // TCO
         }
         else {
-            return APPLY(op, items.begin()+1, items.end(), env);
+            return APPLY(op, items->begin()+1, items->end(), env);
         }
     }
 }
@@ -248,10 +249,7 @@ static malObjectPtr quasiquote(malObjectPtr obj)
 {
     const malSequence* seq = isPair(obj);
     if (!seq) {
-        malObjectVec items;
-        items.push_back(mal::symbol("quote"));
-        items.push_back(obj);
-        return mal::list(items);
+        return mal::list(mal::symbol("quote"), obj);
     }
 
     if (isSymbol(seq->item(0), "unquote")) {
@@ -260,22 +258,25 @@ static malObjectPtr quasiquote(malObjectPtr obj)
         return seq->item(1);
     }
 
-    malObjectVec items;
     const malSequence* innerSeq = isPair(seq->item(0));
     if (innerSeq && isSymbol(innerSeq->item(0), "splice-unquote")) {
         checkArgsIs("splice-unquote", 1, innerSeq->count() - 1);
         // (qq (sq '(a b c))) -> a b c
-        items.push_back(mal::symbol("concat"));
-        items.push_back(innerSeq->item(1));
+        return mal::list(
+            mal::symbol("concat"),
+            innerSeq->item(1),
+            quasiquote(seq->rest())
+        );
     }
     else {
         // (qq (a b c)) -> (list (qq a) (qq b) (qq c))
         // (qq xs     ) -> (cons (qq (car xs)) (qq (cdr xs)))
-        items.push_back(mal::symbol("cons"));
-        items.push_back(quasiquote(seq->first()));
+        return mal::list(
+            mal::symbol("cons"),
+            quasiquote(seq->first()),
+            quasiquote(seq->rest())
+        );
     }
-    items.push_back(quasiquote(seq->rest()));
-    return mal::list(items);
 }
 
 static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)

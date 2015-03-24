@@ -79,7 +79,7 @@ void Tokeniser::skipWhitespace()
 
 static malObjectPtr readAtom(Tokeniser& tokeniser);
 static malObjectPtr readForm(Tokeniser& tokeniser);
-static void readList(Tokeniser& tokeniser, malObjectVec& items,
+static void readList(Tokeniser& tokeniser, malObjectVec* items,
                       const String& end);
 static malObjectPtr processMacro(Tokeniser& tokeniser, const String& symbol);
 
@@ -102,20 +102,20 @@ static malObjectPtr readForm(Tokeniser& tokeniser)
 
     if (token == "(") {
         tokeniser.next();
-        malObjectVec items;
+        malObjectVec* items = new malObjectVec();
         readList(tokeniser, items, ")");
         return mal::list(items);
     }
     if (token == "[") {
         tokeniser.next();
-        malObjectVec items;
+        malObjectVec* items = new malObjectVec();
         readList(tokeniser, items, "]");
         return mal::vector(items);
     }
     if (token == "{") {
         tokeniser.next();
-        malObjectVec items;
-        items.push_back(mal::symbol("hash-map"));
+        malObjectVec* items = new malObjectVec();
+        items->push_back(mal::symbol("hash-map"));
         readList(tokeniser, items, "}");
         return mal::list(items);
     }
@@ -156,13 +156,10 @@ static malObjectPtr readAtom(Tokeniser& tokeniser)
         return mal::keyword(token);
     }
     if (token == "^") {
-        malObjectVec items;
-        items.push_back(mal::symbol("with-meta"));
         malObjectPtr meta = readForm(tokeniser);
         malObjectPtr object = readForm(tokeniser);
-        items.push_back(object);
-        items.push_back(meta);
-        return mal::list(items);
+        // Note that meta and object switch places
+        return mal::list(mal::symbol("with-meta"), object, meta);
     }
     for (Constant* it = constTable; it != constTableEnd; ++it) {
         if (token == it->token) {
@@ -180,7 +177,7 @@ static malObjectPtr readAtom(Tokeniser& tokeniser)
     return mal::symbol(token);
 }
 
-static void readList(Tokeniser& tokeniser, malObjectVec& items,
+static void readList(Tokeniser& tokeniser, malObjectVec* items,
                       const String& end)
 {
     while (1) {
@@ -189,14 +186,11 @@ static void readList(Tokeniser& tokeniser, malObjectVec& items,
             tokeniser.next();
             return;
         }
-        items.push_back(readForm(tokeniser));
+        items->push_back(readForm(tokeniser));
     }
 }
 
 static malObjectPtr processMacro(Tokeniser& tokeniser, const String& symbol)
 {
-    malObjectVec items;
-    items.push_back(mal::symbol(symbol));
-    items.push_back(readForm(tokeniser));
-    return mal::list(items);
+    return mal::list(mal::symbol(symbol), readForm(tokeniser));
 }
