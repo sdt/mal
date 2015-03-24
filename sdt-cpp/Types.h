@@ -161,21 +161,20 @@ public:
 
 class malSequence : public malObject {
 public:
-    malSequence(const malObjectVec& items) : m_items(items) { }
-    malSequence(malObjectIter begin, malObjectIter end)
-        : m_items(begin, end) { }
-    malSequence(const malSequence& that, malObjectPtr meta)
-        : malObject(meta), m_items(that.m_items) { }
+    malSequence(const malObjectVec& items);
+    malSequence(malObjectIter begin, malObjectIter end);
+    malSequence(const malSequence& that, malObjectPtr meta);
+    virtual ~malSequence();
 
     virtual String print(bool readably) const;
 
     malObjectVec evalItems(malEnvPtr env) const;
-    int count() const { return m_items.size(); }
-    bool isEmpty() const { return m_items.empty(); }
-    malObjectPtr item(int index) const { return m_items[index]; }
+    int count() const { return m_items->size(); }
+    bool isEmpty() const { return m_items->empty(); }
+    malObjectPtr item(int index) const { return (*m_items)[index]; }
 
-    malObjectIter begin() const { return m_items.cbegin(); }
-    malObjectIter end()   const { return m_items.cend(); }
+    malObjectIter begin() const { return m_items->cbegin(); }
+    malObjectIter end()   const { return m_items->cend(); }
 
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
@@ -186,7 +185,7 @@ public:
     virtual malObjectPtr rest() const;
 
 private:
-    const malObjectVec m_items;
+    const malObjectVec* m_items;
 };
 
 class malList : public malSequence {

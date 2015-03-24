@@ -342,6 +342,30 @@ malObjectPtr malObject::withMeta(malObjectPtr meta) const
     return doWithMeta(meta);
 }
 
+malSequence::malSequence(const malObjectVec& items)
+: m_items(new malObjectVec(items))
+{
+
+}
+
+malSequence::malSequence(malObjectIter begin, malObjectIter end)
+: m_items(new malObjectVec(begin, end))
+{
+
+}
+
+malSequence::malSequence(const malSequence& that, malObjectPtr meta)
+: malObject(meta)
+, m_items(new malObjectVec(*(that.m_items)))
+{
+
+}
+
+malSequence::~malSequence()
+{
+    delete m_items;
+}
+
 bool malSequence::doIsEqualTo(const malObject* rhs) const
 {
     const malSequence* rhsSeq = static_cast<const malSequence*>(rhs);
@@ -349,9 +373,9 @@ bool malSequence::doIsEqualTo(const malObject* rhs) const
         return false;
     }
 
-    for (malObjectIter it0 = m_items.begin(),
+    for (malObjectIter it0 = m_items->begin(),
                        it1 = rhsSeq->begin(),
-                       end = m_items.end(); it0 != end; ++it0, ++it1) {
+                       end = m_items->end(); it0 != end; ++it0, ++it1) {
 
         if (! (*it0)->isEqualTo(*it1)) {
             return false;
@@ -363,7 +387,7 @@ bool malSequence::doIsEqualTo(const malObject* rhs) const
 malObjectVec malSequence::evalItems(malEnvPtr env) const
 {
     malObjectVec items;
-    for (auto it = m_items.begin(), end = m_items.end(); it != end; ++it) {
+    for (auto it = m_items->begin(), end = m_items->end(); it != end; ++it) {
         items.push_back(EVAL(*it, env));
     }
     return items;
@@ -377,8 +401,8 @@ malObjectPtr malSequence::first() const
 String malSequence::print(bool readably) const
 {
     String str;
-    auto end = m_items.cend();
-    auto it = m_items.cbegin();
+    auto end = m_items->cend();
+    auto it = m_items->cbegin();
     if (it != end) {
         str += (*it)->print(readably);
         ++it;
