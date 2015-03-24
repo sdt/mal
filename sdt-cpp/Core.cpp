@@ -43,7 +43,7 @@ private:
 
 HandlerRecord* HandlerRecord::first = NULL;
 
-#define ARG(type, name) const type* name = OBJECT_CAST(type, *argsBegin++)
+#define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
 
 #define FUNCNAME(uniq) builtIn ## uniq
 #define HRECNAME(uniq) handler ## uniq

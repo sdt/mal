@@ -10,12 +10,12 @@
 #include <vector>
 
 class malObject;
-typedef RefCountedPtr<const malObject>      malObjectPtr;
-typedef std::vector<malObjectPtr>           malObjectVec;
-typedef malObjectVec::const_iterator        malObjectIter;
+typedef RefCountedPtr<malObject>    malObjectPtr;
+typedef std::vector<malObjectPtr>   malObjectVec;
+typedef malObjectVec::iterator      malObjectIter;
 
 class malEnv;
-typedef RefCountedPtr<malEnv>               malEnvPtr;
+typedef RefCountedPtr<malEnv>       malEnvPtr;
 
 // step*.cpp
 extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);

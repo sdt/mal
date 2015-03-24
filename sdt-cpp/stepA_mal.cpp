@@ -282,10 +282,10 @@ static malObjectPtr quasiquote(malObjectPtr obj)
 static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
 {
     if (const malSequence* seq = isPair(obj)) {
-        if (const malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
+        if (malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
             if (malEnvPtr symEnv = env->find(sym->value())) {
                 malObjectPtr value = sym->eval(symEnv);
-                if (const malLambda* lambda = DYNAMIC_CAST(malLambda, value)) {
+                if (malLambda* lambda = DYNAMIC_CAST(malLambda, value)) {
                     return lambda->isMacro() ? lambda : NULL;
                 }
             }

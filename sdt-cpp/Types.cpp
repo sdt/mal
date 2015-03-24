@@ -48,7 +48,7 @@ namespace mal {
         return malObjectPtr(new malLambda(bindings, body, env));
     }
 
-    malObjectPtr list(const malObjectVec* items) {
+    malObjectPtr list(malObjectVec* items) {
         return malObjectPtr(new malList(items));
     };
 
@@ -99,7 +99,7 @@ namespace mal {
         return malObjectPtr(c);
     };
 
-    malObjectPtr vector(const malObjectVec* items) {
+    malObjectPtr vector(malObjectVec* items) {
         return malObjectPtr(new malVector(items));
     };
 
@@ -246,7 +246,7 @@ bool malHash::doIsEqualTo(const malObject* rhs) const
         if (it0->first != it1->first) {
             return false;
         }
-        if (!it0->second->isEqualTo(it1->second)) {
+        if (!it0->second->isEqualTo(it1->second.ptr())) {
             return false;
         }
     }
@@ -313,7 +313,7 @@ malObjectPtr malList::conj(malObjectIter argsBegin,
     return mal::list(items);
 }
 
-malObjectPtr malList::eval(malEnvPtr env) const
+malObjectPtr malList::eval(malEnvPtr env)
 {
     // Note, this isn't actually called since the TCO updates, but
     // is required for the earlier steps, so don't get rid of it.
@@ -332,22 +332,20 @@ String malList::print(bool readably) const
     return '(' + malSequence::print(readably) + ')';
 }
 
-malObjectPtr malObject::eval(malEnvPtr env) const
+malObjectPtr malObject::eval(malEnvPtr env)
 {
     // Default case of eval is just to return the object itself.
     return malObjectPtr(this);
 }
 
-bool malObject::isEqualTo(malObjectPtr rhs) const
+bool malObject::isEqualTo(const malObject* rhs) const
 {
-    const malObject* rhsp = rhs.ptr();
-
     // Special-case. Vectors and Lists can be compared.
-    bool matchingTypes = (typeid(*this) == typeid(*rhsp)) ||
+    bool matchingTypes = (typeid(*this) == typeid(*rhs)) ||
         (dynamic_cast<const malSequence*>(this) &&
-         dynamic_cast<const malSequence*>(rhsp));
+         dynamic_cast<const malSequence*>(rhs));
 
-    return matchingTypes && doIsEqualTo(rhs.ptr());
+    return matchingTypes && doIsEqualTo(rhs);
 }
 
 bool malObject::isTrue() const
@@ -366,7 +364,7 @@ malObjectPtr malObject::withMeta(malObjectPtr meta) const
     return doWithMeta(meta);
 }
 
-malSequence::malSequence(const malObjectVec* items)
+malSequence::malSequence(malObjectVec* items)
 : m_items(items)
 {
 
@@ -401,7 +399,7 @@ bool malSequence::doIsEqualTo(const malObject* rhs) const
                        it1 = rhsSeq->begin(),
                        end = m_items->end(); it0 != end; ++it0, ++it1) {
 
-        if (! (*it0)->isEqualTo(*it1)) {
+        if (! (*it0)->isEqualTo((*it1).ptr())) {
             return false;
         }
     }
@@ -455,7 +453,7 @@ String malString::print(bool readably) const
     return readably ? escapedValue() : value();
 }
 
-malObjectPtr malSymbol::eval(malEnvPtr env) const
+malObjectPtr malSymbol::eval(malEnvPtr env)
 {
     return env->get(value());
 }
@@ -473,7 +471,7 @@ malObjectPtr malVector::conj(malObjectIter argsBegin,
     return mal::vector(items);
 }
 
-malObjectPtr malVector::eval(malEnvPtr env) const
+malObjectPtr malVector::eval(malEnvPtr env)
 {
     return mal::vector(evalItems(env));
 }

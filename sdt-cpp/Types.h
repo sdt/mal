@@ -28,9 +28,9 @@ public:
 
     bool isTrue() const;
 
-    bool isEqualTo(malObjectPtr rhs) const;
+    bool isEqualTo(const malObject* rhs) const;
 
-    virtual malObjectPtr eval(malEnvPtr env) const;
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual String print(bool readably) const = 0;
 
@@ -47,9 +47,9 @@ T* object_cast(malObjectPtr obj, const char* typeName) {
     return dest;
 }
 
-#define OBJECT_CAST(Type, Object)   object_cast<const Type>(Object, #Type)
-#define DYNAMIC_CAST(Type, Object)  (dynamic_cast<const Type*>((Object).ptr()))
-#define STATIC_CAST(Type, Object)   (static_cast<const Type*>((Object).ptr()))
+#define OBJECT_CAST(Type, Object)   object_cast<Type>(Object, #Type)
+#define DYNAMIC_CAST(Type, Object)  (dynamic_cast<Type*>((Object).ptr()))
+#define STATIC_CAST(Type, Object)   (static_cast<Type*>((Object).ptr()))
 
 #define WITH_META(Type) \
     virtual malObjectPtr doWithMeta(malObjectPtr meta) const { \
@@ -150,7 +150,7 @@ public:
     malSymbol(const malSymbol& that, malObjectPtr meta)
         : malStringBase(that, meta) { }
 
-    virtual malObjectPtr eval(malEnvPtr env) const;
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual bool doIsEqualTo(const malObject* rhs) const {
         return value() == static_cast<const malSymbol*>(rhs)->value();
@@ -161,7 +161,7 @@ public:
 
 class malSequence : public malObject {
 public:
-    malSequence(const malObjectVec* items);
+    malSequence(malObjectVec* items);
     malSequence(malObjectIter begin, malObjectIter end);
     malSequence(const malSequence& that, malObjectPtr meta);
     virtual ~malSequence();
@@ -173,8 +173,8 @@ public:
     bool isEmpty() const { return m_items->empty(); }
     malObjectPtr item(int index) const { return (*m_items)[index]; }
 
-    malObjectIter begin() const { return m_items->cbegin(); }
-    malObjectIter end()   const { return m_items->cend(); }
+    malObjectIter begin() const { return m_items->begin(); }
+    malObjectIter end()   const { return m_items->end(); }
 
     virtual bool doIsEqualTo(const malObject* rhs) const;
 
@@ -185,19 +185,19 @@ public:
     virtual malObjectPtr rest() const;
 
 private:
-    const malObjectVec* m_items;
+    malObjectVec* const m_items;
 };
 
 class malList : public malSequence {
 public:
-    malList(const malObjectVec* items) : malSequence(items) { }
+    malList(malObjectVec* items) : malSequence(items) { }
     malList(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
     malList(const malList& that, malObjectPtr meta)
         : malSequence(that, meta) { }
 
     virtual String print(bool readably) const;
-    virtual malObjectPtr eval(malEnvPtr env) const;
+    virtual malObjectPtr eval(malEnvPtr env);
 
     virtual malObjectPtr conj(malObjectIter argsBegin,
                               malObjectIter argsEnd) const;
@@ -207,13 +207,13 @@ public:
 
 class malVector : public malSequence {
 public:
-    malVector(const malObjectVec* items) : malSequence(items) { }
+    malVector(malObjectVec* items) : malSequence(items) { }
     malVector(malObjectIter begin, malObjectIter end)
         : malSequence(begin, end) { }
     malVector(const malVector& that, malObjectPtr meta)
         : malSequence(that, meta) { }
 
-    virtual malObjectPtr eval(malEnvPtr env) const;
+    virtual malObjectPtr eval(malEnvPtr env);
     virtual String print(bool readably) const;
 
     virtual malObjectPtr conj(malObjectIter argsBegin,
@@ -338,13 +338,12 @@ public:
 
     malObjectPtr deref() const { return m_value; }
 
-    //TODO: oh this is just wrong wrong wrong
-    malObjectPtr reset(malObjectPtr value) const { return m_value = value; }
+    malObjectPtr reset(malObjectPtr value) { return m_value = value; }
 
     WITH_META(malAtom);
 
 private:
-    mutable malObjectPtr m_value; //TODO: :/
+    malObjectPtr m_value;
 };
 
 namespace mal {
@@ -358,7 +357,7 @@ namespace mal {
     malObjectPtr integer(const String& token);
     malObjectPtr keyword(const String& token);
     malObjectPtr lambda(const StringVec&, malObjectPtr, malEnvPtr);
-    malObjectPtr list(const malObjectVec* items);
+    malObjectPtr list(malObjectVec* items);
     malObjectPtr list(malObjectIter begin, malObjectIter end);
     malObjectPtr list(malObjectPtr a);
     malObjectPtr list(malObjectPtr a, malObjectPtr b);
@@ -368,7 +367,7 @@ namespace mal {
     malObjectPtr string(const String& token);
     malObjectPtr symbol(const String& token);
     malObjectPtr trueObject();
-    malObjectPtr vector(const malObjectVec* items);
+    malObjectPtr vector(malObjectVec* items);
     malObjectPtr vector(malObjectIter begin, malObjectIter end);
 };
 
