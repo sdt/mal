@@ -2,7 +2,6 @@
 #define INCLUDE_MAL_H
 
 #include "Debug.h"
-#include "RefCounted.h"
 #include "RefCountedPtr.h"
 #include "String.h"
 #include "Validation.h"
