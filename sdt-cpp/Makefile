@@ -44,6 +44,6 @@ libmal.a: $(LIBOBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf *.o $(TARGETS) libmal.a
+	rm -rf *.o $(TARGETS) libmal.a .deps
 
 -include .deps
