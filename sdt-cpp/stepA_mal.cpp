@@ -183,26 +183,36 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 ASSERT(OBJECT_CAST(malSymbol,
                     catchBlock->item(0))->value() == "catch*",
                     "catch block must begin with catch*");
+
+                // We don't need excSym at this scope, but we want to check
+                // that the catch block is valid always, not just in case of
+                // an exception.
                 const malSymbol* excSym =
                     OBJECT_CAST(malSymbol, catchBlock->item(1));
+
                 malObjectPtr excVal;
 
                 try {
-                    return EVAL(tryBody, env);
+                    ast = EVAL(tryBody, env);
                 }
                 catch(String& s) {
                     excVal = mal::string(s);
                 }
                 catch (malEmptyInputException&) {
-                    return mal::nil();
+                    // Not an error, continue as if we got nil
+                    ast = mal::nil();
                 }
                 catch(malObjectPtr& o) {
                     excVal = o;
                 };
 
-                malEnvPtr innerEnv(new malEnv(env));
-                innerEnv->set(excSym->value(), excVal);
-                return EVAL(catchBlock->item(2), innerEnv);
+                if (excVal) {
+                    // we got some exception
+                    env = malEnvPtr(new malEnv(env));
+                    env->set(excSym->value(), excVal);
+                    ast = catchBlock->item(2);
+                }
+                continue; // TCO
             }
         }
 
