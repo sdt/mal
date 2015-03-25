@@ -18,12 +18,12 @@
     checkArgsAtLeast(name.c_str(), expected, \
                         std::distance(argsBegin, argsEnd))
 
-static String printObjects(malObjectIter begin, malObjectIter end,
+static String printValues(malValueIter begin, malValueIter end,
                            const String& sep, bool readably);
 
 static StaticList<malBuiltIn*> handlers;
 
-#define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
+#define ARG(type, name) type* name = VALUE_CAST(type, *argsBegin++)
 
 #define FUNCNAME(uniq) builtIn ## uniq
 #define HRECNAME(uniq) handler ## uniq
@@ -31,8 +31,8 @@ static StaticList<malBuiltIn*> handlers;
     static malBuiltIn::ApplyFunc FUNCNAME(uniq); \
     static StaticList<malBuiltIn*>::Node HRECNAME(uniq) \
         (handlers, new malBuiltIn(symbol, FUNCNAME(uniq))); \
-    malObjectPtr FUNCNAME(uniq)(const String& name, \
-        malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+    malValuePtr FUNCNAME(uniq)(const String& name, \
+        malValueIter argsBegin, malValueIter argsEnd, malEnvPtr env)
 
 #define BUILTIN(symbol)  BUILTIN_DEF(__LINE__, symbol)
 
@@ -59,22 +59,22 @@ static StaticList<malBuiltIn*> handlers;
         return mal::integer(lhs->value() op rhs->value()); \
     }
 
-BUILTIN_ISA("atom?",                malAtom);
-BUILTIN_ISA("keyword?",             malKeyword);
-BUILTIN_ISA("list?",                malList);
-BUILTIN_ISA("map?",                 malHash);
-BUILTIN_ISA("sequential?",          malSequence);
-BUILTIN_ISA("symbol?",              malSymbol);
-BUILTIN_ISA("vector?",              malVector);
+BUILTIN_ISA("atom?",        malAtom);
+BUILTIN_ISA("keyword?",     malKeyword);
+BUILTIN_ISA("list?",        malList);
+BUILTIN_ISA("map?",         malHash);
+BUILTIN_ISA("sequential?",  malSequence);
+BUILTIN_ISA("symbol?",      malSymbol);
+BUILTIN_ISA("vector?",      malVector);
 
-BUILTIN_INTOP(+, false);
-BUILTIN_INTOP(/, true);
-BUILTIN_INTOP(*, false);
-BUILTIN_INTOP(%, true);
+BUILTIN_INTOP(+,            false);
+BUILTIN_INTOP(/,            true);
+BUILTIN_INTOP(*,            false);
+BUILTIN_INTOP(%,            true);
 
-BUILTIN_IS("true?",     trueObject);
-BUILTIN_IS("false?",    falseObject);
-BUILTIN_IS("nil?",      nil);
+BUILTIN_IS("true?",         trueValue);
+BUILTIN_IS("false?",        falseValue);
+BUILTIN_IS("nil?",          nilValue);
 
 BUILTIN("-")
 {
@@ -100,8 +100,8 @@ BUILTIN("<=")
 BUILTIN("=")
 {
     CHECK_ARGS_IS(2);
-    const malObject* lhs = (*argsBegin++).ptr();
-    const malObject* rhs = (*argsBegin++).ptr();
+    const malValue* lhs = (*argsBegin++).ptr();
+    const malValue* rhs = (*argsBegin++).ptr();
 
     return mal::boolean(lhs->isEqualTo(rhs));
 }
@@ -109,13 +109,13 @@ BUILTIN("=")
 BUILTIN("apply")
 {
     CHECK_ARGS_AT_LEAST(2);
-    malObjectPtr op = *argsBegin++; // this gets checked in APPLY
+    malValuePtr op = *argsBegin++; // this gets checked in APPLY
 
     // Copy the first N-1 arguments in.
-    malObjectVec args(argsBegin, argsEnd-1);
+    malValueVec args(argsBegin, argsEnd-1);
 
     // Then append the argument as a list.
-    const malSequence* lastArg = OBJECT_CAST(malSequence, *(argsEnd-1));
+    const malSequence* lastArg = VALUE_CAST(malSequence, *(argsEnd-1));
     for (int i = 0; i < lastArg->count(); i++) {
         args.push_back(lastArg->item(i));
     }
@@ -142,11 +142,11 @@ BUILTIN("concat")
 {
     int count = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
-        const malSequence* seq = OBJECT_CAST(malSequence, *it);
+        const malSequence* seq = VALUE_CAST(malSequence, *it);
         count += seq->count();
     }
 
-    malObjectVec* items = new malObjectVec(count);
+    malValueVec* items = new malValueVec(count);
     int offset = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
         const malSequence* seq = STATIC_CAST(malSequence, *it);
@@ -168,10 +168,10 @@ BUILTIN("conj")
 BUILTIN("cons")
 {
     CHECK_ARGS_IS(2);
-    malObjectPtr first = *argsBegin++;
+    malValuePtr first = *argsBegin++;
     ARG(malSequence, rest);
 
-    malObjectVec* items = new malObjectVec(1 + rest->count());
+    malValueVec* items = new malValueVec(1 + rest->count());
     items->at(0) = first;
     std::copy(rest->begin(), rest->end(), items->begin() + 1);
 
@@ -181,7 +181,7 @@ BUILTIN("cons")
 BUILTIN("contains?")
 {
     CHECK_ARGS_IS(2);
-    if (*argsBegin == mal::nil()) {
+    if (*argsBegin == mal::nilValue()) {
         return *argsBegin;
     }
     ARG(malHash, hash);
@@ -191,7 +191,7 @@ BUILTIN("contains?")
 BUILTIN("count")
 {
     CHECK_ARGS_IS(1);
-    if (*argsBegin == mal::nil()) {
+    if (*argsBegin == mal::nilValue()) {
         return mal::integer(0);
     }
 
@@ -239,7 +239,7 @@ BUILTIN("first")
 BUILTIN("get")
 {
     CHECK_ARGS_IS(2);
-    if (*argsBegin == mal::nil()) {
+    if (*argsBegin == mal::nilValue()) {
         return *argsBegin;
     }
     ARG(malHash, hash);
@@ -268,7 +268,7 @@ BUILTIN("keyword")
 BUILTIN("meta")
 {
     CHECK_ARGS_IS(1);
-    malObjectPtr obj = *argsBegin++;
+    malValuePtr obj = *argsBegin++;
 
     return obj->meta();
 }
@@ -287,19 +287,19 @@ BUILTIN("nth")
 
 BUILTIN("pr-str")
 {
-    return mal::string(printObjects(argsBegin, argsEnd, " ", true));
+    return mal::string(printValues(argsBegin, argsEnd, " ", true));
 }
 
 BUILTIN("println")
 {
-    std::cout << printObjects(argsBegin, argsEnd, " ", false) << "\n";
-    return mal::nil();
+    std::cout << printValues(argsBegin, argsEnd, " ", false) << "\n";
+    return mal::nilValue();
 }
 
 BUILTIN("prn")
 {
-    std::cout << printObjects(argsBegin, argsEnd, " ", true) << "\n";
-    return mal::nil();
+    std::cout << printValues(argsBegin, argsEnd, " ", true) << "\n";
+    return mal::nilValue();
 }
 
 BUILTIN("read-string")
@@ -353,7 +353,7 @@ BUILTIN("slurp")
 
 BUILTIN("str")
 {
-    return mal::string(printObjects(argsBegin, argsEnd, "", false));
+    return mal::string(printValues(argsBegin, argsEnd, "", false));
 }
 
 BUILTIN("symbol")
@@ -384,8 +384,8 @@ BUILTIN("vector")
 BUILTIN("with-meta")
 {
     CHECK_ARGS_IS(2);
-    malObjectPtr obj  = *argsBegin++;
-    malObjectPtr meta = *argsBegin++;
+    malValuePtr obj  = *argsBegin++;
+    malValuePtr meta = *argsBegin++;
     return obj->withMeta(meta);
 }
 
@@ -414,8 +414,8 @@ void installCore(malEnvPtr env) {
     }
 }
 
-static String printObjects(malObjectIter begin, malObjectIter end,
-                           const String& sep, bool readably)
+static String printValues(malValueIter begin, malValueIter end,
+                          const String& sep, bool readably)
 {
     String out;
 

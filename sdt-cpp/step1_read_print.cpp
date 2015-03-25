@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-malObjectPtr READ(const String& input);
-malObjectPtr EVAL(malObjectPtr ast);
-String PRINT(malObjectPtr ast);
+malValuePtr READ(const String& input);
+malValuePtr EVAL(malValuePtr ast);
+String PRINT(malValuePtr ast);
 String rep(const String& input);
 
 int main(int argc, char* argv[])
@@ -31,21 +31,22 @@ String rep(const String& input)
     return PRINT(EVAL(READ(input)));
 }
 
-malObjectPtr READ(const String& input)
+malValuePtr READ(const String& input)
 {
     return readStr(input);
 }
 
-malObjectPtr EVAL(malObjectPtr ast)
+malValuePtr EVAL(malValuePtr ast)
 {
     return ast;
 }
 
-String PRINT(malObjectPtr ast)
+String PRINT(malValuePtr ast)
 {
     return ast->print(true);
 }
 
 // Adding these just to keep the linker happy
-malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env) { return NULL; }
-malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env) { return NULL; }
+malValuePtr EVAL(malValuePtr ast, malEnvPtr env) { return NULL; }
+malValuePtr APPLY(malValuePtr op, malValueIter argsBegin, malValueIter argsEnd,
+                  malEnvPtr env) { return NULL; }

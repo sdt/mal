@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-malObjectPtr READ(const String& input);
-String PRINT(malObjectPtr ast);
+malValuePtr READ(const String& input);
+String PRINT(malValuePtr ast);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -37,13 +37,13 @@ String rep(const String& input, malEnvPtr env)
     return PRINT(EVAL(READ(input), env));
 }
 
-malObjectPtr READ(const String& input)
+malValuePtr READ(const String& input)
 {
     return readStr(input);
 }
 
 
-malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
+malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
 {
     if (const malList* list = DYNAMIC_CAST(malList, ast)) {
         const malSymbol* symbol;
@@ -55,7 +55,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "def!") {
                 checkArgsIs("def!", 2, argCount);
-                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
@@ -71,11 +71,11 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "fn*") {
                 checkArgsIs("fn*", 2, argCount);
 
-                const malList* bindings = OBJECT_CAST(malList, list->item(1));
+                const malList* bindings = VALUE_CAST(malList, list->item(1));
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
                     const malSymbol* sym =
-                      OBJECT_CAST(malSymbol, bindings->item(i));
+                        VALUE_CAST(malSymbol, bindings->item(i));
                     params.push_back(sym->value());
                 }
 
@@ -85,14 +85,14 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "if") {
                 checkArgsBetween("if", 2, 3, argCount);
 
-                malObjectPtr cond = EVAL(list->item(1), env);
+                malValuePtr cond = EVAL(list->item(1), env);
                 if (cond->isTrue()) {
                     // then
                     return EVAL(list->item(2), env);
                 }
                 if (argCount == 2) {
                     // no else case
-                    return mal::nil();
+                    return mal::nilValue();
                 }
                 // else case
                 return EVAL(list->item(3), env);
@@ -101,12 +101,12 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "let*") {
                 checkArgsIs("let*", 2, argCount);
                 const malSequence* bindings =
-                  OBJECT_CAST(malSequence, list->item(1));
+                    VALUE_CAST(malSequence, list->item(1));
                 int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
                     const malSymbol* var =
-                      OBJECT_CAST(malSymbol, bindings->item(i));
+                        VALUE_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 return EVAL(list->item(2), inner);
@@ -121,12 +121,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
     return ast->eval(env);
 }
 
-String PRINT(malObjectPtr ast)
+String PRINT(malValuePtr ast)
 {
     return ast->print(true);
 }
 
-malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+malValuePtr APPLY(malValuePtr op, malValueIter argsBegin, malValueIter argsEnd,
+                  malEnvPtr env)
 {
     const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     ASSERT(handler != NULL, "\"%s\" is not applicable",
@@ -135,11 +136,11 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
     return handler->apply(argsBegin, argsEnd, env);
 }
 
-malObjectPtr readline(const String& prompt)
+malValuePtr readline(const String& prompt)
 {
     String input;
     if (s_readLine.get(prompt, input)) {
         return mal::string(input);
     }
-    return mal::nil();
+    return mal::nilValue();
 }

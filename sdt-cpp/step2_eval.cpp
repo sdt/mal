@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-malObjectPtr READ(const String& input);
-String PRINT(malObjectPtr ast);
+malValuePtr READ(const String& input);
+String PRINT(malValuePtr ast);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -34,22 +34,23 @@ String rep(const String& input, malEnvPtr env)
     return PRINT(EVAL(READ(input), env));
 }
 
-malObjectPtr READ(const String& input)
+malValuePtr READ(const String& input)
 {
     return readStr(input);
 }
 
-malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
+malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
 {
     return ast->eval(env);
 }
 
-String PRINT(malObjectPtr ast)
+String PRINT(malValuePtr ast)
 {
     return ast->print(true);
 }
 
-malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+malValuePtr APPLY(malValuePtr op, malValueIter argsBegin, malValueIter argsEnd,
+                  malEnvPtr env)
 {
     const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     if (handler == NULL) {
@@ -59,11 +60,11 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
     return handler->apply(argsBegin, argsEnd, env);
 }
 
-malObjectPtr readline(const String& prompt)
+malValuePtr readline(const String& prompt)
 {
     String input;
     if (s_readLine.get(prompt, input)) {
         return mal::string(input);
     }
-    return mal::nil();
+    return mal::nilValue();
 }

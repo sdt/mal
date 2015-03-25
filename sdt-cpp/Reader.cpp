@@ -77,13 +77,13 @@ void Tokeniser::skipWhitespace()
     }
 }
 
-static malObjectPtr readAtom(Tokeniser& tokeniser);
-static malObjectPtr readForm(Tokeniser& tokeniser);
-static void readList(Tokeniser& tokeniser, malObjectVec* items,
+static malValuePtr readAtom(Tokeniser& tokeniser);
+static malValuePtr readForm(Tokeniser& tokeniser);
+static void readList(Tokeniser& tokeniser, malValueVec* items,
                       const String& end);
-static malObjectPtr processMacro(Tokeniser& tokeniser, const String& symbol);
+static malValuePtr processMacro(Tokeniser& tokeniser, const String& symbol);
 
-malObjectPtr readStr(const String& input)
+malValuePtr readStr(const String& input)
 {
     Tokeniser tokeniser(input);
     if (tokeniser.eof()) {
@@ -92,7 +92,7 @@ malObjectPtr readStr(const String& input)
     return readForm(tokeniser);
 }
 
-static malObjectPtr readForm(Tokeniser& tokeniser)
+static malValuePtr readForm(Tokeniser& tokeniser)
 {
     ASSERT(!tokeniser.eof(), "Expected form, got EOF");
     String token = tokeniser.peek();
@@ -102,19 +102,19 @@ static malObjectPtr readForm(Tokeniser& tokeniser)
 
     if (token == "(") {
         tokeniser.next();
-        std::unique_ptr<malObjectVec> items(new malObjectVec);
+        std::unique_ptr<malValueVec> items(new malValueVec);
         readList(tokeniser, items.get(), ")");
         return mal::list(items.release());
     }
     if (token == "[") {
         tokeniser.next();
-        std::unique_ptr<malObjectVec> items(new malObjectVec);
+        std::unique_ptr<malValueVec> items(new malValueVec);
         readList(tokeniser, items.get(), "]");
         return mal::vector(items.release());
     }
     if (token == "{") {
         tokeniser.next();
-        std::unique_ptr<malObjectVec> items(new malObjectVec);
+        std::unique_ptr<malValueVec> items(new malValueVec);
         items->push_back(mal::symbol("hash-map"));
         readList(tokeniser, items.get(), "}");
         return mal::list(items.release());
@@ -122,7 +122,7 @@ static malObjectPtr readForm(Tokeniser& tokeniser)
     return readAtom(tokeniser);
 }
 
-static malObjectPtr readAtom(Tokeniser& tokeniser)
+static malValuePtr readAtom(Tokeniser& tokeniser)
 {
     struct ReaderMacro {
         const char* token;
@@ -139,12 +139,12 @@ static malObjectPtr readAtom(Tokeniser& tokeniser)
 
     struct Constant {
         const char* token;
-        malObjectPtr value;
+        malValuePtr value;
     };
     Constant constTable[] = {
-        { "false",  mal::falseObject()  },
-        { "nil",    mal::nil()          },
-        { "true",   mal::trueObject()   },
+        { "false",  mal::falseValue()  },
+        { "nil",    mal::nilValue()          },
+        { "true",   mal::trueValue()   },
     };
     const Constant* constTableEnd = constTable + ARRAY_SIZE(constTable);
 
@@ -156,10 +156,10 @@ static malObjectPtr readAtom(Tokeniser& tokeniser)
         return mal::keyword(token);
     }
     if (token == "^") {
-        malObjectPtr meta = readForm(tokeniser);
-        malObjectPtr object = readForm(tokeniser);
-        // Note that meta and object switch places
-        return mal::list(mal::symbol("with-meta"), object, meta);
+        malValuePtr meta = readForm(tokeniser);
+        malValuePtr value = readForm(tokeniser);
+        // Note that meta and value switch places
+        return mal::list(mal::symbol("with-meta"), value, meta);
     }
     for (Constant* it = constTable; it != constTableEnd; ++it) {
         if (token == it->token) {
@@ -177,7 +177,7 @@ static malObjectPtr readAtom(Tokeniser& tokeniser)
     return mal::symbol(token);
 }
 
-static void readList(Tokeniser& tokeniser, malObjectVec* items,
+static void readList(Tokeniser& tokeniser, malValueVec* items,
                       const String& end)
 {
     while (1) {
@@ -190,7 +190,7 @@ static void readList(Tokeniser& tokeniser, malObjectVec* items,
     }
 }
 
-static malObjectPtr processMacro(Tokeniser& tokeniser, const String& symbol)
+static malValuePtr processMacro(Tokeniser& tokeniser, const String& symbol)
 {
     return mal::list(mal::symbol(symbol), readForm(tokeniser));
 }

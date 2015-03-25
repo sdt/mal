@@ -10,7 +10,7 @@ malEnv::malEnv(malEnvPtr outer)
 }
 
 malEnv::malEnv(malEnvPtr outer, const StringVec& bindings,
-               malObjectIter argsBegin, malObjectIter argsEnd)
+               malValueIter argsBegin, malValueIter argsEnd)
 : m_outer(outer)
 {
     TRACE_ENV("Creating malEnv %p, outer=%p\n", this, m_outer.ptr());
@@ -45,7 +45,7 @@ malEnvPtr malEnv::find(const String& symbol)
     return NULL;
 }
 
-malObjectPtr malEnv::get(const String& symbol)
+malValuePtr malEnv::get(const String& symbol)
 {
     for (malEnvPtr env = this; env; env = env->m_outer) {
         auto it = env->m_map.find(symbol);
@@ -56,7 +56,7 @@ malObjectPtr malEnv::get(const String& symbol)
     ASSERT(false, "'%s' not found", symbol.c_str());
 }
 
-malObjectPtr malEnv::set(const String& symbol, malObjectPtr value)
+malValuePtr malEnv::set(const String& symbol, malValuePtr value)
 {
     m_map[symbol] = value;
     return value;

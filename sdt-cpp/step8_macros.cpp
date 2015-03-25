@@ -7,13 +7,13 @@
 #include <iostream>
 #include <memory>
 
-malObjectPtr READ(const String& input);
-String PRINT(malObjectPtr ast);
+malValuePtr READ(const String& input);
+String PRINT(malValuePtr ast);
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safeRep(const String& input, malEnvPtr env);
-static malObjectPtr quasiquote(malObjectPtr obj);
-static malObjectPtr macroExpand(malObjectPtr obj, malEnvPtr env);
+static malValuePtr quasiquote(malValuePtr obj);
+static malValuePtr macroExpand(malValuePtr obj, malEnvPtr env);
 static void installMacros(malEnvPtr env);
 
 static ReadLine s_readLine("~/.mal-history");
@@ -54,7 +54,7 @@ static void safeRep(const String& input, malEnvPtr env)
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[])
 {
-    malObjectVec* args = new malObjectVec();
+    malValueVec* args = new malValueVec();
     for (int i = 0; i < argc; i++) {
         args->push_back(mal::string(argv[i]));
     }
@@ -66,12 +66,12 @@ String rep(const String& input, malEnvPtr env)
     return PRINT(EVAL(READ(input), env));
 }
 
-malObjectPtr READ(const String& input)
+malValuePtr READ(const String& input)
 {
     return readStr(input);
 }
 
-malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
+malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
 {
     while (1) {
         const malList* list = DYNAMIC_CAST(malList, ast);
@@ -93,16 +93,16 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
             if (special == "def!") {
                 checkArgsIs("def!", 2, argCount);
-                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
+                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
             }
 
             if (special == "defmacro!") {
                 checkArgsIs("defmacro!", 2, argCount);
 
-                const malSymbol* id = OBJECT_CAST(malSymbol, list->item(1));
-                malObjectPtr body = EVAL(list->item(2), env);
-                const malLambda* lambda = OBJECT_CAST(malLambda, body);
+                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
+                malValuePtr body = EVAL(list->item(2), env);
+                const malLambda* lambda = VALUE_CAST(malLambda, body);
                 return env->set(id->value(), mal::macro(*lambda));
             }
 
@@ -120,11 +120,11 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
                 checkArgsIs("fn*", 2, argCount);
 
                 const malSequence* bindings =
-                    OBJECT_CAST(malSequence, list->item(1));
+                    VALUE_CAST(malSequence, list->item(1));
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
                     const malSymbol* sym =
-                        OBJECT_CAST(malSymbol, bindings->item(i));
+                        VALUE_CAST(malSymbol, bindings->item(i));
                     params.push_back(sym->value());
                 }
 
@@ -136,7 +136,7 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
 
                 bool isTrue = EVAL(list->item(1), env)->isTrue();
                 if (!isTrue && (argCount == 2)) {
-                    return mal::nil();
+                    return mal::nilValue();
                 }
                 ast = list->item(isTrue ? 2 : 3);
                 continue; // TCO
@@ -145,12 +145,12 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
             if (special == "let*") {
                 checkArgsIs("let*", 2, argCount);
                 const malSequence* bindings =
-                    OBJECT_CAST(malSequence, list->item(1));
+                    VALUE_CAST(malSequence, list->item(1));
                 int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
                     const malSymbol* var =
-                        OBJECT_CAST(malSymbol, bindings->item(i));
+                        VALUE_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
                 ast = list->item(2);
@@ -176,8 +176,8 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        std::unique_ptr<malObjectVec> items(list->evalItems(env));
-        malObjectPtr op = items->at(0);
+        std::unique_ptr<malValueVec> items(list->evalItems(env));
+        malValuePtr op = items->at(0);
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
             env = lambda->makeEnv(items->begin()+1, items->end());
@@ -189,12 +189,13 @@ malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env)
     }
 }
 
-String PRINT(malObjectPtr ast)
+String PRINT(malValuePtr ast)
 {
     return ast->print(true);
 }
 
-malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
+malValuePtr APPLY(malValuePtr op, malValueIter argsBegin, malValueIter argsEnd,
+                  malEnvPtr env)
 {
     const malApplicable* handler = DYNAMIC_CAST(malApplicable, op);
     ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
@@ -202,19 +203,19 @@ malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsE
     return handler->apply(argsBegin, argsEnd, env);
 }
 
-static bool isSymbol(malObjectPtr obj, const String& text)
+static bool isSymbol(malValuePtr obj, const String& text)
 {
     const malSymbol* sym = DYNAMIC_CAST(malSymbol, obj);
     return sym && (sym->value() == text);
 }
 
-static const malSequence* isPair(malObjectPtr obj)
+static const malSequence* isPair(malValuePtr obj)
 {
     const malSequence* list = DYNAMIC_CAST(malSequence, obj);
     return list && !list->isEmpty() ? list : NULL;
 }
 
-static malObjectPtr quasiquote(malObjectPtr obj)
+static malValuePtr quasiquote(malValuePtr obj)
 {
     const malSequence* seq = isPair(obj);
     if (!seq) {
@@ -248,12 +249,12 @@ static malObjectPtr quasiquote(malObjectPtr obj)
     }
 }
 
-static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
+static const malLambda* isMacroApplication(malValuePtr obj, malEnvPtr env)
 {
     if (const malSequence* seq = isPair(obj)) {
         if (malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
             if (malEnvPtr symEnv = env->find(sym->value())) {
-                malObjectPtr value = sym->eval(symEnv);
+                malValuePtr value = sym->eval(symEnv);
                 if (malLambda* lambda = DYNAMIC_CAST(malLambda, value)) {
                     return lambda->isMacro() ? lambda : NULL;
                 }
@@ -263,7 +264,7 @@ static const malLambda* isMacroApplication(malObjectPtr obj, malEnvPtr env)
     return NULL;
 }
 
-static malObjectPtr macroExpand(malObjectPtr obj, malEnvPtr env)
+static malValuePtr macroExpand(malValuePtr obj, malEnvPtr env)
 {
     while (const malLambda* macro = isMacroApplication(obj, env)) {
         const malSequence* seq = STATIC_CAST(malSequence, obj);
@@ -284,11 +285,11 @@ static void installMacros(malEnvPtr env)
     }
 }
 
-malObjectPtr readline(const String& prompt)
+malValuePtr readline(const String& prompt)
 {
     String input;
     if (s_readLine.get(prompt, input)) {
         return mal::string(input);
     }
-    return mal::nil();
+    return mal::nilValue();
 }

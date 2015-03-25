@@ -9,24 +9,26 @@
 
 #include <vector>
 
-class malObject;
-typedef RefCountedPtr<malObject>    malObjectPtr;
-typedef std::vector<malObjectPtr>   malObjectVec;
-typedef malObjectVec::iterator      malObjectIter;
+class malValue;
+typedef RefCountedPtr<malValue>  malValuePtr;
+typedef std::vector<malValuePtr> malValueVec;
+typedef malValueVec::iterator    malValueIter;
 
 class malEnv;
-typedef RefCountedPtr<malEnv>       malEnvPtr;
+typedef RefCountedPtr<malEnv>     malEnvPtr;
 
 // step*.cpp
-extern malObjectPtr APPLY(malObjectPtr op, malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env);
-extern malObjectPtr EVAL(malObjectPtr ast, malEnvPtr env);
-extern malObjectPtr readline(const String& prompt);
+extern malValuePtr APPLY(malValuePtr op,
+                         malValueIter argsBegin, malValueIter argsEnd,
+                         malEnvPtr env);
+extern malValuePtr EVAL(malValuePtr ast, malEnvPtr env);
+extern malValuePtr readline(const String& prompt);
 extern String rep(const String& input, malEnvPtr env);
 
 // Core.cpp
 extern void installCore(malEnvPtr env);
 
 // Reader.cpp
-extern malObjectPtr readStr(const String& input);
+extern malValuePtr readStr(const String& input);
 
 #endif // INCLUDE_MAL_H
