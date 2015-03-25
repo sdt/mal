@@ -1,39 +1,50 @@
 #ifndef INCLUDE_STATICLIST_H
 #define INCLUDE_STATICLIST_H
 
-template<typename T> class StaticListNode;
-
 template<typename T>
 class StaticList
 {
 public:
     StaticList() : m_head(NULL) { }
 
-    StaticListNode<T>* setHead(StaticListNode<T>* node) {
-        StaticListNode<T>* oldHead = m_head;
-        m_head = node;
-        return oldHead;
-    }
+    class Iterator;
+    Iterator begin() { return Iterator(m_head); }
+    Iterator end()   { return Iterator(NULL);   }
 
-    StaticListNode<T>* head() { return m_head; }
+    class Node {
+    public:
+        Node(StaticList<T>& list, T item)
+        : m_item(item), m_next(list.m_head) {
+            list.m_head = this;
+        }
+
+    private:
+        friend class Iterator;
+        T m_item;
+        Node* m_next;
+    };
+
+    class Iterator {
+    public:
+        Iterator& operator ++ () {
+            m_node = m_node->m_next;
+            return *this;
+        }
+
+        T& operator * () { return m_node->m_item; }
+        bool operator != (const Iterator& that) {
+            return m_node != that.m_node;
+        }
+
+    private:
+        friend class StaticList<T>;
+        Iterator(Node* node) : m_node(node) { }
+        Node* m_node;
+    };
 
 private:
-    StaticListNode<T>* m_head;
-};
-
-template<typename T>
-class StaticListNode
-{
-public:
-    StaticListNode(StaticList<T>& list, T item)
-    : m_item(item), m_next(list.setHead(this)) { }
-
-    T& item() { return m_item; }
-    StaticListNode<T>* next() { return m_next; }
-
-private:
-    T m_item;
-    StaticListNode<T>* m_next;
+    friend class Node;
+    Node*  m_head;
 };
 
 #endif // INCLUDE_STATICLIST_H

@@ -29,7 +29,7 @@ static StaticList<malBuiltIn*> handlers;
 #define HRECNAME(uniq) handler ## uniq
 #define BUILTIN_DEF(uniq, symbol) \
     static malBuiltIn::ApplyFunc FUNCNAME(uniq); \
-    static StaticListNode<malBuiltIn*> HRECNAME(uniq) \
+    static StaticList<malBuiltIn*>::Node HRECNAME(uniq) \
         (handlers, new malBuiltIn(symbol, FUNCNAME(uniq))); \
     malObjectPtr FUNCNAME(uniq)(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
@@ -404,8 +404,8 @@ static const char* malFunctionTable[] = {
 };
 
 void installCore(malEnvPtr env) {
-    for (auto it = handlers.head(); it != NULL; it = it->next()) {
-        malBuiltIn* handler = it->item();
+    for (auto it = handlers.begin(), end = handlers.end(); it != end; ++it) {
+        malBuiltIn* handler = *it;
         env->set(handler->name(), handler);
     }
 
