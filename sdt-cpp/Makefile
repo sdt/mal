@@ -7,8 +7,8 @@ ifeq ($(uname_S),Darwin)
 	INCPATHS=-I$(READLINE)/include
 	LIBPATHS=-L$(READLINE)/lib
 else
-	# Ubuntu 15.04 / docker
-	CXX=clang++-3.6
+	# Ubuntu 14.10 / docker
+	CXX=clang++-3.5
 endif
 
 LD=$(CXX)
