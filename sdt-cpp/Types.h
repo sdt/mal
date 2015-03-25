@@ -283,10 +283,12 @@ public:
         return this == rhs; // these are singletons
     }
 
+    String name() const { return m_name; }
+
     WITH_META(malBuiltIn);
 
 private:
-    const String     m_name;
+    const String m_name;
     ApplyFunc* m_handler;
 };
 

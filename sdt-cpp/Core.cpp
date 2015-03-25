@@ -1,5 +1,6 @@
 #include "MAL.h"
 #include "Environment.h"
+#include "StaticList.h"
 #include "Types.h"
 
 #include <fstream>
@@ -20,28 +21,7 @@
 static String printObjects(malObjectIter begin, malObjectIter end,
                            const String& sep, bool readably);
 
-class HandlerRecord {
-public:
-    HandlerRecord(const char* name, malBuiltIn::ApplyFunc * handler)
-    : name(name), handler(handler), next(first)
-    {
-        first = this;
-    }
-
-    static void installAll(malEnvPtr env) {
-        for (HandlerRecord* it = first; it != NULL; it = it->next) {
-            env->set(it->name, mal::builtin(it->name, it->handler));
-        }
-    }
-
-private:
-    const char* name;
-    malBuiltIn::ApplyFunc* handler;
-    static HandlerRecord* first;
-    HandlerRecord* next;
-};
-
-HandlerRecord* HandlerRecord::first = NULL;
+static StaticList<malBuiltIn*> handlers;
 
 #define ARG(type, name) type* name = OBJECT_CAST(type, *argsBegin++)
 
@@ -49,7 +29,8 @@ HandlerRecord* HandlerRecord::first = NULL;
 #define HRECNAME(uniq) handler ## uniq
 #define BUILTIN_DEF(uniq, symbol) \
     static malBuiltIn::ApplyFunc FUNCNAME(uniq); \
-    static HandlerRecord HRECNAME(uniq)(symbol, FUNCNAME(uniq)); \
+    static StaticListNode<malBuiltIn*> HRECNAME(uniq) \
+        (handlers, new malBuiltIn(symbol, FUNCNAME(uniq))); \
     malObjectPtr FUNCNAME(uniq)(const String& name, \
         malObjectIter argsBegin, malObjectIter argsEnd, malEnvPtr env)
 
@@ -423,7 +404,10 @@ static const char* malFunctionTable[] = {
 };
 
 void installCore(malEnvPtr env) {
-    HandlerRecord::installAll(env);
+    for (auto it = handlers.head(); it != NULL; it = it->next()) {
+        malBuiltIn* handler = it->item();
+        env->set(handler->name(), handler);
+    }
 
     for (int i = 0; i < ARRAY_SIZE(malFunctionTable); i++) {
         rep(malFunctionTable[i], env);
