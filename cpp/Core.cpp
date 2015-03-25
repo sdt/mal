@@ -59,7 +59,6 @@ static StaticList<malBuiltIn*> handlers;
         return mal::integer(lhs->value() op rhs->value()); \
     }
 
-BUILTIN_ISA("atom?",        malAtom);
 BUILTIN_ISA("keyword?",     malKeyword);
 BUILTIN_ISA("list?",        malList);
 BUILTIN_ISA("map?",         malHash);
@@ -131,13 +130,6 @@ BUILTIN("assoc")
     return hash->assoc(argsBegin, argsEnd);
 }
 
-BUILTIN("atom")
-{
-    CHECK_ARGS_IS(1);
-
-    return mal::atom(*argsBegin);
-}
-
 BUILTIN("concat")
 {
     int count = 0;
@@ -155,14 +147,6 @@ BUILTIN("concat")
     }
 
     return mal::list(items);
-}
-
-BUILTIN("conj")
-{
-    CHECK_ARGS_AT_LEAST(1);
-    ARG(malSequence, seq);
-
-    return seq->conj(argsBegin, argsEnd);
 }
 
 BUILTIN("cons")
@@ -197,14 +181,6 @@ BUILTIN("count")
 
     ARG(malSequence, seq);
     return mal::integer(seq->count());
-}
-
-BUILTIN("deref")
-{
-    CHECK_ARGS_IS(1);
-    ARG(malAtom, atom);
-
-    return atom->deref();
 }
 
 BUILTIN("dissoc")
@@ -265,14 +241,6 @@ BUILTIN("keyword")
     return mal::keyword(":" + token->value());
 }
 
-BUILTIN("meta")
-{
-    CHECK_ARGS_IS(1);
-    malValuePtr obj = *argsBegin++;
-
-    return obj->meta();
-}
-
 BUILTIN("nth")
 {
     CHECK_ARGS_IS(2);
@@ -308,21 +276,6 @@ BUILTIN("read-string")
     ARG(malString, str);
 
     return readStr(str->value());
-}
-
-BUILTIN("readline")
-{
-    CHECK_ARGS_IS(1);
-    ARG(malString, str);
-
-    return readline(str->value());
-}
-
-BUILTIN("reset!")
-{
-    CHECK_ARGS_IS(2);
-    ARG(malAtom, atom);
-    return atom->reset(*argsBegin);
 }
 
 BUILTIN("rest")
@@ -381,14 +334,6 @@ BUILTIN("vector")
     return mal::vector(argsBegin, argsEnd);
 }
 
-BUILTIN("with-meta")
-{
-    CHECK_ARGS_IS(2);
-    malValuePtr obj  = *argsBegin++;
-    malValuePtr meta = *argsBegin++;
-    return obj->withMeta(meta);
-}
-
 static const char* malFunctionTable[] = {
     "(def! list (fn* (& items) items))",
     "(def! not (fn* (cond) (if cond false true)))",
@@ -399,8 +344,6 @@ static const char* malFunctionTable[] = {
         (eval (read-string (str \"(do \" (slurp filename) \")\")))))",
     "(def! map (fn* (f xs) (if (empty? xs) xs \
         (cons (f (first xs)) (map f (rest xs))))))",
-    "(def! swap! (fn* (atom f & args) (reset! atom (apply f @atom args))))",
-    "(def! *host-language* \"sdt-cpp\")",
 };
 
 void installCore(malEnvPtr env) {

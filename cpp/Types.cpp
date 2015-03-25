@@ -7,10 +7,6 @@
 #include <typeinfo>
 
 namespace mal {
-    malValuePtr atom(malValuePtr value) {
-        return malValuePtr(new malAtom(value));
-    };
-
     malValuePtr boolean(bool value) {
         return value ? trueValue() : falseValue();
     }
@@ -264,19 +260,8 @@ malLambda::malLambda(const StringVec& bindings,
 
 }
 
-malLambda::malLambda(const malLambda& that, malValuePtr meta)
-: malApplicable(meta)
-, m_bindings(that.m_bindings)
-, m_body(that.m_body)
-, m_env(that.m_env)
-, m_isMacro(that.m_isMacro)
-{
-
-}
-
 malLambda::malLambda(const malLambda& that, bool isMacro)
-: malApplicable(that.m_meta)
-, m_bindings(that.m_bindings)
+: m_bindings(that.m_bindings)
 , m_body(that.m_body)
 , m_env(that.m_env)
 , m_isMacro(isMacro)
@@ -291,27 +276,9 @@ malValuePtr malLambda::apply(malValueIter argsBegin,
     return EVAL(m_body, makeEnv(argsBegin, argsEnd));
 }
 
-malValuePtr malLambda::doWithMeta(malValuePtr meta) const
-{
-    return new malLambda(*this, meta);
-}
-
 malEnvPtr malLambda::makeEnv(malValueIter argsBegin, malValueIter argsEnd) const
 {
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
-}
-
-malValuePtr malList::conj(malValueIter argsBegin,
-                          malValueIter argsEnd) const
-{
-    int oldItemCount = std::distance(begin(), end());
-    int newItemCount = std::distance(argsBegin, argsEnd);
-
-    malValueVec* items = new malValueVec(oldItemCount + newItemCount);
-    std::reverse_copy(argsBegin, argsEnd, items->begin());
-    std::copy(begin(), end(), items->begin() + newItemCount);
-
-    return mal::list(items);
 }
 
 malValuePtr malList::eval(malEnvPtr env)
@@ -355,16 +322,6 @@ bool malValue::isTrue() const
         && (this != mal::nilValue().ptr());
 }
 
-malValuePtr malValue::meta() const
-{
-    return m_meta.ptr() == NULL ? mal::nilValue() : m_meta;
-}
-
-malValuePtr malValue::withMeta(malValuePtr meta) const
-{
-    return doWithMeta(meta);
-}
-
 malSequence::malSequence(malValueVec* items)
 : m_items(items)
 {
@@ -373,13 +330,6 @@ malSequence::malSequence(malValueVec* items)
 
 malSequence::malSequence(malValueIter begin, malValueIter end)
 : m_items(new malValueVec(begin, end))
-{
-
-}
-
-malSequence::malSequence(const malSequence& that, malValuePtr meta)
-: malValue(meta)
-, m_items(new malValueVec(*(that.m_items)))
 {
 
 }
@@ -457,19 +407,6 @@ String malString::print(bool readably) const
 malValuePtr malSymbol::eval(malEnvPtr env)
 {
     return env->get(value());
-}
-
-malValuePtr malVector::conj(malValueIter argsBegin,
-                            malValueIter argsEnd) const
-{
-    int oldItemCount = std::distance(begin(), end());
-    int newItemCount = std::distance(argsBegin, argsEnd);
-
-    malValueVec* items = new malValueVec(oldItemCount + newItemCount);
-    std::copy(begin(), end(), items->begin());
-    std::copy(argsBegin, argsEnd, items->begin() + oldItemCount);
-
-    return mal::vector(items);
 }
 
 malValuePtr malVector::eval(malEnvPtr env)

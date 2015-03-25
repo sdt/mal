@@ -325,12 +325,3 @@ static void installMacros(malEnvPtr env)
         rep(macroTable[i], env);
     }
 }
-
-malValuePtr readline(const String& prompt)
-{
-    String input;
-    if (s_readLine.get(prompt, input)) {
-        return mal::string(input);
-    }
-    return mal::nilValue();
-}
