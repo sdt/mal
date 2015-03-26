@@ -1,13 +1,13 @@
-#include "MAL.h"
-
+#include "String.h"
 #include "ReadLine.h"
-#include "Types.h"
 
 #include <iostream>
 #include <memory>
 
-malValuePtr READ(const String& input);
-String PRINT(malValuePtr ast);
+String READ(const String& input);
+String EVAL(const String& ast);
+String PRINT(const String& ast);
+String rep(const String& input);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -16,17 +16,7 @@ int main(int argc, char* argv[])
     String prompt = "user> ";
     String input;
     while (s_readLine.get(prompt, input)) {
-        String out;
-        try {
-            out = rep(input);
-        }
-        catch (malEmptyInputException&) {
-            continue; // no output
-        }
-        catch (String& s) {
-            out = s;
-        };
-        std::cout << out << "\n";
+        std::cout << rep(input) << "\n";
     }
     return 0;
 }
@@ -36,17 +26,17 @@ String rep(const String& input)
     return PRINT(EVAL(READ(input)));
 }
 
-malValuePtr READ(const String& input)
+String READ(const String& input)
 {
-    return readStr(input);
+    return input;
 }
 
-malValuePtr EVAL(malValuePtr ast)
+String EVAL(const String& ast)
 {
     return ast;
 }
 
-String PRINT(malValuePtr ast)
+String PRINT(const String& ast)
 {
-    return ast->print(true);
+    return ast;
 }
