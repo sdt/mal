@@ -12,7 +12,6 @@ String PRINT(malValuePtr ast);
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safeRep(const String& input, malEnvPtr env);
-static malValuePtr quasiquote(malValuePtr obj);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -139,17 +138,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                 env = inner;
                 continue; // TCO
             }
-
-            if (special == "quasiquote") {
-                checkArgsIs("quasiquote", 1, argCount);
-                ast = quasiquote(list->item(1));
-                continue; // TCO
-            }
-
-            if (special == "quote") {
-                checkArgsIs("quote", 1, argCount);
-                return list->item(1);
-            }
         }
 
         // Now we're left with the case of a regular list to be evaluated.
@@ -178,50 +166,4 @@ malValuePtr APPLY(malValuePtr op, malValueIter argsBegin, malValueIter argsEnd,
     ASSERT(handler != NULL, "\"%s\" is not applicable", op->print(true).c_str());
 
     return handler->apply(argsBegin, argsEnd, env);
-}
-
-static bool isSymbol(malValuePtr obj, const String& text)
-{
-    const malSymbol* sym = DYNAMIC_CAST(malSymbol, obj);
-    return sym && (sym->value() == text);
-}
-
-static const malSequence* isPair(malValuePtr obj)
-{
-    const malSequence* list = DYNAMIC_CAST(malSequence, obj);
-    return list && !list->isEmpty() ? list : NULL;
-}
-
-static malValuePtr quasiquote(malValuePtr obj)
-{
-    const malSequence* seq = isPair(obj);
-    if (!seq) {
-        return mal::list(mal::symbol("quote"), obj);
-    }
-
-    if (isSymbol(seq->item(0), "unquote")) {
-        // (qq (uq form)) -> form
-        checkArgsIs("unquote", 1, seq->count() - 1);
-        return seq->item(1);
-    }
-
-    const malSequence* innerSeq = isPair(seq->item(0));
-    if (innerSeq && isSymbol(innerSeq->item(0), "splice-unquote")) {
-        checkArgsIs("splice-unquote", 1, innerSeq->count() - 1);
-        // (qq (sq '(a b c))) -> a b c
-        return mal::list(
-            mal::symbol("concat"),
-            innerSeq->item(1),
-            quasiquote(seq->rest())
-        );
-    }
-    else {
-        // (qq (a b c)) -> (list (qq a) (qq b) (qq c))
-        // (qq xs     ) -> (cons (qq (car xs)) (qq (cdr xs)))
-        return mal::list(
-            mal::symbol("cons"),
-            quasiquote(seq->first()),
-            quasiquote(seq->rest())
-        );
-    }
 }
