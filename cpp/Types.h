@@ -223,7 +223,6 @@ private:
 class malLambda : public malApplicable {
 public:
     malLambda(const StringVec& bindings, malValuePtr body, malEnvPtr env);
-    malLambda(const malLambda& that, bool isMacro);
 
     virtual malValuePtr apply(malValueIter argsBegin,
                               malValueIter argsEnd,
@@ -237,16 +236,13 @@ public:
     }
 
     virtual String print(bool readably) const {
-        return STRF("#user-%s(%p)", m_isMacro ? "macro" : "function", this);
+        return STRF("#user-function(%p)", this);
     }
-
-    bool isMacro() const { return m_isMacro; }
 
 private:
     const StringVec   m_bindings;
     const malValuePtr m_body;
     const malEnvPtr   m_env;
-    const bool        m_isMacro;
 };
 
 namespace mal {
@@ -263,7 +259,6 @@ namespace mal {
     malValuePtr list(malValuePtr a);
     malValuePtr list(malValuePtr a, malValuePtr b);
     malValuePtr list(malValuePtr a, malValuePtr b, malValuePtr c);
-    malValuePtr macro(const malLambda& lambda);
     malValuePtr nilValue();
     malValuePtr string(const String& token);
     malValuePtr symbol(const String& token);

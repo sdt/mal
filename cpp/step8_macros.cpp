@@ -13,8 +13,6 @@ String PRINT(malValuePtr ast);
 static void makeArgv(malEnvPtr env, int argc, char* argv[]);
 static void safeRep(const String& input, malEnvPtr env);
 static malValuePtr quasiquote(malValuePtr obj);
-static malValuePtr macroExpand(malValuePtr obj, malEnvPtr env);
-static void installMacros(malEnvPtr env);
 
 static ReadLine s_readLine("~/.mal-history");
 
@@ -24,7 +22,6 @@ int main(int argc, char* argv[])
     String input;
     malEnvPtr replEnv(new malEnv);
     installCore(replEnv);
-    installMacros(replEnv);
     makeArgv(replEnv, argc - 2, argv + 2);
     if (argc > 1) {
         String filename = escape(argv[1]);
@@ -79,12 +76,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
             return ast->eval(env);
         }
 
-        ast = macroExpand(ast, env);
-        list = DYNAMIC_CAST(malList, ast);
-        if (!list || (list->count() == 0)) {
-            return ast->eval(env);
-        }
-
         // From here on down we are evaluating a non-empty list.
         // First handle the special forms.
         if (const malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
@@ -95,15 +86,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                 checkArgsIs("def!", 2, argCount);
                 const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
                 return env->set(id->value(), EVAL(list->item(2), env));
-            }
-
-            if (special == "defmacro!") {
-                checkArgsIs("defmacro!", 2, argCount);
-
-                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
-                malValuePtr body = EVAL(list->item(2), env);
-                const malLambda* lambda = VALUE_CAST(malLambda, body);
-                return env->set(id->value(), mal::macro(*lambda));
             }
 
             if (special == "do") {
@@ -156,11 +138,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                 ast = list->item(2);
                 env = inner;
                 continue; // TCO
-            }
-
-            if (special == "macroexpand") {
-                checkArgsIs("macroexpand", 1, argCount);
-                return macroExpand(list->item(1), env);
             }
 
             if (special == "quasiquote") {
@@ -246,41 +223,5 @@ static malValuePtr quasiquote(malValuePtr obj)
             quasiquote(seq->first()),
             quasiquote(seq->rest())
         );
-    }
-}
-
-static const malLambda* isMacroApplication(malValuePtr obj, malEnvPtr env)
-{
-    if (const malSequence* seq = isPair(obj)) {
-        if (malSymbol* sym = DYNAMIC_CAST(malSymbol, seq->first())) {
-            if (malEnvPtr symEnv = env->find(sym->value())) {
-                malValuePtr value = sym->eval(symEnv);
-                if (malLambda* lambda = DYNAMIC_CAST(malLambda, value)) {
-                    return lambda->isMacro() ? lambda : NULL;
-                }
-            }
-        }
-    }
-    return NULL;
-}
-
-static malValuePtr macroExpand(malValuePtr obj, malEnvPtr env)
-{
-    while (const malLambda* macro = isMacroApplication(obj, env)) {
-        const malSequence* seq = STATIC_CAST(malSequence, obj);
-        obj = macro->apply(seq->begin() + 1, seq->end(), env);
-    }
-    return obj;
-}
-
-static const char* macroTable[] = {
-    "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
-    "(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))",
-};
-
-static void installMacros(malEnvPtr env)
-{
-    for (int i = 0; i < ARRAY_SIZE(macroTable); i++) {
-        rep(macroTable[i], env);
     }
 }
