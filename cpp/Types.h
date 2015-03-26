@@ -21,7 +21,7 @@ public:
 
     bool isTrue() const;
 
-    virtual malValuePtr eval(malEnvPtr env);
+    virtual malValuePtr eval(malEnv& env);
 
     virtual String print(bool readably) const = 0;
 };
@@ -95,7 +95,7 @@ public:
     malSymbol(const String& token)
         : malStringBase(token) { }
 
-    virtual malValuePtr eval(malEnvPtr env);
+    virtual malValuePtr eval(malEnv& env);
 };
 
 class malSequence : public malValue {
@@ -106,7 +106,7 @@ public:
 
     virtual String print(bool readably) const;
 
-    malValueVec* evalItems(malEnvPtr env) const;
+    malValueVec* evalItems(malEnv& env) const;
     int count() const { return m_items->size(); }
     bool isEmpty() const { return m_items->empty(); }
     malValuePtr item(int index) const { return (*m_items)[index]; }
@@ -128,7 +128,7 @@ public:
         : malSequence(begin, end) { }
 
     virtual String print(bool readably) const;
-    virtual malValuePtr eval(malEnvPtr env);
+    virtual malValuePtr eval(malEnv& env);
 };
 
 class malVector : public malSequence {
@@ -137,7 +137,7 @@ public:
     malVector(malValueIter begin, malValueIter end)
         : malSequence(begin, end) { }
 
-    virtual malValuePtr eval(malEnvPtr env);
+    virtual malValuePtr eval(malEnv& env);
     virtual String print(bool readably) const;
 };
 
@@ -147,7 +147,7 @@ public:
 
     virtual malValuePtr apply(malValueIter argsBegin,
                                malValueIter argsEnd,
-                               malEnvPtr env) const = 0;
+                               malEnv& env) const = 0;
 };
 
 class malHash : public malValue {
@@ -167,14 +167,14 @@ public:
     typedef malValuePtr (ApplyFunc)(const String& name,
                                     malValueIter argsBegin,
                                     malValueIter argsEnd,
-                                    malEnvPtr env);
+                                    malEnv& env);
 
     malBuiltIn(const String& name, ApplyFunc* handler)
     : m_name(name), m_handler(handler) { }
 
     virtual malValuePtr apply(malValueIter argsBegin,
                               malValueIter argsEnd,
-                              malEnvPtr env) const;
+                              malEnv& env) const;
 
     virtual String print(bool readably) const {
         return STRF("#builtin-function(%s)", m_name.c_str());

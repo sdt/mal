@@ -90,7 +90,7 @@ namespace mal {
 
 malValuePtr malBuiltIn::apply(malValueIter argsBegin,
                               malValueIter argsEnd,
-                              malEnvPtr env) const
+                              malEnv& env) const
 {
     return m_handler(m_name, argsBegin, argsEnd, env);
 }
@@ -149,7 +149,7 @@ String malHash::print(bool readably) const
     return s + "}";
 }
 
-malValuePtr malList::eval(malEnvPtr env)
+malValuePtr malList::eval(malEnv& env)
 {
     if (count() == 0) {
         return malValuePtr(this);
@@ -166,7 +166,7 @@ String malList::print(bool readably) const
     return '(' + malSequence::print(readably) + ')';
 }
 
-malValuePtr malValue::eval(malEnvPtr env)
+malValuePtr malValue::eval(malEnv& env)
 {
     // Default case of eval is just to return the object itself.
     return malValuePtr(this);
@@ -195,7 +195,7 @@ malSequence::~malSequence()
     delete m_items;
 }
 
-malValueVec* malSequence::evalItems(malEnvPtr env) const
+malValueVec* malSequence::evalItems(malEnv& env) const
 {
     malValueVec* items = new malValueVec;;
     items->reserve(count());
@@ -242,12 +242,12 @@ String malString::print(bool readably) const
     return readably ? escapedValue() : value();
 }
 
-malValuePtr malSymbol::eval(malEnvPtr env)
+malValuePtr malSymbol::eval(malEnv& env)
 {
-    return env->get(value());
+    return env.get(value());
 }
 
-malValuePtr malVector::eval(malEnvPtr env)
+malValuePtr malVector::eval(malEnv& env)
 {
     return mal::vector(evalItems(env));
 }
