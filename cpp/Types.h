@@ -182,14 +182,6 @@ public:
     typedef std::map<String, malValuePtr> Map;
 
     malHash(malValueIter argsBegin, malValueIter argsEnd);
-    malHash(const malHash::Map& map);
-
-    malValuePtr assoc(malValueIter argsBegin, malValueIter argsEnd) const;
-    malValuePtr dissoc(malValueIter argsBegin, malValueIter argsEnd) const;
-    bool contains(malValuePtr key) const;
-    malValuePtr get(malValuePtr key) const;
-    malValuePtr keys() const;
-    malValuePtr values() const;
 
     virtual String print(bool readably) const;
 
@@ -262,7 +254,6 @@ namespace mal {
     malValuePtr builtin(const String& name, malBuiltIn::ApplyFunc handler);
     malValuePtr falseValue();
     malValuePtr hash(malValueIter argsBegin, malValueIter argsEnd);
-    malValuePtr hash(const malHash::Map& map);
     malValuePtr integer(int value);
     malValuePtr integer(const String& token);
     malValuePtr keyword(const String& token);

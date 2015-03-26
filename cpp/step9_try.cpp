@@ -173,47 +173,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                 checkArgsIs("quote", 1, argCount);
                 return list->item(1);
             }
-
-            if (special == "try*") {
-                checkArgsIs("try*", 2, argCount);
-                malValuePtr tryBody = list->item(1);
-                const malList* catchBlock = VALUE_CAST(malList, list->item(2));
-
-                checkArgsIs("catch*", 2, catchBlock->count() - 1);
-                ASSERT(VALUE_CAST(malSymbol,
-                    catchBlock->item(0))->value() == "catch*",
-                    "catch block must begin with catch*");
-
-                // We don't need excSym at this scope, but we want to check
-                // that the catch block is valid always, not just in case of
-                // an exception.
-                const malSymbol* excSym =
-                    VALUE_CAST(malSymbol, catchBlock->item(1));
-
-                malValuePtr excVal;
-
-                try {
-                    ast = EVAL(tryBody, env);
-                }
-                catch(String& s) {
-                    excVal = mal::string(s);
-                }
-                catch (malEmptyInputException&) {
-                    // Not an error, continue as if we got nil
-                    ast = mal::nilValue();
-                }
-                catch(malValuePtr& o) {
-                    excVal = o;
-                };
-
-                if (excVal) {
-                    // we got some exception
-                    env = malEnvPtr(new malEnv(env));
-                    env->set(excSym->value(), excVal);
-                    ast = catchBlock->item(2);
-                }
-                continue; // TCO
-            }
         }
 
         // Now we're left with the case of a regular list to be evaluated.
