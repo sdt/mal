@@ -3,7 +3,6 @@
 #include "StaticList.h"
 #include "Types.h"
 
-#include <fstream>
 #include <iostream>
 
 #define CHECK_ARGS_IS(expected) \
@@ -109,12 +108,6 @@ BUILTIN("empty?")
     return mal::boolean(seq->isEmpty());
 }
 
-BUILTIN("eval")
-{
-    CHECK_ARGS_IS(1);
-    return EVAL(*argsBegin, env->getRoot());
-}
-
 BUILTIN("hash-map")
 {
     return mal::hash(argsBegin, argsEnd);
@@ -137,33 +130,6 @@ BUILTIN("prn")
     return mal::nilValue();
 }
 
-BUILTIN("read-string")
-{
-    CHECK_ARGS_IS(1);
-    ARG(malString, str);
-
-    return readStr(str->value());
-}
-
-BUILTIN("slurp")
-{
-    CHECK_ARGS_IS(1);
-    ARG(malString, filename);
-
-    std::ios_base::openmode openmode =
-        std::ios::ate | std::ios::in | std::ios::binary;
-    std::ifstream file(filename->value().c_str(), openmode);
-    ASSERT(!file.fail(), "Cannot open %s", filename->value().c_str());
-
-    String data;
-    data.reserve(file.tellg());
-    file.seekg(0, std::ios::beg);
-    data.append(std::istreambuf_iterator<char>(file.rdbuf()),
-                std::istreambuf_iterator<char>());
-
-    return mal::string(data);
-}
-
 BUILTIN("str")
 {
     return mal::string(printValues(argsBegin, argsEnd, "", false));
@@ -175,8 +141,6 @@ static const char* malFunctionTable[] = {
     "(def! >= (fn* (a b) (<= b a)))",
     "(def! < (fn* (a b) (not (<= b a))))",
     "(def! > (fn* (a b) (not (<= a b))))",
-    "(def! load-file (fn* (filename) \
-        (eval (read-string (str \"(do \" (slurp filename) \")\")))))",
 };
 
 void installCore(malEnvPtr env) {

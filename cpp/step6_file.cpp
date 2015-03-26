@@ -10,9 +10,6 @@
 malValuePtr READ(const String& input);
 String PRINT(malValuePtr ast);
 
-static void makeArgv(malEnvPtr env, int argc, char* argv[]);
-static void safeRep(const String& input, malEnvPtr env);
-
 static ReadLine s_readLine("~/.mal-history");
 
 int main(int argc, char* argv[])
@@ -21,40 +18,20 @@ int main(int argc, char* argv[])
     String input;
     malEnvPtr replEnv(new malEnv);
     installCore(replEnv);
-    makeArgv(replEnv, argc - 2, argv + 2);
-    if (argc > 1) {
-        String filename = escape(argv[1]);
-        safeRep(STRF("(load-file %s)", filename.c_str()), replEnv);
-        return 0;
-    }
     while (s_readLine.get(prompt, input)) {
-        safeRep(input, replEnv);
+        String out;
+        try {
+            out = rep(input, replEnv);
+        }
+        catch (malEmptyInputException&) {
+            continue; // no output
+        }
+        catch (String& s) {
+            out = s;
+        };
+        std::cout << out << "\n";
     }
     return 0;
-}
-
-static void safeRep(const String& input, malEnvPtr env)
-{
-    String out;
-    try {
-        out = rep(input, env);
-    }
-    catch (malEmptyInputException&) {
-        return;
-    }
-    catch (String& s) {
-        out = s;
-    };
-    std::cout << out << "\n";
-}
-
-static void makeArgv(malEnvPtr env, int argc, char* argv[])
-{
-    malValueVec* args = new malValueVec();
-    for (int i = 0; i < argc; i++) {
-        args->push_back(mal::string(argv[i]));
-    }
-    env->set("*ARGV*", mal::list(args));
 }
 
 String rep(const String& input, malEnvPtr env)
