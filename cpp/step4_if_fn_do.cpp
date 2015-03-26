@@ -63,40 +63,6 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
             return env->set(id->value(), EVAL(list->item(2), env));
         }
 
-        if (special == "do") {
-            checkArgsAtLeast("do", 1, argCount);
-
-            for (int i = 1; i < argCount; i++) {
-                EVAL(list->item(i), env);
-            }
-            return EVAL(list->item(argCount), env);
-        }
-
-        if (special == "fn*") {
-            checkArgsIs("fn*", 2, argCount);
-
-            const malSequence* bindings =
-                VALUE_CAST(malSequence, list->item(1));
-            StringVec params;
-            for (int i = 0; i < bindings->count(); i++) {
-                const malSymbol* sym =
-                    VALUE_CAST(malSymbol, bindings->item(i));
-                params.push_back(sym->value());
-            }
-
-            return mal::lambda(params, list->item(2), env);
-        }
-
-        if (special == "if") {
-            checkArgsBetween("if", 2, 3, argCount);
-
-            bool isTrue = EVAL(list->item(1), env)->isTrue();
-            if (!isTrue && (argCount == 2)) {
-                return mal::nilValue();
-            }
-            return EVAL(list->item(isTrue ? 2 : 3), env);
-        }
-
         if (special == "let*") {
             checkArgsIs("let*", 2, argCount);
             const malSequence* bindings =
@@ -115,13 +81,7 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
     // Now we're left with the case of a regular list to be evaluated.
     std::unique_ptr<malValueVec> items(list->evalItems(env));
     malValuePtr op = items->at(0);
-    if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
-        return EVAL(lambda->getBody(),
-                    lambda->makeEnv(items->begin()+1, items->end()));
-    }
-    else {
-        return APPLY(op, items->begin()+1, items->end(), env);
-    }
+    return APPLY(op, items->begin()+1, items->end(), env);
 }
 
 String PRINT(malValuePtr ast)

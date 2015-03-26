@@ -7,10 +7,6 @@
 #include <typeinfo>
 
 namespace mal {
-    malValuePtr boolean(bool value) {
-        return value ? trueValue() : falseValue();
-    }
-
     malValuePtr builtin(const String& name, malBuiltIn::ApplyFunc handler) {
         return malValuePtr(new malBuiltIn(name, handler));
     };
@@ -35,11 +31,6 @@ namespace mal {
     malValuePtr keyword(const String& token) {
         return malValuePtr(new malKeyword(token));
     };
-
-    malValuePtr lambda(const StringVec& bindings,
-                       malValuePtr body, malEnvPtr env) {
-        return malValuePtr(new malLambda(bindings, body, env));
-    }
 
     malValuePtr list(malValueVec* items) {
         return malValuePtr(new malList(items));
@@ -158,47 +149,6 @@ String malHash::print(bool readably) const
     return s + "}";
 }
 
-bool malHash::doIsEqualTo(const malValue* rhs) const
-{
-    const malHash::Map& r_map = static_cast<const malHash*>(rhs)->m_map;
-    if (m_map.size() != r_map.size()) {
-        return false;
-    }
-
-    for (auto it0 = m_map.begin(), end0 = m_map.end(), it1 = r_map.begin();
-         it0 != end0; ++it0, ++it1) {
-
-        if (it0->first != it1->first) {
-            return false;
-        }
-        if (!it0->second->isEqualTo(it1->second.ptr())) {
-            return false;
-        }
-    }
-    return true;
-}
-
-malLambda::malLambda(const StringVec& bindings,
-                     malValuePtr body, malEnvPtr env)
-: m_bindings(bindings)
-, m_body(body)
-, m_env(env)
-{
-
-}
-
-malValuePtr malLambda::apply(malValueIter argsBegin,
-                             malValueIter argsEnd,
-                             malEnvPtr) const
-{
-    return EVAL(m_body, makeEnv(argsBegin, argsEnd));
-}
-
-malEnvPtr malLambda::makeEnv(malValueIter argsBegin, malValueIter argsEnd) const
-{
-    return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
-}
-
 malValuePtr malList::eval(malEnvPtr env)
 {
     if (count() == 0) {
@@ -222,16 +172,6 @@ malValuePtr malValue::eval(malEnvPtr env)
     return malValuePtr(this);
 }
 
-bool malValue::isEqualTo(const malValue* rhs) const
-{
-    // Special-case. Vectors and Lists can be compared.
-    bool matchingTypes = (typeid(*this) == typeid(*rhs)) ||
-        (dynamic_cast<const malSequence*>(this) &&
-         dynamic_cast<const malSequence*>(rhs));
-
-    return matchingTypes && doIsEqualTo(rhs);
-}
-
 bool malValue::isTrue() const
 {
     return (this != mal::falseValue().ptr())
@@ -253,24 +193,6 @@ malSequence::malSequence(malValueIter begin, malValueIter end)
 malSequence::~malSequence()
 {
     delete m_items;
-}
-
-bool malSequence::doIsEqualTo(const malValue* rhs) const
-{
-    const malSequence* rhsSeq = static_cast<const malSequence*>(rhs);
-    if (count() != rhsSeq->count()) {
-        return false;
-    }
-
-    for (malValueIter it0 = m_items->begin(),
-                      it1 = rhsSeq->begin(),
-                      end = m_items->end(); it0 != end; ++it0, ++it1) {
-
-        if (! (*it0)->isEqualTo((*it1).ptr())) {
-            return false;
-        }
-    }
-    return true;
 }
 
 malValueVec* malSequence::evalItems(malEnvPtr env) const
