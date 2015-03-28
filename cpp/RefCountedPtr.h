@@ -5,20 +5,46 @@
 
 #include <cstddef>
 
+#ifdef DEBUG_MEMORY_AUDITING
+    #include <set>
+#endif
+
 class RefCounted {
 public:
-    RefCounted() : m_refCount(0) { }
-    virtual ~RefCounted() { }
+    RefCounted() : m_refCount(0)
+    {
+#ifdef DEBUG_MEMORY_AUDITING
+        s_tracker.insert(this);
+#endif
+    }
+    virtual ~RefCounted()
+    {
+#ifdef DEBUG_MEMORY_AUDITING
+        s_tracker.erase(this);
+#endif
+    }
 
     const RefCounted* acquire() const { m_refCount++; return this; }
     int release() const { return --m_refCount; }
     int refCount() const { return m_refCount; }
+
+#ifdef DEBUG_MEMORY_AUDITING
+    typedef std::set<RefCounted*>   Set;
+    typedef Set::iterator           SetIter;
+
+    static SetIter begin() { return s_tracker.begin(); }
+    static SetIter end()   { return s_tracker.end(); }
+#endif
 
 private:
     RefCounted(const RefCounted&); // no copy ctor
     RefCounted& operator = (const RefCounted&); // no assignments
 
     mutable int m_refCount;
+
+#ifdef DEBUG_MEMORY_AUDITING
+    static Set s_tracker;
+#endif
 };
 
 template<class T>
