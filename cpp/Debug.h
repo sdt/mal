@@ -7,6 +7,8 @@
 #define DEBUG_TRACE                    1
 //#define DEBUG_OBJECT_LIFETIMES         1
 //#define DEBUG_ENV_LIFETIMES            1
+//
+#define DEBUG_MEMORY_AUDITING           1
 
 #define DEBUG_TRACE_FILE    stderr
 
