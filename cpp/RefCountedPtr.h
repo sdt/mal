@@ -46,6 +46,7 @@ public:
     }
 
     int getMark() const { return m_mark; }
+    static void memoryReport(const RefCounted* root);
 #endif
 
 private:
