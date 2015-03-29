@@ -39,8 +39,10 @@ public:
     static SetIter end()   { return s_tracker->end(); }
 
     void mark(int value) const {
-        m_mark = value;
-        doMark(value);
+        if (m_mark != value) {  // stop if we've been here already
+            m_mark = value;
+            doMark(value);
+        }
     }
 
     int getMark() const { return m_mark; }
