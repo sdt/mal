@@ -111,6 +111,13 @@ namespace mal {
     };
 };
 
+#if DEBUG_MEMORY_AUDITING
+void malAtom::doMark(int value) const
+{
+    m_value->mark(value);
+}
+#endif
+
 malValuePtr malBuiltIn::apply(malValueIter argsBegin,
                               malValueIter argsEnd,
                               malEnvPtr env) const
@@ -163,6 +170,15 @@ malHash::malHash(const malHash::Map& map)
 {
 
 }
+
+#if DEBUG_MEMORY_AUDITING
+void malHash::doMark(int value) const
+{
+    for (auto &it : m_map) {
+        it.second->mark(value);
+    }
+}
+#endif
 
 malValuePtr
 malHash::assoc(malValueIter argsBegin, malValueIter argsEnd) const
@@ -301,6 +317,14 @@ malLambda::malLambda(const malLambda& that, bool isMacro)
 
 }
 
+#if DEBUG_MEMORY_AUDITING
+void malLambda::doMark(int value) const
+{
+    m_body->mark(value);
+    m_env->mark(value);
+}
+#endif
+
 malValuePtr malLambda::apply(malValueIter argsBegin,
                              malValueIter argsEnd,
                              malEnvPtr) const
@@ -405,6 +429,15 @@ malSequence::~malSequence()
 {
     delete m_items;
 }
+
+#if DEBUG_MEMORY_AUDITING
+void malSequence::doMark(int value) const
+{
+    for (auto& it : *m_items) {
+        it->mark(value);
+    }
+}
+#endif
 
 bool malSequence::doIsEqualTo(const malValue* rhs) const
 {

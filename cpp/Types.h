@@ -36,6 +36,11 @@ protected:
     virtual bool doIsEqualTo(const malValue* rhs) const = 0;
 
     malValuePtr m_meta;
+
+private:
+#if DEBUG_MEMORY_AUDITING
+    virtual void doMark(int value) const { };
+#endif
 };
 
 template<class T>
@@ -54,6 +59,12 @@ T* value_cast(malValuePtr obj, const char* typeName) {
     virtual malValuePtr doWithMeta(malValuePtr meta) const { \
         return new Type(*this, meta); \
     } \
+
+#if DEBUG_MEMORY_AUDITING
+    #define DO_MARK virtual void doMark(int value) const
+#else
+    #define DO_MARK
+#endif
 
 class malConstant : public malValue {
 public:
@@ -185,6 +196,8 @@ public:
 
 private:
     malValueVec* const m_items;
+
+    DO_MARK;
 };
 
 class malList : public malSequence {
@@ -257,6 +270,8 @@ public:
 private:
     const Map m_map;
     const bool m_isEvaluated;
+
+    DO_MARK;
 };
 
 class malBuiltIn : public malApplicable {
@@ -323,6 +338,8 @@ private:
     const malValuePtr m_body;
     const malEnvPtr   m_env;
     const bool        m_isMacro;
+
+    DO_MARK;
 };
 
 class malAtom : public malValue {
@@ -347,6 +364,8 @@ public:
 
 private:
     malValuePtr m_value;
+
+    DO_MARK;
 };
 
 namespace mal {

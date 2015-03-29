@@ -71,3 +71,14 @@ malEnvPtr malEnv::getRoot()
         }
     }
 }
+
+#if DEBUG_MEMORY_AUDITING
+void malEnv::doMark(int value) const
+{
+    for (auto env = this; env; env = env->m_outer.ptr()) {
+        for (auto &it : env->m_map) {
+            it.second->mark(value);
+        }
+    }
+}
+#endif
