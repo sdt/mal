@@ -14,13 +14,16 @@ public:
     RefCounted() : m_refCount(0)
     {
 #ifdef DEBUG_MEMORY_AUDITING
-        s_tracker.insert(this);
+        if (s_tracker == NULL) {
+            s_tracker = new Set;
+        }
+        s_tracker->insert(this);
 #endif
     }
     virtual ~RefCounted()
     {
 #ifdef DEBUG_MEMORY_AUDITING
-        s_tracker.erase(this);
+        s_tracker->erase(this);
 #endif
     }
 
@@ -32,8 +35,8 @@ public:
     typedef std::set<RefCounted*>   Set;
     typedef Set::iterator           SetIter;
 
-    static SetIter begin() { return s_tracker.begin(); }
-    static SetIter end()   { return s_tracker.end(); }
+    static SetIter begin() { return s_tracker->begin(); }
+    static SetIter end()   { return s_tracker->end(); }
 
     void mark(int value) const {
         m_mark = value;
@@ -52,7 +55,7 @@ private:
 #ifdef DEBUG_MEMORY_AUDITING
     virtual void doMark(int value) const = 0;
     mutable int m_mark;
-    static Set s_tracker;
+    static Set* s_tracker;
 #endif
 };
 
