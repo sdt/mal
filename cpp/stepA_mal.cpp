@@ -33,8 +33,14 @@ int main(int argc, char* argv[])
         safeRep(STRF("(load-file %s)", filename.c_str()), replEnv);
         return 0;
     }
+#ifdef DEBUG_MEMORY_AUDITING
+    //RefCounted::memoryReport(replEnv.ptr());
+#endif
     while (s_readLine.get(prompt, input)) {
         safeRep(input, replEnv);
+#ifdef DEBUG_MEMORY_AUDITING
+        RefCounted::memoryReport(replEnv.ptr());
+#endif
     }
     return 0;
 }
