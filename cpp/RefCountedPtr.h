@@ -34,6 +34,13 @@ public:
 
     static SetIter begin() { return s_tracker.begin(); }
     static SetIter end()   { return s_tracker.end(); }
+
+    void mark(int value) const {
+        m_mark = value;
+        doMark(value);
+    }
+
+    int getMark() const { return m_mark; }
 #endif
 
 private:
@@ -43,6 +50,8 @@ private:
     mutable int m_refCount;
 
 #ifdef DEBUG_MEMORY_AUDITING
+    virtual void doMark(int value) const = 0;
+    mutable int m_mark;
     static Set s_tracker;
 #endif
 };

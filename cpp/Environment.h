@@ -20,6 +20,10 @@ public:
     malValuePtr set(const String& symbol, malValuePtr value);
     malEnvPtr   getRoot();
 
+#if DEBUG_MEMORY_AUDITING
+    virtual void doMark(int value) const;
+#endif
+
 private:
     typedef std::map<String, malValuePtr> Map;
     Map m_map;
