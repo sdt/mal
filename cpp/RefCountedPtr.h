@@ -38,12 +38,7 @@ public:
     static SetIter begin() { return s_tracker->begin(); }
     static SetIter end()   { return s_tracker->end(); }
 
-    void mark(int value) const {
-        if (m_mark != value) {  // stop if we've been here already
-            m_mark = value;
-            doMark(value);
-        }
-    }
+    void mark(int value) const;
 
     int getMark() const { return m_mark; }
     static void memoryReport(const RefCounted* root);
