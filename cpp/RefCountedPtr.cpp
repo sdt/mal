@@ -4,6 +4,8 @@
 
 #include "String.h"
 
+#include <typeinfo>
+
 RefCounted::Set* RefCounted::s_tracker;
 
 void RefCounted::dump() const
