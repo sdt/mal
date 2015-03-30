@@ -38,6 +38,7 @@ public:
     static SetIter begin() { return s_tracker->begin(); }
     static SetIter end()   { return s_tracker->end(); }
 
+    void dump() const;
     void mark(int value) const;
 
     int getMark() const { return m_mark; }
@@ -51,6 +52,7 @@ private:
     mutable int m_refCount;
 
 #ifdef DEBUG_MEMORY_AUDITING
+    virtual void doDump() const = 0;
     virtual void doMark(int value) const = 0;
     mutable int m_mark;
     static Set* s_tracker;

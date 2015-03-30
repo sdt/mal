@@ -39,6 +39,9 @@ protected:
 
 private:
 #if DEBUG_MEMORY_AUDITING
+    virtual void doDump() const {
+        TRACE("%s", print(false).c_str());
+    };
     virtual void doMark(int value) const { };
 #endif
 };
