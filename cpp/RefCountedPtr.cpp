@@ -6,6 +6,14 @@
 
 RefCounted::Set* RefCounted::s_tracker;
 
+void RefCounted::mark(int value) const
+{
+    if (m_mark != value) {  // stop if we've been here already
+        m_mark = value;
+        doMark(value);
+    }
+}
+
 void RefCounted::memoryReport(const RefCounted* root)
 {
     static int mark = 0;
