@@ -426,12 +426,12 @@ bool malSequence::doIsEqualTo(const malValue* rhs) const
 
 malValueVec* malSequence::evalItems(malEnvPtr env) const
 {
-    malValueVec* items = new malValueVec;;
+    std::unique_ptr<malValueVec> items(new malValueVec);
     items->reserve(count());
     for (auto it = m_items->begin(), end = m_items->end(); it != end; ++it) {
         items->push_back(EVAL(*it, env));
     }
-    return items;
+    return items.release();
 }
 
 malValuePtr malSequence::first() const
