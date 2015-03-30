@@ -6,6 +6,13 @@
 
 RefCounted::Set* RefCounted::s_tracker;
 
+void RefCounted::dump() const
+{
+    TRACE("%p (%d) %-12s : ", this, m_refCount, typeid(*this).name());
+    doDump();
+    TRACE("\n");
+}
+
 void RefCounted::mark(int value) const
 {
     if (m_mark != value) {  // stop if we've been here already
@@ -26,7 +33,8 @@ void RefCounted::memoryReport(const RefCounted* root)
         if (it->getMark() != mark) {
             unreachableObjectCount++;
 
-            TRACE("Unreachable object at %p\n", it);
+            TRACE("Unreachable object ");
+            it->dump();
         }
     }
 
