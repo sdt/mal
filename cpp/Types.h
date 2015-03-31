@@ -42,7 +42,13 @@ private:
     virtual void doDump() const {
         TRACE("%s", print(false).c_str());
     };
-    virtual void doMark(int value) const { };
+    virtual void doMark(int value) const {
+        if (m_meta) {
+            m_meta->mark(value);
+        }
+        doValueMark(value);
+    };
+    virtual void doValueMark(int value) const { }
 #endif
 };
 
@@ -64,7 +70,7 @@ T* value_cast(malValuePtr obj, const char* typeName) {
     } \
 
 #if DEBUG_MEMORY_AUDITING
-    #define DO_MARK virtual void doMark(int value) const
+    #define DO_MARK virtual void doValueMark(int value) const
 #else
     #define DO_MARK
 #endif
