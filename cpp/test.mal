@@ -1,0 +1,15 @@
+(def! xx (fn* (x) (x x)))
+
+(def! Y
+      (fn* (h)
+           (xx
+            (fn* (g)
+                 (h (fn* args (apply (g g) args)))))))
+
+(def! fac
+      (Y
+        (fn* (f)
+             (fn* (x)
+                  (if (< x 2)
+                    1
+                    (* x (f (- x 1))))))))
