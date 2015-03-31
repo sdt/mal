@@ -15,7 +15,7 @@ You may need to edit the READLINE path in the Makefile.
 
 This should compile on Ubuntu 14.10 and 15.04 with the following packages
 
-    apt-get install clang-3.5 libreadline-dev make
+    apt-get install g++-4.9 libreadline-dev make
 
 ## Docker
 
