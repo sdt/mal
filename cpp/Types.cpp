@@ -112,7 +112,7 @@ namespace mal {
 };
 
 #if DEBUG_MEMORY_AUDITING
-void malAtom::doMark(int value) const
+void malAtom::doValueMark(int value) const
 {
     m_value->mark(value);
 }
@@ -172,7 +172,7 @@ malHash::malHash(const malHash::Map& map)
 }
 
 #if DEBUG_MEMORY_AUDITING
-void malHash::doMark(int value) const
+void malHash::doValueMark(int value) const
 {
     for (auto &it : m_map) {
         it.second->mark(value);
@@ -318,7 +318,7 @@ malLambda::malLambda(const malLambda& that, bool isMacro)
 }
 
 #if DEBUG_MEMORY_AUDITING
-void malLambda::doMark(int value) const
+void malLambda::doValueMark(int value) const
 {
     m_body->mark(value);
     m_env->mark(value);
@@ -431,7 +431,7 @@ malSequence::~malSequence()
 }
 
 #if DEBUG_MEMORY_AUDITING
-void malSequence::doMark(int value) const
+void malSequence::doValueMark(int value) const
 {
     for (auto& it : *m_items) {
         it->mark(value);
