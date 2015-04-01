@@ -178,6 +178,175 @@ public:
     WITH_META(malSymbol);
 };
 
+/*
+
+  malSequence hierarchy is:
+
+    seq*
+      list*
+        empty
+        pair
+      vector
+*/
+
+class malSequence : public malValue {
+public:
+    virtual int count() const = 0;
+    virtual bool isEmpty() const = 0;
+    virtual malValuePtr item(int index) const = 0;
+
+    virtual malValuePtr conj(malValueIter argsBegin,
+                             malValueIter argsEnd) const = 0;
+    virtual bool doIsEqualTo(const malValue* rhs) const;
+
+    virtual malValuePtr first() const = 0;
+    virtual malValuePtr rest() const = 0;
+
+    class Iterator {
+    public:
+        virtual malValuePtr operator *  () = 0;
+        virtual Iterator&   operator ++ () = 0;
+        virtual bool        operator != (const Iterator& that) = 0;
+    };
+
+    virtual Iterator begin() = 0;
+    virtual Iterator end() = 0;
+};
+
+class malList : public malSequence {
+public:
+    class Iterator : malSequence::Iterator {
+    public:
+        virtual malValuePtr operator *  () {
+            return m_list->first();
+        }
+
+        virtual Iterator&   operator ++ () {
+            m_list = VALUE_CAST(malList, m_list->rest());
+            return *this;
+        }
+
+        virtual bool operator != (const malSequence::Iterator& that) {
+            return !m_list->isEqualTo(that.m_list);
+        }
+
+    private:
+        friend class malList;
+        Iterator(malList* list) : m_list(list) { }
+        malList* m_list;
+    };
+
+    malSequence::Iterator begin() {
+        return new Iterator(this);
+    };
+
+    malSequence::Iterator end() {
+        return new Iterator(&malEmptyList::instance);
+    };
+
+};
+
+class malEmptyList : public malList {
+public:
+    malEmptyList() { }
+    malEmptyList(const malEmptyList& that, malValuePtr meta);
+
+    virtual int count() const { return 0; }
+    virtual bool isEmpty() const { return true; }
+    virtual malValuePtr item(int index) const;
+
+    virtual malValuePtr first() const;
+    virtual malValuePtr rest() const;
+
+    virtual malValuePtr conj(malValueIter argsBegin,
+                             malValueIter argsEnd) const;
+
+    virtual String print(bool readably) const;
+
+    WITH_META(malEmptyList);
+
+    static malEmptyList instance;
+};
+
+class malPair : public malList {
+public:
+    malPair(malValuePtr car, malValuePtr cdr);
+    malPair(const malPair& that, malValuePtr meta);
+
+    virtual bool isEmpty() const { return false; }
+    virtual int count() const;
+    virtual malValuePtr item(int index) const;
+
+    virtual malValuePtr first() const { return m_car; }
+    virtual malValuePtr rest()  const { return m_cdr; }
+
+    virtual malValuePtr conj(malValueIter argsBegin,
+                             malValueIter argsEnd) const;
+
+    virtual String print(bool readably) const;
+
+    WITH_META(malPair);
+
+private:
+    malValuePtr m_car;
+    malValuePtr m_cdr;
+
+    DO_MARK;
+};
+
+class malVector : public malSequence {
+public:
+    malVector(malValueVec* items);
+    malVector(malValueIter begin, malValueIter end);
+    malVector(const malVector& that, malValuePtr meta);
+    virtual ~malVector();
+
+    virtual String print(bool readably) const;
+
+    virtual malValuePtr eval(malEnvPtr env);
+    malValueVec* evalItems(malEnvPtr env) const;
+    int count() const { return m_items->size(); }
+    bool isEmpty() const { return m_items->empty(); }
+    malValuePtr item(int index) const { return (*m_items)[index]; }
+
+    //malValueIter begin() const { return m_items->begin(); }
+    //malValueIter end()   const { return m_items->end(); }
+
+    virtual malValuePtr conj(malValueIter argsBegin,
+                              malValueIter argsEnd) const;
+
+    malValuePtr first() const;
+    virtual malValuePtr rest() const;
+
+    WITH_META(malVector);
+
+    class Iterator : public malSequence::Iterator {
+    public:
+        virtual malValuePtr operator *  () {
+            return m_vector->item(m_index);
+        };
+        virtual Iterator&   operator ++ () {
+            m_index++;
+            return *this;
+        };
+        virtual bool operator != (const Iterator& that) {
+            return !((m_vector == that.m_vector) && (m_index == that.m_index));
+        };
+
+    private:
+        friend class malVector;
+        Iterator(malVector* vector)
+        : m_vector(vector), m_index(0) { }
+        malVector* m_vector;
+        int m_index;
+    };
+private:
+    malValueVec* const m_items;
+
+    DO_MARK;
+};
+
+/*
 class malSequence : public malValue {
 public:
     malSequence(malValueVec* items);
@@ -242,6 +411,7 @@ public:
 
     WITH_META(malVector);
 };
+*/
 
 class malApplicable : public malValue {
 public:

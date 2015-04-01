@@ -19,6 +19,11 @@ namespace mal {
         return malValuePtr(new malBuiltIn(name, handler));
     };
 
+    malValuePtr emptyList() {
+        static malEmptyList* empty = new malEmptyList;
+        return malValuePtr(empty);
+    }
+
     malValuePtr falseValue() {
         static malValuePtr c(new malConstant("false"));
         return malValuePtr(c);
@@ -51,33 +56,30 @@ namespace mal {
         return malValuePtr(new malLambda(bindings, body, env));
     }
 
+/*
     malValuePtr list(malValueVec* items) {
         return malValuePtr(new malList(items));
     };
+*/
 
     malValuePtr list(malValueIter begin, malValueIter end) {
-        return malValuePtr(new malList(begin, end));
+        //TODO: reverse the iterators, and build the list back-to-front
+        if (begin == end) {
+            return mal::emptyList();
+        }
+        return malValuePtr(new malPair(*begin, list(begin + 1, end)));
     };
 
     malValuePtr list(malValuePtr a) {
-        malValueVec* items = new malValueVec(1);
-        items->at(0) = a;
-        return malValuePtr(new malList(items));
+        return malValuePtr(new malPair(a, mal::emptyList()));
     }
 
     malValuePtr list(malValuePtr a, malValuePtr b) {
-        malValueVec* items = new malValueVec(2);
-        items->at(0) = a;
-        items->at(1) = b;
-        return malValuePtr(new malList(items));
+        return malValuePtr(new malPair(a, list(b)));
     }
 
     malValuePtr list(malValuePtr a, malValuePtr b, malValuePtr c) {
-        malValueVec* items = new malValueVec(3);
-        items->at(0) = a;
-        items->at(1) = b;
-        items->at(2) = c;
-        return malValuePtr(new malList(items));
+        return malValuePtr(new malPair(a, list(b, c)));
     }
 
     malValuePtr macro(const malLambda& lambda) {
@@ -123,6 +125,26 @@ malValuePtr malBuiltIn::apply(malValueIter argsBegin,
                               malEnvPtr env) const
 {
     return m_handler(m_name, argsBegin, argsEnd, env);
+}
+
+malValuePtr malEmptyList::first() const
+{
+    return mal::nilValue();
+}
+
+malValuePtr malEmptyList::item(int index) const
+{
+    return mal::nilValue();
+}
+
+String malEmptyList::print(bool readably) const
+{
+    return "()";
+}
+
+malValuePtr malEmptyList::rest() const
+{
+    return mal::nilValue();
 }
 
 static String makeHashKey(malValuePtr key)
@@ -342,6 +364,7 @@ malEnvPtr malLambda::makeEnv(malValueIter argsBegin, malValueIter argsEnd) const
     return malEnvPtr(new malEnv(m_env, m_bindings, argsBegin, argsEnd));
 }
 
+/*
 malValuePtr malList::conj(malValueIter argsBegin,
                           malValueIter argsEnd) const
 {
@@ -354,7 +377,9 @@ malValuePtr malList::conj(malValueIter argsBegin,
 
     return mal::list(items);
 }
+*/
 
+/*
 malValuePtr malList::eval(malEnvPtr env)
 {
     // Note, this isn't actually called since the TCO updates, but
@@ -373,6 +398,7 @@ String malList::print(bool readably) const
 {
     return '(' + malSequence::print(readably) + ')';
 }
+*/
 
 malValuePtr malValue::eval(malEnvPtr env)
 {
@@ -406,6 +432,7 @@ malValuePtr malValue::withMeta(malValuePtr meta) const
     return doWithMeta(meta);
 }
 
+/*
 malSequence::malSequence(malValueVec* items)
 : m_items(items)
 {
@@ -438,9 +465,13 @@ void malSequence::doValueMark(int value) const
     }
 }
 #endif
+*/
 
 bool malSequence::doIsEqualTo(const malValue* rhs) const
 {
+    // TODO:
+    return false;
+/*
     const malSequence* rhsSeq = static_cast<const malSequence*>(rhs);
     if (count() != rhsSeq->count()) {
         return false;
@@ -455,45 +486,8 @@ bool malSequence::doIsEqualTo(const malValue* rhs) const
         }
     }
     return true;
+*/
 }
-
-malValueVec* malSequence::evalItems(malEnvPtr env) const
-{
-    std::unique_ptr<malValueVec> items(new malValueVec);
-    items->reserve(count());
-    for (auto it = m_items->begin(), end = m_items->end(); it != end; ++it) {
-        items->push_back(EVAL(*it, env));
-    }
-    return items.release();
-}
-
-malValuePtr malSequence::first() const
-{
-    return count() == 0 ? mal::nilValue() : item(0);
-}
-
-String malSequence::print(bool readably) const
-{
-    String str;
-    auto end = m_items->cend();
-    auto it = m_items->cbegin();
-    if (it != end) {
-        str += (*it)->print(readably);
-        ++it;
-    }
-    for ( ; it != end; ++it) {
-        str += " ";
-        str += (*it)->print(readably);
-    }
-    return str;
-}
-
-malValuePtr malSequence::rest() const
-{
-    malValueIter start = (count() > 0) ? begin() + 1 : end();
-    return mal::list(start, end());
-}
-
 String malString::escapedValue() const
 {
     return escape(value());
@@ -527,7 +521,40 @@ malValuePtr malVector::eval(malEnvPtr env)
     return mal::vector(evalItems(env));
 }
 
+malValueVec* malVector::evalItems(malEnvPtr env) const
+{
+    std::unique_ptr<malValueVec> items(new malValueVec);
+    items->reserve(count());
+    for (auto it = m_items->begin(), end = m_items->end(); it != end; ++it) {
+        items->push_back(EVAL(*it, env));
+    }
+    return items.release();
+}
+
+malValuePtr malVector::first() const
+{
+    return count() == 0 ? mal::nilValue() : item(0);
+}
+
 String malVector::print(bool readably) const
 {
-    return '[' + malSequence::print(readably) + ']';
+    String str = "[";
+    auto end = m_items->cend();
+    auto it = m_items->cbegin();
+    if (it != end) {
+        str += (*it)->print(readably);
+        ++it;
+    }
+    for ( ; it != end; ++it) {
+        str += " ";
+        str += (*it)->print(readably);
+    }
+    return str + "]";
 }
+
+malValuePtr malVector::rest() const
+{
+    malValueIter start = (count() > 0) ? begin() + 1 : end();
+    return mal::list(start, end());
+}
+
