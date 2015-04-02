@@ -4,7 +4,6 @@
 #include "Debug.h"
 #include "RefCountedPtr.h"
 #include "String.h"
-#include "Validation.h"
 
 #include <vector>
 
@@ -15,6 +14,8 @@ typedef malValueVec::iterator    malValueIter;
 
 class malEnv;
 typedef RefCountedPtr<malEnv>     malEnvPtr;
+
+#include "Validation.h"
 
 // step*.cpp
 extern malValuePtr APPLY(malValuePtr op,

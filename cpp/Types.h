@@ -203,6 +203,8 @@ public:
     malValuePtr first() const;
     virtual malValuePtr rest() const;
 
+    virtual malValuePtr toList() = 0;
+
 private:
     malValueVec* const m_items;
 
@@ -223,6 +225,8 @@ public:
     virtual malValuePtr conj(malValueIter argsBegin,
                              malValueIter argsEnd) const;
 
+    virtual malValuePtr toList();
+
     WITH_META(malList);
 };
 
@@ -239,6 +243,8 @@ public:
 
     virtual malValuePtr conj(malValueIter argsBegin,
                              malValueIter argsEnd) const;
+
+    virtual malValuePtr toList();
 
     WITH_META(malVector);
 };

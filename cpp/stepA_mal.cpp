@@ -79,6 +79,18 @@ malValuePtr READ(const String& input)
     return readStr(input);
 }
 
+#define ARGS(sym, expected)  \
+            malValuePtr arg[expected]; \
+            argList = shiftArgs(sym, argList, expected, expected, arg);
+
+#define ARGS_BETWEEN(sym, min, max)  \
+            malValuePtr arg[max]; \
+            argList = shiftArgs(sym, argList, min, max, arg);
+
+#define ARGS_AT_LEAST(sym, min) \
+            malValuePtr arg[min]; \
+            argList = shiftArgs(sym, argList, min, -1, arg);
+
 malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
 {
     while (1) {
@@ -95,40 +107,45 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
 
         // From here on down we are evaluating a non-empty list.
         // First handle the special forms.
-        if (const malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->item(0))) {
+        if (const malSymbol* symbol = DYNAMIC_CAST(malSymbol, list->first())) {
             String special = symbol->value();
-            int argCount = list->count() - 1;
+            malValuePtr argList = list->rest();
 
             if (special == "def!") {
-                checkArgsIs("def!", 2, argCount);
-                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
-                return env->set(id->value(), EVAL(list->item(2), env));
+                ARGS("def!", 2);
+
+                const malSymbol* id = VALUE_CAST(malSymbol, arg[0]);
+                return env->set(id->value(), EVAL(arg[1], env));
             }
 
             if (special == "defmacro!") {
-                checkArgsIs("defmacro!", 2, argCount);
+                ARGS("defmacro!", 2);
 
-                const malSymbol* id = VALUE_CAST(malSymbol, list->item(1));
-                malValuePtr body = EVAL(list->item(2), env);
+                const malSymbol* id = VALUE_CAST(malSymbol, arg[0]);
+                malValuePtr body = EVAL(arg[1], env);
                 const malLambda* lambda = VALUE_CAST(malLambda, body);
                 return env->set(id->value(), mal::macro(*lambda));
             }
 
             if (special == "do") {
-                checkArgsAtLeast("do", 1, argCount);
+                ARGS_AT_LEAST("do", 1);
 
-                for (int i = 1; i < argCount; i++) {
-                    EVAL(list->item(i), env);
+                malList* list = VALUE_CAST(malList, argList);
+                while (!list->isEmpty()) {
+                    EVAL(arg[0], env);
+                    arg[0] = list->first();
+                    argList = list->rest();
+                    list = VALUE_CAST(malList, argList);
                 }
-                ast = list->item(argCount);
+                ast = arg[0];
                 continue; // TCO
             }
 
             if (special == "fn*") {
-                checkArgsIs("fn*", 2, argCount);
+                ARGS("fn*", 2);
 
-                const malSequence* bindings =
-                    VALUE_CAST(malSequence, list->item(1));
+                //LIST: convert this to malVector
+                const malSequence* bindings = VALUE_CAST(malSequence, arg[0]);
                 StringVec params;
                 for (int i = 0; i < bindings->count(); i++) {
                     const malSymbol* sym =
@@ -136,24 +153,26 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                     params.push_back(sym->value());
                 }
 
-                return mal::lambda(params, list->item(2), env);
+                return mal::lambda(params, arg[1], env);
             }
 
             if (special == "if") {
-                checkArgsBetween("if", 2, 3, argCount);
+                ARGS_BETWEEN("if", 2, 3);
 
-                bool isTrue = EVAL(list->item(1), env)->isTrue();
-                if (!isTrue && (argCount == 2)) {
+                bool isTrue = EVAL(arg[0], env)->isTrue();
+                if (!isTrue && !arg[2]) {
                     return mal::nilValue();
                 }
-                ast = list->item(isTrue ? 2 : 3);
+                ast = arg[isTrue ? 1 : 2];
                 continue; // TCO
             }
 
+
             if (special == "let*") {
-                checkArgsIs("let*", 2, argCount);
-                const malSequence* bindings =
-                    VALUE_CAST(malSequence, list->item(1));
+                ARGS("let*", 2);
+
+                //LIST: convert this to malVector
+                const malSequence* bindings = VALUE_CAST(malSequence, arg[0]);
                 int count = checkArgsEven("let*", bindings->count());
                 malEnvPtr inner(new malEnv(env));
                 for (int i = 0; i < count; i += 2) {
@@ -161,29 +180,33 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
                         VALUE_CAST(malSymbol, bindings->item(i));
                     inner->set(var->value(), EVAL(bindings->item(i+1), inner));
                 }
-                ast = list->item(2);
+                ast = arg[1];
                 env = inner;
                 continue; // TCO
             }
 
             if (special == "macroexpand") {
-                checkArgsIs("macroexpand", 1, argCount);
-                return macroExpand(list->item(1), env);
+                ARGS("macroexpand", 1);
+
+                return macroExpand(arg[0], env);
             }
 
             if (special == "quasiquote") {
-                checkArgsIs("quasiquote", 1, argCount);
-                ast = quasiquote(list->item(1));
+                ARGS("quasiquote", 1);
+
+                ast = quasiquote(arg[0]);
                 continue; // TCO
             }
 
             if (special == "quote") {
-                checkArgsIs("quote", 1, argCount);
-                return list->item(1);
+                ARGS("quote", 1);
+
+                return arg[0];
             }
 
             if (special == "try*") {
-                checkArgsIs("try*", 2, argCount);
+                ARGS("try*", 2);
+
                 malValuePtr tryBody = list->item(1);
                 const malList* catchBlock = VALUE_CAST(malList, list->item(2));
 
@@ -259,32 +282,34 @@ static bool isSymbol(malValuePtr obj, const String& text)
     return sym && (sym->value() == text);
 }
 
-static const malSequence* isPair(malValuePtr obj)
+static malValuePtr isPair(malValuePtr obj)
 {
-    const malSequence* list = DYNAMIC_CAST(malSequence, obj);
-    return list && !list->isEmpty() ? list : NULL;
+    const malSequence* seq = DYNAMIC_CAST(malSequence, obj);
+    return seq && !seq->isEmpty() ? seq->toList : NULL;
 }
 
 static malValuePtr quasiquote(malValuePtr obj)
 {
-    const malSequence* seq = isPair(obj);
+    malValuePtr seq = isPair(obj);
     if (!seq) {
         return mal::list(mal::symbol("quote"), obj);
     }
 
-    if (isSymbol(seq->item(0), "unquote")) {
+    malList* list = STATIC_CAST(malList, seq);
+    if (isSymbol(list->item(0), "unquote")) {
         // (qq (uq form)) -> form
-        checkArgsIs("unquote", 1, seq->count() - 1);
-        return seq->item(1);
+        checkArgsIs("unquote", 1, list->count() - 1);
+        return list->item(1);
     }
 
-    const malSequence* innerSeq = isPair(seq->item(0));
-    if (innerSeq && isSymbol(innerSeq->item(0), "splice-unquote")) {
-        checkArgsIs("splice-unquote", 1, innerSeq->count() - 1);
+    const malList* innerList = isPair(seq->item(0));
+    malValuePtr innerSeq = isPair(seq->
+    if (innerList && isSymbol(innerList->item(0), "splice-unquote")) {
+        checkArgsIs("splice-unquote", 1, innerList->count() - 1);
         // (qq (sq '(a b c))) -> a b c
         return mal::list(
             mal::symbol("concat"),
-            innerSeq->item(1),
+            innerList->item(1),
             quasiquote(seq->rest())
         );
     }

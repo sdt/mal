@@ -1,0 +1,29 @@
+1. malValueIter -> malValueVecIter
+    * only vectors, not lists
+
+2. malSequence::toVector -> returns a vector frmo a list/vector
+    * Core::apply
+
+3. malSequence::toList -> returns a list from a list/vector
+    * Core::cons
+
+4. EVAL should be modified to use first()/rest() instead of list->item(x)
+
+Required methods for malSequence
+    * isEmpty
+
+Required methods for malList
+    * Reader
+        * construct from malValueVec
+        * cons
+    * Core
+        * appendTo(malValueVec&)    // apply
+        * prependTo(malList&)       // concat
+
+
+Required methods for malVector
+    * Core
+        * appendTo(malValueVec&)    // apply
+        * prependTo(malList&)       // concat
+        * toList                    // cons
+        * construct from malValueIter begin/end // vector

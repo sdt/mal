@@ -115,6 +115,7 @@ BUILTIN("apply")
     // Copy the first N-1 arguments in.
     malValueVec args(argsBegin, argsEnd-1);
 
+// LIST: sequence->appendTo(args) ?
     // Then append the argument as a list.
     const malSequence* lastArg = VALUE_CAST(malSequence, *(argsEnd-1));
     for (int i = 0; i < lastArg->count(); i++) {
@@ -141,6 +142,7 @@ BUILTIN("atom")
 
 BUILTIN("concat")
 {
+// LIST: foreach arg { list = arg.prependTo(list) }
     int count = 0;
     for (auto it = argsBegin; it != argsEnd; ++it) {
         const malSequence* seq = VALUE_CAST(malSequence, *it);
@@ -162,6 +164,8 @@ BUILTIN("conj")
 {
     CHECK_ARGS_AT_LEAST(1);
     ARG(malSequence, seq);
+
+// LIST: if list, cons all the args. if vector, append the args
 
     return seq->conj(argsBegin, argsEnd);
 }

@@ -374,6 +374,11 @@ String malList::print(bool readably) const
     return '(' + malSequence::print(readably) + ')';
 }
 
+malValuePtr malList::toList()
+{
+    return malValuePtr(this);
+}
+
 malValuePtr malValue::eval(malEnvPtr env)
 {
     // Default case of eval is just to return the object itself.
@@ -492,6 +497,11 @@ malValuePtr malSequence::rest() const
 {
     malValueIter start = (count() > 0) ? begin() + 1 : end();
     return mal::list(start, end());
+}
+
+malValuePtr malVector::toList()
+{
+    return mal::list(begin(), end());
 }
 
 String malString::escapedValue() const

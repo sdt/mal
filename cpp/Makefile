@@ -15,8 +15,8 @@ LD=$(CXX)
 AR=ar
 
 DEBUG=-ggdb
-CXXFLAGS=-O3 -Wall $(DEBUG) $(INCPATHS) -std=c++11
-LDFLAGS=-O3 $(DEBUG) $(LIBPATHS) -L. -lreadline -lhistory
+CXXFLAGS=-O0 -Wall $(DEBUG) $(INCPATHS) -std=c++11
+LDFLAGS=-O0 $(DEBUG) $(LIBPATHS) -L. -lreadline -lhistory
 
 LIBSOURCES=Core.cpp Environment.cpp Reader.cpp ReadLine.cpp RefCountedPtr.cpp \
 			String.cpp Types.cpp Validation.cpp
