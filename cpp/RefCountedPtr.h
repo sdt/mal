@@ -33,14 +33,14 @@ public:
     int refCount() const { return m_refCount; }
 
 #ifdef DEBUG_MEMORY_AUDITING
-    typedef std::set<RefCounted*>   Set;
-    typedef Set::iterator           SetIter;
+    typedef std::set<const RefCounted*> Set;
+    typedef Set::iterator               SetIter;
 
     static SetIter begin() { return s_tracker->begin(); }
     static SetIter end()   { return s_tracker->end(); }
 
     String info() const;
-    void dump(const String& indent) const;
+    void dump(const String& indent, Set& seen) const;
     void mark(int value) const;
 
     int getMark() const { return m_mark; }
@@ -54,7 +54,7 @@ private:
     mutable int m_refCount;
 
 #ifdef DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const = 0;
+    virtual void doDump(const String& indent, Set& seen) const = 0;
     virtual void doMark(int value) const = 0;
     mutable int m_mark;
     static Set* s_tracker;

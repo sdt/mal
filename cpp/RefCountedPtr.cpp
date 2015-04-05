@@ -8,9 +8,15 @@
 
 RefCounted::Set* RefCounted::s_tracker;
 
-void RefCounted::dump(const String& indent) const
+void RefCounted::dump(const String& indent, Set& seen) const
 {
-    doDump(indent);
+    if (seen.find(this) == seen.end()) {
+        seen.insert(this);
+        doDump(indent, seen);
+    }
+    else {
+        TRACE("%s%s: (SEEN)\n", indent.c_str(), info().c_str());
+    }
 }
 
 String RefCounted::info() const
@@ -40,7 +46,8 @@ void RefCounted::memoryReport(const RefCounted* root)
             unreachableObjectCount++;
 
             TRACE("Unreachable object:\n");
-            it->dump("  ");
+            Set seen;
+            it->dump("  ", seen);
         }
     }
 

@@ -39,7 +39,7 @@ protected:
 
 private:
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const {
+    virtual void doDump(const String& indent, RefCounted::Set& seen) const {
         TRACE("%s%s: %s\n", indent.c_str(), info().c_str(),
                             print(false).c_str());
     };
@@ -277,7 +277,7 @@ public:
 
     WITH_META(malHash);
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const;
+    virtual void doDump(const String& indent, RefCounted::Set& seen) const;
 #endif
 
 private:
@@ -346,7 +346,7 @@ public:
 
     virtual malValuePtr doWithMeta(malValuePtr meta) const;
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const;
+    virtual void doDump(const String& indent, RefCounted::Set& seen) const;
 #endif
 
 private:
@@ -378,7 +378,7 @@ public:
 
     WITH_META(malAtom);
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const;
+    virtual void doDump(const String& indent, RefCounted::Set& seen) const;
 #endif
 
 private:

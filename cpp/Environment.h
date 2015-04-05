@@ -21,7 +21,7 @@ public:
     malEnvPtr   getRoot();
 
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump(const String& indent) const;
+    virtual void doDump(const String& indent, RefCounted::Set& seen) const;
     virtual void doMark(int value) const;
 #endif
 
