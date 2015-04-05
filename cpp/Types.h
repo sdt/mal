@@ -332,7 +332,7 @@ public:
         : malValue(meta), m_value(that.m_value) { }
 
     virtual bool doIsEqualTo(const malValue* rhs) const {
-        return this->m_value->isEqualTo(rhs);
+        return m_value->isEqualTo(rhs);
     }
 
     virtual String print(bool readably) const {
