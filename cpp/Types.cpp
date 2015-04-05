@@ -116,6 +116,12 @@ void malAtom::doValueMark(int value) const
 {
     m_value->mark(value);
 }
+
+void malAtom::doDump(const String& indent) const
+{
+    TRACE("%s%s\n", indent.c_str(), info().c_str());
+    m_value->dump(indent + "  ");
+}
 #endif
 
 malValuePtr malBuiltIn::apply(malValueIter argsBegin,
@@ -176,6 +182,15 @@ void malHash::doValueMark(int value) const
 {
     for (auto &it : m_map) {
         it.second->mark(value);
+    }
+}
+
+void malHash::doDump(const String& indent) const
+{
+    TRACE("%s%s\n", indent.c_str(), info().c_str());
+    for (auto it : m_map) {
+        TRACE("%s  %s =>\n", indent.c_str(), it.first.c_str());
+        it.second->dump(indent + "    ");
     }
 }
 #endif
@@ -322,6 +337,14 @@ void malLambda::doValueMark(int value) const
 {
     m_body->mark(value);
     m_env->mark(value);
+}
+
+void malLambda::doDump(const String& indent) const
+{
+    TRACE("%s%s\n", indent.c_str(), info().c_str());
+    m_body->dump(indent + "  ");
+//    m_env->dump(indent + "  ");
+    TRACE("%s  %s\n", indent.c_str(), m_env->info().c_str());
 }
 #endif
 

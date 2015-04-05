@@ -8,11 +8,15 @@
 
 RefCounted::Set* RefCounted::s_tracker;
 
-void RefCounted::dump() const
+void RefCounted::dump(const String& indent) const
 {
-    TRACE("%p (%d) %-12s : ", this, m_refCount, typeid(*this).name());
-    doDump();
-    TRACE("\n");
+    doDump(indent);
+}
+
+String RefCounted::info() const
+{
+    return STRF("%-12s %p (%d ref%s)",
+        typeid(*this).name(), this, m_refCount, PLURAL(m_refCount));
 }
 
 void RefCounted::mark(int value) const
@@ -35,8 +39,8 @@ void RefCounted::memoryReport(const RefCounted* root)
         if (it->getMark() != mark) {
             unreachableObjectCount++;
 
-            TRACE("Unreachable object ");
-            it->dump();
+            TRACE("Unreachable object:\n");
+            it->dump("  ");
         }
     }
 

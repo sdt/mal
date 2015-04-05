@@ -39,8 +39,9 @@ protected:
 
 private:
 #if DEBUG_MEMORY_AUDITING
-    virtual void doDump() const {
-        TRACE("%s", print(false).c_str());
+    virtual void doDump(const String& indent) const {
+        TRACE("%s%s: %s\n", indent.c_str(), info().c_str(),
+                            print(false).c_str());
     };
     virtual void doMark(int value) const {
         if (m_meta) {
@@ -275,6 +276,9 @@ public:
     virtual bool doIsEqualTo(const malValue* rhs) const;
 
     WITH_META(malHash);
+#if DEBUG_MEMORY_AUDITING
+    virtual void doDump(const String& indent) const;
+#endif
 
 private:
     const Map m_map;
@@ -341,6 +345,9 @@ public:
     bool isMacro() const { return m_isMacro; }
 
     virtual malValuePtr doWithMeta(malValuePtr meta) const;
+#if DEBUG_MEMORY_AUDITING
+    virtual void doDump(const String& indent) const;
+#endif
 
 private:
     const StringVec   m_bindings;
@@ -370,6 +377,9 @@ public:
     malValuePtr reset(malValuePtr value) { return m_value = value; }
 
     WITH_META(malAtom);
+#if DEBUG_MEMORY_AUDITING
+    virtual void doDump(const String& indent) const;
+#endif
 
 private:
     malValuePtr m_value;
