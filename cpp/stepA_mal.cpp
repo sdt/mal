@@ -31,12 +31,11 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         String filename = escape(argv[1]);
         safeRep(STRF("(load-file %s)", filename.c_str()), replEnv);
+#ifdef DEBUG_MEMORY_AUDITING
         RefCounted::memoryReport(replEnv.ptr());
+#endif
         return 0;
     }
-#ifdef DEBUG_MEMORY_AUDITING
-    RefCounted::memoryReport(replEnv.ptr());
-#endif
     while (s_readLine.get(prompt, input)) {
         safeRep(input, replEnv);
 #ifdef DEBUG_MEMORY_AUDITING
