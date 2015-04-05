@@ -76,6 +76,10 @@ malEnvPtr malEnv::getRoot()
 #if DEBUG_MEMORY_AUDITING
 void malEnv::doDump(const String& indent, RefCounted::Set& seen) const {
     TRACE("%s%s\n", indent.c_str(), info().c_str());
+    if (m_outer) {
+        TRACE("%s  %s =>\n", indent.c_str(), "[OUTER]");
+        m_outer->dump(indent + "    ", seen);
+    }
     for (auto it : m_map) {
         TRACE("%s  %s =>\n", indent.c_str(), it.first.c_str());
         it.second->dump(indent + "    ", seen);
