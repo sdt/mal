@@ -51,8 +51,11 @@ void RefCounted::memoryReport(const RefCounted* root)
         }
     }
 
-    TRACE("%d unreachable object%s total.\n",
-        unreachableObjectCount, PLURAL(unreachableObjectCount));
+    int totalObjectCount = s_tracker->size();
+    TRACE("%d of %d object%s unreachable.\n",
+        unreachableObjectCount,
+        totalObjectCount,
+        PLURAL(totalObjectCount));
 }
 
 #endif
