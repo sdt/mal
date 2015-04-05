@@ -88,10 +88,11 @@ void malEnv::doDump(const String& indent, RefCounted::Set& seen) const {
 
 void malEnv::doMark(int value) const
 {
-    for (auto env = this; env; env = env->m_outer.ptr()) {
-        for (auto &it : env->m_map) {
-            it.second->mark(value);
-        }
+    for (auto &it : m_map) {
+        it.second->mark(value);
+    }
+    if (m_outer) {
+        m_outer->mark(value);
     }
 }
 #endif
