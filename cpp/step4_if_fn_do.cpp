@@ -115,14 +115,14 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
     }
 
     // Now we're left with the case of a regular list to be evaluated.
-    std::unique_ptr<malValueVec> items(list->evalItems(env));
-    malValuePtr op = items->at(0);
+    malValueVec items(list->evalItems(env));
+    malValuePtr op = items[0];
     if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
         return EVAL(lambda->getBody(),
-                    lambda->makeEnv(items->begin()+1, items->end()));
+                    lambda->makeEnv(items.begin()+1, items.end()));
     }
     else {
-        return APPLY(op, items->begin()+1, items->end(), env);
+        return APPLY(op, items.begin()+1, items.end(), env);
     }
 }
 

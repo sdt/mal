@@ -56,9 +56,9 @@ static void safeRep(const String& input, malEnvPtr env)
 
 static void makeArgv(malEnvPtr env, int argc, char* argv[])
 {
-    malValueVec* args = new malValueVec();
+    malValueVec args;
     for (int i = 0; i < argc; i++) {
-        args->push_back(mal::string(argv[i]));
+        args.push_back(mal::string(argv[i]));
     }
     env->set("*ARGV*", mal::list(args));
 }
@@ -178,15 +178,15 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
         }
 
         // Now we're left with the case of a regular list to be evaluated.
-        std::unique_ptr<malValueVec> items(list->evalItems(env));
-        malValuePtr op = items->at(0);
+        malValueVec items(list->evalItems(env));
+        malValuePtr op = items[0];
         if (const malLambda* lambda = DYNAMIC_CAST(malLambda, op)) {
             ast = lambda->getBody();
-            env = lambda->makeEnv(items->begin()+1, items->end());
+            env = lambda->makeEnv(items.begin()+1, items.end());
             continue; // TCO
         }
         else {
-            return APPLY(op, items->begin()+1, items->end(), env);
+            return APPLY(op, items.begin()+1, items.end(), env);
         }
     }
 }

@@ -79,9 +79,9 @@ malValuePtr EVAL(malValuePtr ast, malEnvPtr env)
     }
 
     // Now we're left with the case of a regular list to be evaluated.
-    std::unique_ptr<malValueVec> items(list->evalItems(env));
-    malValuePtr op = items->at(0);
-    return APPLY(op, items->begin()+1, items->end(), env);
+    malValueVec items(list->evalItems(env));
+    malValuePtr op = items[0];
+    return APPLY(op, items.begin()+1, items.end(), env);
 }
 
 String PRINT(malValuePtr ast)

@@ -181,20 +181,19 @@ public:
 
 class malSequence : public malValue {
 public:
-    malSequence(malValueVec* items);
+    malSequence(malValueVec& items);
     malSequence(malValueIter begin, malValueIter end);
     malSequence(const malSequence& that, malValuePtr meta);
-    virtual ~malSequence();
 
     virtual String print(bool readably) const;
 
-    malValueVec* evalItems(malEnvPtr env) const;
-    int count() const { return m_items->size(); }
-    bool isEmpty() const { return m_items->empty(); }
-    malValuePtr item(int index) const { return (*m_items)[index]; }
+    malValueVec evalItems(malEnvPtr env) const;
+    int count() const { return m_items.size(); }
+    bool isEmpty() const { return m_items.empty(); }
+    malValuePtr item(int index) const { return m_items[index]; }
 
-    malValueIter begin() const { return m_items->begin(); }
-    malValueIter end()   const { return m_items->end(); }
+    malValueIter begin() const { return m_items.begin(); }
+    malValueIter end()   const { return m_items.end(); }
 
     virtual bool doIsEqualTo(const malValue* rhs) const;
 
@@ -205,14 +204,14 @@ public:
     virtual malValuePtr rest() const;
 
 private:
-    malValueVec* const m_items;
+    malValueVec m_items;
 
     DO_MARK;
 };
 
 class malList : public malSequence {
 public:
-    malList(malValueVec* items) : malSequence(items) { }
+    malList(malValueVec& items) : malSequence(items) { }
     malList(malValueIter begin, malValueIter end)
         : malSequence(begin, end) { }
     malList(const malList& that, malValuePtr meta)
@@ -229,7 +228,7 @@ public:
 
 class malVector : public malSequence {
 public:
-    malVector(malValueVec* items) : malSequence(items) { }
+    malVector(malValueVec& items) : malSequence(items) { }
     malVector(malValueIter begin, malValueIter end)
         : malSequence(begin, end) { }
     malVector(const malVector& that, malValuePtr meta)
@@ -399,7 +398,7 @@ namespace mal {
     malValuePtr integer(const String& token);
     malValuePtr keyword(const String& token);
     malValuePtr lambda(const StringVec&, malValuePtr, malEnvPtr);
-    malValuePtr list(malValueVec* items);
+    malValuePtr list(malValueVec& items);
     malValuePtr list(malValueIter begin, malValueIter end);
     malValuePtr list(malValuePtr a);
     malValuePtr list(malValuePtr a, malValuePtr b);
@@ -409,7 +408,7 @@ namespace mal {
     malValuePtr string(const String& token);
     malValuePtr symbol(const String& token);
     malValuePtr trueValue();
-    malValuePtr vector(malValueVec* items);
+    malValuePtr vector(malValueVec& items);
     malValuePtr vector(malValueIter begin, malValueIter end);
 };
 

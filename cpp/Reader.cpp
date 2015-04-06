@@ -114,8 +114,7 @@ void Tokeniser::skipWhitespace()
 
 static malValuePtr readAtom(Tokeniser& tokeniser);
 static malValuePtr readForm(Tokeniser& tokeniser);
-static void readList(Tokeniser& tokeniser, malValueVec* items,
-                      const String& end);
+static malValueVec readList(Tokeniser& tokeniser, const String& end);
 static malValuePtr processMacro(Tokeniser& tokeniser, const String& symbol);
 
 malValuePtr readStr(const String& input)
@@ -137,20 +136,17 @@ static malValuePtr readForm(Tokeniser& tokeniser)
 
     if (token == "(") {
         tokeniser.next();
-        std::unique_ptr<malValueVec> items(new malValueVec);
-        readList(tokeniser, items.get(), ")");
-        return mal::list(items.release());
+        malValueVec items = readList(tokeniser, ")");
+        return mal::list(items);
     }
     if (token == "[") {
         tokeniser.next();
-        std::unique_ptr<malValueVec> items(new malValueVec);
-        readList(tokeniser, items.get(), "]");
-        return mal::vector(items.release());
+        malValueVec items = readList(tokeniser, "]");
+        return mal::vector(items);
     }
     if (token == "{") {
         tokeniser.next();
-        malValueVec items;
-        readList(tokeniser, &items, "}");
+        malValueVec items = readList(tokeniser, "}");
         return mal::hash(items.begin(), items.end(), false);
     }
     return readAtom(tokeniser);
@@ -209,16 +205,16 @@ static malValuePtr readAtom(Tokeniser& tokeniser)
     return mal::symbol(token);
 }
 
-static void readList(Tokeniser& tokeniser, malValueVec* items,
-                      const String& end)
+static malValueVec readList(Tokeniser& tokeniser, const String& end)
 {
+    malValueVec items;
     while (1) {
         MAL_CHECK(!tokeniser.eof(), "Expected \"%s\", got EOF", end.c_str());
         if (tokeniser.peek() == end) {
             tokeniser.next();
-            return;
+            return items;
         }
-        items->push_back(readForm(tokeniser));
+        items.push_back(readForm(tokeniser));
     }
 }
 

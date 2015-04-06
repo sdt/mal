@@ -51,7 +51,7 @@ namespace mal {
         return malValuePtr(new malLambda(bindings, body, env));
     }
 
-    malValuePtr list(malValueVec* items) {
+    malValuePtr list(malValueVec& items) {
         return malValuePtr(new malList(items));
     };
 
@@ -60,23 +60,23 @@ namespace mal {
     };
 
     malValuePtr list(malValuePtr a) {
-        malValueVec* items = new malValueVec(1);
-        items->at(0) = a;
+        malValueVec items(1);
+        items[0] = a;
         return malValuePtr(new malList(items));
     }
 
     malValuePtr list(malValuePtr a, malValuePtr b) {
-        malValueVec* items = new malValueVec(2);
-        items->at(0) = a;
-        items->at(1) = b;
+        malValueVec items(2);
+        items[0] = a;
+        items[1] = b;
         return malValuePtr(new malList(items));
     }
 
     malValuePtr list(malValuePtr a, malValuePtr b, malValuePtr c) {
-        malValueVec* items = new malValueVec(3);
-        items->at(0) = a;
-        items->at(1) = b;
-        items->at(2) = c;
+        malValueVec items(3);
+        items[0] = a;
+        items[1] = b;
+        items[2] = c;
         return malValuePtr(new malList(items));
     }
 
@@ -102,7 +102,7 @@ namespace mal {
         return malValuePtr(c);
     };
 
-    malValuePtr vector(malValueVec* items) {
+    malValuePtr vector(malValueVec& items) {
         return malValuePtr(new malVector(items));
     };
 
@@ -243,14 +243,14 @@ malValuePtr malHash::get(malValuePtr key) const
 
 malValuePtr malHash::keys() const
 {
-    malValueVec* keys = new malValueVec();
-    keys->reserve(m_map.size());
+    malValueVec keys;
+    keys.reserve(m_map.size());
     for (auto it = m_map.begin(), end = m_map.end(); it != end; ++it) {
         if (it->first[0] == '"') {
-            keys->push_back(mal::string(unescape(it->first)));
+            keys.push_back(mal::string(unescape(it->first)));
         }
         else {
-            keys->push_back(mal::keyword(it->first));
+            keys.push_back(mal::keyword(it->first));
         }
     }
     return mal::list(keys);
@@ -258,10 +258,10 @@ malValuePtr malHash::keys() const
 
 malValuePtr malHash::values() const
 {
-    malValueVec* keys = new malValueVec();
-    keys->reserve(m_map.size());
+    malValueVec keys;
+    keys.reserve(m_map.size());
     for (auto it = m_map.begin(), end = m_map.end(); it != end; ++it) {
-        keys->push_back(it->second);
+        keys.push_back(it->second);
     }
     return mal::list(keys);
 }
@@ -370,9 +370,9 @@ malValuePtr malList::conj(malValueIter argsBegin,
     int oldItemCount = std::distance(begin(), end());
     int newItemCount = std::distance(argsBegin, argsEnd);
 
-    malValueVec* items = new malValueVec(oldItemCount + newItemCount);
-    std::reverse_copy(argsBegin, argsEnd, items->begin());
-    std::copy(begin(), end(), items->begin() + newItemCount);
+    malValueVec items(oldItemCount + newItemCount);
+    std::reverse_copy(argsBegin, argsEnd, items.begin());
+    std::copy(begin(), end(), items.begin() + newItemCount);
 
     return mal::list(items);
 }
@@ -385,10 +385,10 @@ malValuePtr malList::eval(malEnvPtr env)
         return malValuePtr(this);
     }
 
-    std::unique_ptr<malValueVec> items(evalItems(env));
-    auto it = items->begin();
+    malValueVec items(evalItems(env));
+    auto it = items.begin();
     malValuePtr op = *it;
-    return APPLY(op, ++it, items->end(), env);
+    return APPLY(op, ++it, items.end(), env);
 }
 
 String malList::print(bool readably) const
@@ -428,34 +428,29 @@ malValuePtr malValue::withMeta(malValuePtr meta) const
     return doWithMeta(meta);
 }
 
-malSequence::malSequence(malValueVec* items)
+malSequence::malSequence(malValueVec& items)
 : m_items(items)
 {
 
 }
 
 malSequence::malSequence(malValueIter begin, malValueIter end)
-: m_items(new malValueVec(begin, end))
+: m_items(begin, end)
 {
 
 }
 
 malSequence::malSequence(const malSequence& that, malValuePtr meta)
 : malValue(meta)
-, m_items(new malValueVec(*(that.m_items)))
+, m_items(that.m_items)
 {
 
-}
-
-malSequence::~malSequence()
-{
-    delete m_items;
 }
 
 #if DEBUG_MEMORY_AUDITING
 void malSequence::doValueMark(int value) const
 {
-    for (auto& it : *m_items) {
+    for (auto& it : m_items) {
         it->mark(value);
     }
 }
@@ -468,9 +463,9 @@ bool malSequence::doIsEqualTo(const malValue* rhs) const
         return false;
     }
 
-    for (malValueIter it0 = m_items->begin(),
+    for (malValueIter it0 = m_items.begin(),
                       it1 = rhsSeq->begin(),
-                      end = m_items->end(); it0 != end; ++it0, ++it1) {
+                      end = m_items.end(); it0 != end; ++it0, ++it1) {
 
         if (! (*it0)->isEqualTo((*it1).ptr())) {
             return false;
@@ -479,14 +474,14 @@ bool malSequence::doIsEqualTo(const malValue* rhs) const
     return true;
 }
 
-malValueVec* malSequence::evalItems(malEnvPtr env) const
+malValueVec malSequence::evalItems(malEnvPtr env) const
 {
-    std::unique_ptr<malValueVec> items(new malValueVec);
-    items->reserve(count());
-    for (auto it = m_items->begin(), end = m_items->end(); it != end; ++it) {
-        items->push_back(EVAL(*it, env));
+    malValueVec items;
+    items.reserve(count());
+    for (auto it = m_items.begin(), end = m_items.end(); it != end; ++it) {
+        items.push_back(EVAL(*it, env));
     }
-    return items.release();
+    return items;
 }
 
 malValuePtr malSequence::first() const
@@ -497,8 +492,8 @@ malValuePtr malSequence::first() const
 String malSequence::print(bool readably) const
 {
     String str;
-    auto end = m_items->cend();
-    auto it = m_items->cbegin();
+    auto end = m_items.cend();
+    auto it = m_items.cbegin();
     if (it != end) {
         str += (*it)->print(readably);
         ++it;
@@ -537,16 +532,17 @@ malValuePtr malVector::conj(malValueIter argsBegin,
     int oldItemCount = std::distance(begin(), end());
     int newItemCount = std::distance(argsBegin, argsEnd);
 
-    malValueVec* items = new malValueVec(oldItemCount + newItemCount);
-    std::copy(begin(), end(), items->begin());
-    std::copy(argsBegin, argsEnd, items->begin() + oldItemCount);
+    malValueVec items(oldItemCount + newItemCount);
+    std::copy(begin(), end(), items.begin());
+    std::copy(argsBegin, argsEnd, items.begin() + oldItemCount);
 
     return mal::vector(items);
 }
 
 malValuePtr malVector::eval(malEnvPtr env)
 {
-    return mal::vector(evalItems(env));
+    malValueVec items(evalItems(env));
+    return mal::vector(items);
 }
 
 String malVector::print(bool readably) const

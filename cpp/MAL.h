@@ -9,9 +9,9 @@
 #include <vector>
 
 class malValue;
-typedef RefCountedPtr<malValue>  malValuePtr;
-typedef std::vector<malValuePtr> malValueVec;
-typedef malValueVec::iterator    malValueIter;
+typedef RefCountedPtr<malValue>     malValuePtr;
+typedef std::vector<malValuePtr>    malValueVec;
+typedef malValueVec::const_iterator malValueIter;
 
 class malEnv;
 typedef RefCountedPtr<malEnv>     malEnvPtr;
