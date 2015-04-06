@@ -8,7 +8,7 @@
 //#define DEBUG_OBJECT_LIFETIMES         1
 //#define DEBUG_ENV_LIFETIMES            1
 //
-#define DEBUG_MEMORY_AUDITING           1
+//#define DEBUG_MEMORY_AUDITING           1
 
 #define DEBUG_TRACE_FILE    stderr
 
@@ -31,6 +31,12 @@
     #define TRACE_ENV TRACE
 #else
     #define TRACE_ENV NOTRACE
+#endif
+
+#if DEBUG_MEMORY_AUDITING
+    #define MEM_REPORT(rootEnv) RefCounted::memoryReport((rootEnv).ptr());
+#else
+    #define MEM_REPORT(rootEnv) NOOP
 #endif
 
 #define _ASSERT(file, line, condition, ...) \
