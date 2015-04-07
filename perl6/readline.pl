@@ -17,16 +17,12 @@ if ($history.IO ~~ :e) {
     read_history($history);
 }
 else {
-    open($history, :w).close();
+    open($history, :w).close(); # Not sure why this is necessary
 }
 
-loop {
-    my $line = readline("Gimme>");
-    if (! $line.defined) {
-        say "Done";
-        last;
-    }
+while (defined (my $line = readline('user> '))) {
     say "-> $line";
     add_history($line);
     append_history(1, $history);
 }
+say 'Done';
