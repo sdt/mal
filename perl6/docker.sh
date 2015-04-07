@@ -11,6 +11,7 @@ run() {
       -v $PWD:$WORKDIR \
       -e INPUTRC=$WORKDIR/.inputrc \
       -e MAL_HISTORY=$WORKDIR/.mal_history \
+      -e PERL6LIB=$WORKDIR \
       -ti --name $CONTAINER_NAME $IMAGE_NAME "$@"
 }
 
