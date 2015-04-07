@@ -3,9 +3,15 @@
 IMAGE_NAME=mal-perl6
 CONTAINER_NAME=mal-perl6-running
 
+WORKDIR=/run
+
 run() {
     docker rm -f $CONTAINER_NAME > /dev/null 2>/dev/null
-    docker run -v $PWD:/run -ti --name $CONTAINER_NAME $IMAGE_NAME "$@"
+    docker run \
+      -v $PWD:$WORKDIR \
+      -e INPUTRC=$WORKDIR/.inputrc \
+      -e MAL_HISTORY=$WORKDIR/.mal_history \
+      -ti --name $CONTAINER_NAME $IMAGE_NAME "$@"
 }
 
 case $1 in

@@ -12,7 +12,7 @@ sub append_history(Int $lineno, Str $filename) returns Int
 sub read_history(Str $filename) returns Int
     is native('libreadline') { ... }
 
-my $history = "/tmp/HISTORY";
+my $history = %*ENV<MAL_HISTORY> // %*ENV<HOME> ~ '/.mal-history';
 if ($history.IO ~~ :e) {
     read_history($history);
 }
