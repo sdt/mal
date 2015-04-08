@@ -1,6 +1,7 @@
 #!/usr/bin/env perl6
 
 use v6;
+use Reader;
 use ReadLine;
 
 sub MAIN() {
@@ -14,7 +15,7 @@ sub rep(Str $input) {
 }
 
 sub READ(Str $input) {
-    return $input;
+    return read-str($input);
 }
 
 sub EVAL($ast) {
