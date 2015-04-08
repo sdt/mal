@@ -11,7 +11,7 @@ PYTHON = python
 #
 
 IMPLS = bash c clojure coffee cpp cs erlang factor forth go haskell java \
-	julia js lua make mal ocaml matlab miniMAL nim perl php ps \
+	julia js lua make mal ocaml matlab miniMAL nim perl perl6 php ps \
 	python r racket ruby rust scala swift vb guile
 
 step0 = step0_repl
@@ -74,6 +74,7 @@ matlab_STEP_TO_PROG =  matlab/$($(1)).m
 miniMAL_STEP_TO_PROG = miniMAL/$($(1)).json
 nim_STEP_TO_PROG =     nim/$($(1))
 perl_STEP_TO_PROG =    perl/$($(1)).pl
+perl6_STEP_TO_PROG =   perl6/$($(1)).p6
 php_STEP_TO_PROG =     php/$($(1)).php
 ps_STEP_TO_PROG =      ps/$($(1)).ps
 python_STEP_TO_PROG =  python/$($(1)).py
@@ -115,6 +116,8 @@ matlab_RUNSTEP =  matlab -nodisplay -nosplash -nodesktop -nojvm -r "$($(1))($(ca
 miniMAL_RUNSTEP = miniMAL ../$(2) $(3)
 nim_RUNSTEP =     ../$(2) $(3)
 perl_RUNSTEP =    perl ../$(2) $(3)
+perl6_RUNSTEP =   ./docker.sh run perl6 `basename $(2)` $(3)
+#perl6_RUNSTEP =  perl6 ../$(2) $(3)
 php_RUNSTEP =     php ../$(2) $(3)
 ps_RUNSTEP =      $(4)gs -q -I./ -dNODISPLAY -- ../$(2) $(3)$(4)
 python_RUNSTEP =  $(PYTHON) ../$(2) $(3)
