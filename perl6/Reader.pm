@@ -5,31 +5,33 @@ use v6;
 use Types;
 
 grammar MALGrammar {
-    token TOP { <form>? <comment>? }
+    rule TOP { <ws>? <form>? <comment>? | { self.panic($/, "What?") }}
 
-    rule form { <s-expr> | <vector> | <hash> | <atom> }
+    rule form { <s-expr> | <vector> | <hash> | <atom> | { self.panic($/, "Huh?")} }
 
-    rule s-expr { '(' <form>* ')' }
-    rule vector { '[' <form>* ']' }
+    rule s-expr { '(' <form>* ')' | { die "expected ')', got EOF" } }
+    rule vector { '[' <form>* ']' | { die "expected ']', got EOF" } }
     rule hash   { '{' <form>* '}' }
 
-    token atom { <macro> | <string> | <word> }
+    token atom { <macro> | <string> | <integer> | <word> }
 
     rule macro   { <macro-prefix> <form> }
-    token macro-prefix { < ~@ [ ' ` ~ ^ @ > }
+    token macro-prefix { < ~@ ' ` ~ @ > }
 
-    token word   { <[ \S ] - [ \[ \] \{ \} \( \) \' \" \` \, \; \) ]>+ }
-    token string {
-        \"
-        [
-        | \\ .      # Escaped chars are okay
-        | <-["]>    # And anything except a "
-        ]*
-        \"
-    }
+#    rule with-meta { \^ <form> <form> }
+
+    token word    { <[ \S ] - [ \[ \] \{ \} \( \) \' \" \` \, \; \) ]>+ }
+    token integer { < + - >? \d+ }
+    token string  { \" [ \\ . | <-["]> ]* \" }
 
     token comment { \; .* $$ }
-    token ws { <[ \s \, ]>* }
+    token ws      { <[ \s \, ]>* }
+
+    method panic($/, $msg) {
+        my $c = $/.CURSOR;
+        my $pos := $c.pos;
+        die "$msg found at pos $pos";
+    }
 }
 
 class MALGrammar::Actions {
@@ -37,25 +39,29 @@ class MALGrammar::Actions {
         make Value.new(type => String, value => $/.Str);
     }
 
+    method integer($/) {
+        make Value.new(type => Integer, value => $/.Int);
+    }
+
     method word($/) {
         my $value = $/.Str;
-        given $value {
-#            when / ^ <[ \+ \- ]>? \d+ $ / {
-#                make Value.new(type => Integer, value => 0 + $/.Str);
-#            }
-
-#            when / ^ \: / {
-#                make Value.new(type => Keyword, value => $value);
-#            }
-
-            default {
-                make Value.new(type => Symbol, value => $/.Str);
-            }
-        }
+        my $type = $value.substr(0, 1) eq ':' ?? Keyword !! Symbol;
+        make Value.new(type => $type, value => $value);
     }
 
     method macro($/) {
-        say "MACRO:\n", $/;
+        my %macro = q/@/  => 'deref',
+                    q/`/  => 'quasiquote',
+                    q/'/  => 'quote',
+                    q/~@/ => 'splice-unquote',
+                    q/~/  => 'unquote',
+                    ;
+
+        my $prefix = $<macro-prefix>.Str;
+        make Value.new(type => List, value => (
+                Value.new(type => Symbol, value => %macro{$prefix}),
+                $<form>.ast
+            ));
     }
 
     method atom($/) {
@@ -63,7 +69,7 @@ class MALGrammar::Actions {
     }
 
     method s-expr($/) {
-        make Value.new(type => List, value => $<form>».ast);
+        make Value.new(type => List, value => $<form>.map({$_.ast}));
     }
 
     method hash($/) {
@@ -79,13 +85,13 @@ class MALGrammar::Actions {
     }
 
     method TOP($/) {
-        make $<form>».ast;
+        make $<form>.ast;
     }
 }
 
 sub read-str(Str $input) is export {
     my $match = MALGrammar.parse($input, :actions(MALGrammar::Actions.new));
-    say "TOP:\n", $match.ast;
-    say "NO MATCH" unless $match;
-    return $input;
+    if $match ~~ Match {
+        return $match.ast;
+    }
 }
