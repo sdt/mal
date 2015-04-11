@@ -112,6 +112,7 @@ class MALGrammar::Actions {
         my $str = $<string-body>.Str;
         $str .= subst(/\\n/, "\n");
         $str .= subst(/\\\"/, '"');
+        $str .= subst(/\\\\/, '\\');
         make Value.new(type => String, value => $str);
     }
 

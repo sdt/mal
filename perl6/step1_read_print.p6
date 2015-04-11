@@ -36,5 +36,5 @@ sub EVAL($ast) {
 }
 
 sub PRINT($ast) {
-    return pr-str($ast);
+    return pr-str($ast, True);
 }

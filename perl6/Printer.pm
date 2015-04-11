@@ -4,19 +4,19 @@ use v6;
 
 use Types;
 
-sub pr-str(Value $ast) is export {
+sub pr-str(Value $ast, Bool $readably) is export {
     given $ast.type {
         when HashMap {
-            return '{' ~ print-items($ast.value) ~ '}';
+            return '{' ~ print-items($ast.value, $readably) ~ '}';
         }
         when List {
-            return '(' ~ print-items($ast.value) ~ ')';
+            return '(' ~ print-items($ast.value, $readably) ~ ')';
         }
         when Vector {
-            return '[' ~ print-items($ast.value) ~ ']';
+            return '[' ~ print-items($ast.value, $readably) ~ ']';
         }
         when String {
-            return $ast.value.perl;
+            return $readably ?? $ast.value.perl !! $ast.value;
         }
         default {
             return $ast.value;
@@ -24,6 +24,6 @@ sub pr-str(Value $ast) is export {
     }
 }
 
-sub print-items(@items) {
-    return @items.map({ pr-str($_) }).join(' ');
+sub print-items(@items, $readably) {
+    return @items.map({ pr-str($_, $readably) }).join(' ');
 }
