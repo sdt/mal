@@ -14,19 +14,20 @@ grammar MALGrammar {
     token seq-begin     { < [ ( { > }
     token seq-end       { < ] ) } > | $ }
 
-    token atom          { <integer> | <macro> | <string> | <word> }
+    token atom          { <integer> | <macro> | <meta> | <string> | <word> }
 
     token integer       { < + - >? \d+ }
 
     rule macro          { <macro-prefix> <form> }
     token macro-prefix  { < ~@ ' ` ~ @ > }
 
+    rule meta           { \^ <form> <form> }
+
     token string        { <string-begin> <string-body> <string-end> }
     token string-begin  { \" }
     token string-body   { [ \\ . | <-["]> ]* }
     token string-end    { \" | $ }
 
-#    rule with-meta { \^ <form> <form> }
 
     token word          { <[ \S ] - [ \[ \] \{ \} \( \) \' \" \` \, \; \) ]>+ }
 
@@ -80,6 +81,15 @@ class MALGrammar::Actions {
         make Value.new(type => List, value => (
                 Value.new(type => Symbol, value => %macro{$prefix}),
                 $<form>.ast
+            ));
+    }
+
+    method meta($/) {
+        my ($meta, $object) = $<form>[0, 1];
+        make Value.new(type => List, value => (
+                Value.new(type => Symbol, value => "with-meta"),
+                $object.ast,
+                $meta.ast,
             ));
     }
 
