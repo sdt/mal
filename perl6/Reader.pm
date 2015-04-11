@@ -16,9 +16,14 @@ grammar MALGrammar {
     token seq-begin { < [ ( { > }
     token seq-end   { < ] ) } > | $ }
 
-    token atom { <integer> }
+    token atom { <integer> | <string> }
 
     token integer { < + - >? \d+ }
+
+    token string  { <string-begin> <string-body> <string-end> }
+    token string-begin { \" }
+    token string-body  { [ \\ . | <-["]> ]* }
+    token string-end   { \" | $ }
 }
 
 #`<<
@@ -55,7 +60,10 @@ grammar MALGrammar {
 
 class MALGrammar::Actions {
     method string($/) {
-        make Value.new(type => String, value => $/.Str);
+        if $<string-end>.Str eq '' {
+            die "Expected \", got EOF";
+        }
+        make Value.new(type => String, value => $<string-body>.Str);
     }
 
     method integer($/) {
