@@ -10,8 +10,14 @@ sub MAIN() {
         say rep($input);
 
         CATCH {
-            default {
+            when Reader::EmptyInput {
+                # nothing
+            }
+            when Reader::ParseError {
                 say $_.message;
+            }
+            default {
+                say 'Unexpected exception: ', $_.gist;
             }
         }
     }

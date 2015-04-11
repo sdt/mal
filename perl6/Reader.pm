@@ -4,8 +4,17 @@ use v6;
 
 use Types;
 
+class ParseError is Exception {
+    has $.reason;
+    method message { return $.reason }
+}
+
+class EmptyInput is Exception {
+    method message { return 'EmptyInput' }
+}
+
 grammar MALGrammar {
-    rule TOP            { <ws>? <form>? <comment>? }
+    rule TOP            { ^ <form>? <comment>? $ }
 
     rule form           { <seq> | <atom> }
 
@@ -37,6 +46,9 @@ grammar MALGrammar {
 
 class MALGrammar::Actions {
     method TOP($/) {
+        if $<form> ~~ Nil {
+            die EmptyInput.new;
+        };
         make $<form>.ast;
     }
 
@@ -56,7 +68,7 @@ class MALGrammar::Actions {
 
         my $info = %seq-info{ $<seq-begin>.Str };
         if $end ne $info<end> {
-            die "Expected $info<end>, got $end";
+            die ParseError.new(reason => "Expected $info<end>, got $end");
         }
         make Value.new(type => $info<type>, value => $<form>.map({$_.ast}));
     }
@@ -87,7 +99,7 @@ class MALGrammar::Actions {
     method meta($/) {
         my ($meta, $object) = $<form>[0, 1];
         make Value.new(type => List, value => (
-                Value.new(type => Symbol, value => "with-meta"),
+                Value.new(type => Symbol, value => 'with-meta'),
                 $object.ast,
                 $meta.ast,
             ));
@@ -95,7 +107,7 @@ class MALGrammar::Actions {
 
     method string($/) {
         if $<string-end>.Str eq '' {
-            die "Expected \", got EOF";
+            die ParseError.new(reason => "Expected \", got EOF");
         }
         my $str = $<string-body>.Str;
         $str .= subst(/\\n/, "\n");
@@ -115,4 +127,5 @@ sub read-str(Str $input) is export {
     if $match ~~ Match {
         return $match.ast;
     }
+    die ParseError.new(reason => 'Syntax error');
 }
