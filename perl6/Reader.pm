@@ -87,7 +87,10 @@ class MALGrammar::Actions {
         if $<string-end>.Str eq '' {
             die "Expected \", got EOF";
         }
-        make Value.new(type => String, value => $<string-body>.Str);
+        my $str = $<string-body>.Str;
+        $str .= subst(/\\n/, "\n");
+        $str .= subst(/\\\"/, '"');
+        make Value.new(type => String, value => $str);
     }
 
     method word($/) {
