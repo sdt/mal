@@ -116,9 +116,21 @@ class MALGrammar::Actions {
     }
 
     method word($/) {
+        my $type;
         my $value = $/.Str;
-        my $type = $value.substr(0, 1) eq ':' ?? Keyword !! Symbol;
-        make Value.new(type => $type, value => $value);
+        my %constants = true => True, false => False, nil => Nil;
+        given $value {
+            when true | false | nil {
+                $type = Constant;
+            }
+            when .substr(0, 1) eq ':' {
+                $type = Keyword;
+            }
+            default {
+                $type = Symbol;
+            }
+        }
+        make Value.new(:$type, :$value);
     }
 }
 
