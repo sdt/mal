@@ -5,6 +5,24 @@ use v6;
 use Types;
 
 grammar MALGrammar {
+    rule TOP { <ws>? <form>? <comment>? }
+
+    rule form { <seq> | <atom> }
+
+    rule seq { <seq-begin> <form>* <seq-end> }
+
+    token comment   { \; .* $$ }
+    token ws        { <[ \s \, ]>* }
+    token seq-begin { < [ ( { > }
+    token seq-end   { < ] ) } > | $ }
+
+    token atom { <integer> }
+
+    token integer { < + - >? \d+ }
+}
+
+#`<<
+grammar MALGrammar {
     rule TOP { <ws>? <form>? <comment>? | { self.panic($/, "What?") }}
 
     rule form { <s-expr> | <vector> | <hash> | <atom> | { self.panic($/, "Huh?")} }
@@ -33,6 +51,7 @@ grammar MALGrammar {
         die "$msg found at pos $pos";
     }
 }
+>>
 
 class MALGrammar::Actions {
     method string($/) {
@@ -78,6 +97,23 @@ class MALGrammar::Actions {
 
     method vector($/) {
         make Value.new(type => Vector, value => $<form>».ast);
+    }
+
+    method seq($/) {
+        my %seq-info =
+            '(' => %( end => ')', type => List    ),
+            '[' => %( end => ']', type => Vector  ),
+            '{' => %( end => '}', type => HashMap ),
+            ;
+
+        my $end = $<seq-end>.Str;
+        $end = 'EOF' if $end eq '';
+
+        my $info = %seq-info{ $<seq-begin>.Str };
+        if $end ne $info<end> {
+            die "Expected $info<end>, got $end";
+        }
+        make Value.new(type => $info<type>, value => $<form>.map({$_.ast}));
     }
 
     method form($/) {
