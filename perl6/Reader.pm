@@ -68,7 +68,12 @@ class MALGrammar::Actions {
         if $end ne $info<end> {
             die ParseError.new(reason => "Expected $info<end>, got $end");
         }
-        make Value.new(type => $info<type>, value => $<form>.map({$_.ast}));
+        my $type = $info<type>;
+        my @value = $<form>.map({$_.ast}).list;
+        if $type == HashMap {
+            return make make-hash(@value);
+        }
+        make Value.new(:$type, :value(@value));
     }
 
     method atom($/) {
