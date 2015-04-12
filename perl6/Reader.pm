@@ -23,9 +23,7 @@ grammar MALGrammar {
     token seq-begin     { < [ ( { > }
     token seq-end       { < ] ) } > | $ }
 
-    token atom          { <integer> | <macro> | <meta> | <string> | <word> }
-
-    token integer       { < + - >? \d+ }
+    token atom          { <macro> | <meta> | <string> | <word> }
 
     rule macro          { <macro-prefix> <form> }
     token macro-prefix  { < ~@ ' ` ~ @ > }
@@ -77,10 +75,6 @@ class MALGrammar::Actions {
         make $/.values[0].ast;
     }
 
-    method integer($/) {
-        make Value.new(type => Integer, value => $/.Int);
-    }
-
     method macro($/) {
         my %macro = q/@/  => 'deref',
                     q/`/  => 'quasiquote',
@@ -117,6 +111,9 @@ class MALGrammar::Actions {
     }
 
     method word($/) {
+        try {
+            return make Value.new(type => Integer, value => $/.Int);
+        }
         my $type;
         my $value = $/.Str;
         my %constants = true => True, false => False, nil => Nil;
