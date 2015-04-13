@@ -4,13 +4,9 @@ use v6;
 
 use Types;
 
-class ParseError is Exception {
-    has $.reason;
-    method message { return $.reason }
-}
-
-class EmptyInput is Exception {
-    method message { return 'EmptyInput' }
+class ParseError is MAL-Exception { }
+class EmptyInput is MAL-Exception {
+    method new() { self.bless(:reason('Empty input')) }
 }
 
 grammar MALGrammar {
@@ -66,9 +62,14 @@ class MALGrammar::Actions {
 
         my $info = %seq-info{ $<seq-begin>.Str };
         if $end ne $info<end> {
-            die ParseError.new(reason => "Expected $info<end>, got $end");
+            die ParseError.new("Expected $info<end>, got $end");
         }
-        make Value.new(type => $info<type>, value => $<form>.map({$_.ast}));
+        my $type = $info<type>;
+        my @value = $<form>.map({$_.ast}).list;
+        if $type == HashMap {
+            return make make-hash(@value);
+        }
+        make Value.new(:$type, :value(@value));
     }
 
     method atom($/) {
@@ -84,35 +85,28 @@ class MALGrammar::Actions {
                     ;
 
         my $prefix = $<macro-prefix>.Str;
-        make Value.new(type => List, value => (
-                Value.new(type => Symbol, value => %macro{$prefix}),
-                $<form>.ast
-            ));
+        make make-form(%macro{$prefix}, $<form>.ast);
     }
 
     method meta($/) {
         my ($meta, $object) = $<form>[0, 1];
-        make Value.new(type => List, value => (
-                Value.new(type => Symbol, value => 'with-meta'),
-                $object.ast,
-                $meta.ast,
-            ));
+        make make-form('with-meta', $object.ast, $meta.ast);
     }
 
     method string($/) {
         if $<string-end>.Str eq '' {
-            die ParseError.new(reason => "Expected \", got EOF");
+            die ParseError.new("Expected \", got EOF");
         }
-        my $str = $<string-body>.Str;
-        $str .= subst(/\\n/, "\n");
-        $str .= subst(/\\\"/, '"');
-        $str .= subst(/\\\\/, '\\');
-        make Value.new(type => String, value => $str);
+        my $value = $<string-body>.Str;
+        $value .= subst(/\\n/, "\n");
+        $value .= subst(/\\\"/, '"');
+        $value .= subst(/\\\\/, '\\');
+        make Value.new(:type(String), :$value);
     }
 
     method word($/) {
         try {
-            return make Value.new(type => Integer, value => $/.Int);
+            return make Value.new(:type(Integer), :value($/.Int));
         }
         my $type;
         my $value = $/.Str;
@@ -137,5 +131,5 @@ sub read-str(Str $input) is export {
     if $match ~~ Match {
         return $match.ast;
     }
-    die ParseError.new(reason => 'Syntax error');
+    die ParseError.new('Syntax error');
 }
