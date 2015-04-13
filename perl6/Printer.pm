@@ -4,18 +4,18 @@ use v6;
 
 use Types;
 
-sub pr-str(Value $ast, Bool $readably) is export {
-    given $ast.type {
-        when HashMap {
+sub pr-str(malValue $ast, Bool $readably) is export {
+    given $ast {
+        when malHash {
             return '{' ~ print-hash($ast.value, $readably) ~ '}';
         }
-        when List {
+        when malList {
             return '(' ~ print-items($ast.value, $readably) ~ ')';
         }
-        when Vector {
+        when malVector {
             return '[' ~ print-items($ast.value, $readably) ~ ']';
         }
-        when String {
+        when malString {
             return $readably ?? $ast.value.perl !! $ast.value;
         }
         default {

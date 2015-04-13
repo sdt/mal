@@ -7,10 +7,10 @@ use Reader;
 use ReadLine;
 use Types;
 
-class RuntimeError is MAL-Exception { }
+class RuntimeError is malException { }
 
 sub MAIN() {
-    my $repl-env = Env.new;
+    my $repl-env = malEnv.new;
     $repl-env.set('+', wrap-int-op(&[+]));
     $repl-env.set('-', wrap-int-op(&[-]));
     $repl-env.set('*', wrap-int-op(&[*]));
@@ -24,6 +24,7 @@ sub MAIN() {
                 # nothing
             }
             default {
+                say $_;
                 say $_.message;
             }
         }
@@ -38,18 +39,18 @@ sub READ(Str $input) {
     return read-str($input);
 }
 
-sub EVAL($ast, $env) {
-    unless $ast.type ~~ List {
+sub EVAL(malValue $ast, malEnv $env) {
+    unless $ast ~~ malList {
         return eval-ast($ast, $env);
     }
 
     my %special =
-        'def!' => sub ($sym, $def) {
+        'def!' => sub (malSymbol $sym, malValue $def) {
             $env.set($sym.value, EVAL($def, $env))
         },
-        'let*' => sub ($bindings, $expr) {
-            my $inner = Env.new(outer => $env);
-            for $bindings.value.list -> $lhs, $rhs {
+        'let*' => sub (malSequence $bindings, malValue $expr) {
+            my $inner = malEnv.new(outer => $env);
+            for $bindings.value.list -> malSymbol $lhs, malValue $rhs {
                 $inner.set($lhs.value, EVAL($rhs, $inner));
             }
             return EVAL($expr, $inner);
@@ -57,7 +58,7 @@ sub EVAL($ast, $env) {
         ;
 
     my ($op, @args) = $ast.value.list;
-    if $op.type ~~ Symbol && %special{$op.value} -> $handler {
+    if $op ~~ malSymbol && %special{$op.value} -> $handler {
         return $handler(|@args);
         CATCH {
             die RuntimeError.new($op.value ~ ': ' ~ $_);
@@ -73,30 +74,32 @@ sub PRINT($ast) {
     return pr-str($ast, True);
 }
 
-sub eval-ast($ast, $env) {
-    my $type = $ast.type;
-    given ($type) {
-        when Symbol {
+sub eval-ast(malValue $ast, malEnv $env) {
+    given ($ast) {
+        when malSymbol {
             return $env.get($ast.value);
         }
-        when HashMap {
+        when malHash {
             my %value = $ast.value.pairs.map(
                 { $_.key => EVAL($_.value, $env) });
-            return Value.new(:$type, :%value);
+            return malHash.new(%value);
         }
-        when List | Vector {
+        when malList {
             my @value = $ast.value.map({ EVAL($_, $env) });
-            return Value.new(:$type, :@value);
+            return malList.new(@value);
+        }
+        when malVector {
+            my @value = $ast.value.map({ EVAL($_, $env) });
+            return malVector.new(@value);
         }
         default {
             return $ast;
         }
     }
 }
-
 sub wrap-int-op($native-func) {
-    return Value.new(:type(BuiltIn), :value(sub (Value $a, Value $b) {
+    return malBuiltIn.new(sub (malInteger $a, malInteger $b) {
         my $value = $native-func($a.value, $b.value);
-        return Value.new(:type(Integer), :$value);
-    }));
+        return malInteger.new($value.Int);
+    });
 }

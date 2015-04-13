@@ -4,13 +4,13 @@ use v6;
 
 use Types;
 
-class NotFound is MAL-Exception { }
+class NotFound is malException { }
 
-class Env is export {
+class malEnv is export {
     has %.data;
-    has Env $.outer;
+    has malEnv $.outer;
 
-    method set(Str $key, Value $value) {
+    method set(Str $key, malValue $value) {
         %.data{$key} = $value;
     }
 
@@ -21,12 +21,12 @@ class Env is export {
         if $.outer.defined {
             return $.outer.find($key);
         }
-        return Value.nil;
+        return malConstant.nil;
     }
 
     method get(Str $key) {
         my $env = self.find($key);
-        if $env ~~ Value.nil {
+        if $env ~~ malConstant.nil {
             die NotFound.new("\"$key\" not found");
         }
         return $env.data{$key};
