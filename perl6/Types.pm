@@ -45,3 +45,9 @@ sub make-hash(@items) is export {
     });
     return Value.new(:type(HashMap), :value(%hash));
 }
+
+sub make-form(Str $symbol, *@list) is export {
+    Value.new(:type(List), :value(
+        Value.new(:type(Symbol), :value($symbol)),
+        @list));
+}

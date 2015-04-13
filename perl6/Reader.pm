@@ -85,19 +85,12 @@ class MALGrammar::Actions {
                     ;
 
         my $prefix = $<macro-prefix>.Str;
-        make Value.new(type => List, value => (
-                Value.new(type => Symbol, value => %macro{$prefix}),
-                $<form>.ast
-            ));
+        make make-form(%macro{$prefix}, $<form>.ast);
     }
 
     method meta($/) {
         my ($meta, $object) = $<form>[0, 1];
-        make Value.new(type => List, value => (
-                Value.new(type => Symbol, value => 'with-meta'),
-                $object.ast,
-                $meta.ast,
-            ));
+        make make-form('with-meta', $object.ast, $meta.ast);
     }
 
     method string($/) {
