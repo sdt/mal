@@ -40,7 +40,7 @@ sub EVAL($ast, $env) {
     given ($ast.type) {
         when List {
             my ($op, @args) = eval-ast($ast, $env).value.list;
-            return $op(|@args);
+            return $op.value.(|@args);
         }
         default {
             return eval-ast($ast, $env);
@@ -74,8 +74,8 @@ sub eval-ast($ast, $env) {
 }
 
 sub wrap-int-op($native-func) {
-    return sub (Value $a, Value $b) {
+    return Value.new(:type(BuiltIn), :value(sub (Value $a, Value $b) {
         my $value = $native-func($a.value, $b.value);
         return Value.new(:type(Integer), :$value);
-    }
+    }));
 }

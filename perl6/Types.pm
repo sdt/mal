@@ -3,7 +3,7 @@ module Types;
 use v6;
 
 enum Type is export <
-    Constant HashMap Integer Keyword List String Symbol Vector
+    BuiltIn Constant HashMap Integer Keyword List String Symbol Vector
 >;
 
 constant true  is export = 'true';
