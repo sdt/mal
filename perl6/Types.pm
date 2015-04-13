@@ -6,11 +6,26 @@ enum Type is export <
     Constant HashMap Integer Keyword List String Symbol Vector
 >;
 
+constant true  is export = 'true';
+constant false is export = 'false';
+constant nil   is export = 'nil';
+
 class Value is export {
     has Type $.type;
     has $.value;
 
     method Str { return $.type ~ ':' ~ $.value }
+
+    my %constants = true  => Value.new(:type(Constant), :value(true)),
+                    false => Value.new(:type(Constant), :value(false)),
+                    nil   => Value.new(:type(Constant), :value(nil)),
+                    ;
+
+    method true     { %constants<true>  }
+    method false    { %constants<false> }
+    method nil      { %constants<nil>   }
+
+    method Constant(Str $name) { %constants{$name} }
 }
 
 class MAL-Exception is Exception is export {
@@ -21,10 +36,6 @@ class MAL-Exception is Exception is export {
 
 class TypeError  is MAL-Exception { }
 class ArityError is MAL-Exception { }
-
-constant true  is export = 'true';
-constant false is export = 'false';
-constant nil   is export = 'nil';
 
 sub make-hash(@items) is export {
     if @items.elems % 2 != 0 {

@@ -110,10 +110,9 @@ class MALGrammar::Actions {
         }
         my $type;
         my $value = $/.Str;
-        my %constants = true => True, false => False, nil => Nil;
         given $value {
             when true | false | nil {
-                $type = Constant;
+                return make Value.Constant($value);
             }
             when .substr(0, 1) eq ':' {
                 $type = Keyword;
