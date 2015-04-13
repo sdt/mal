@@ -4,8 +4,8 @@ use v6;
 
 use Types;
 
-class ParseError is MAL-Exception { }
-class EmptyInput is MAL-Exception {
+class ParseError is malException { }
+class EmptyInput is malException {
     method new() { self.bless(:reason('Empty input')) }
 }
 
@@ -52,9 +52,9 @@ class MALGrammar::Actions {
 
     method seq($/) {
         my %seq-info =
-            '(' => %( end => ')', type => List    ),
-            '[' => %( end => ']', type => Vector  ),
-            '{' => %( end => '}', type => HashMap ),
+            '(' => %( end => ')', type => malList   ),
+            '[' => %( end => ']', type => malVector ),
+            '{' => %( end => '}', type => malHash   ),
             ;
 
         my $end = $<seq-end>.Str;
@@ -66,10 +66,10 @@ class MALGrammar::Actions {
         }
         my $type = $info<type>;
         my @value = $<form>.map({$_.ast}).list;
-        if $type == HashMap {
+        if $type ~~ malHash {
             return make make-hash(@value);
         }
-        make Value.new(:$type, :value(@value));
+        make $type.new(@value);
     }
 
     method atom($/) {
@@ -101,28 +101,28 @@ class MALGrammar::Actions {
         $value .= subst(/\\n/, "\n");
         $value .= subst(/\\\"/, '"');
         $value .= subst(/\\\\/, '\\');
-        make Value.new(:type(String), :$value);
+        make malString.new($value);
     }
 
     method word($/) {
         try {
-            return make Value.new(:type(Integer), :value($/.Int));
+            return make malInteger.new($/.Int);
         }
-        my $type;
         my $value = $/.Str;
-        my %constants = true => True, false => False, nil => Nil;
+        my %constants = true  => malTrue,
+                        false => malFalse,
+                        nil   => malNil;
         given $value {
-            when true | false | nil {
-                $type = Constant;
+            when %constants {
+                make %constants{$value};
             }
             when .substr(0, 1) eq ':' {
-                $type = Keyword;
+                make malKeyword.new($value);
             }
             default {
-                $type = Symbol;
+                make malSymbol.new($value);
             }
         }
-        make Value.new(:$type, :$value);
     }
 }
 
