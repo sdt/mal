@@ -97,16 +97,16 @@ class MALGrammar::Actions {
         if $<string-end>.Str eq '' {
             die ParseError.new("Expected \", got EOF");
         }
-        my $str = $<string-body>.Str;
-        $str .= subst(/\\n/, "\n");
-        $str .= subst(/\\\"/, '"');
-        $str .= subst(/\\\\/, '\\');
-        make Value.new(type => String, value => $str);
+        my $value = $<string-body>.Str;
+        $value .= subst(/\\n/, "\n");
+        $value .= subst(/\\\"/, '"');
+        $value .= subst(/\\\\/, '\\');
+        make Value.new(:type(String), :$value);
     }
 
     method word($/) {
         try {
-            return make Value.new(type => Integer, value => $/.Int);
+            return make Value.new(:type(Integer), :value($/.Int));
         }
         my $type;
         my $value = $/.Str;

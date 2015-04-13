@@ -53,18 +53,19 @@ sub PRINT($ast) {
 }
 
 sub eval-ast($ast, %env) {
-    given ($ast.type) {
+    my $type = $ast.type;
+    given ($type) {
         when Symbol {
             return %env{$ast.value};
         }
         when HashMap {
-            my %evaluated = $ast.value.pairs.map(
+            my %value = $ast.value.pairs.map(
                 { $_.key => EVAL($_.value, %env) });
-            return Value.new(type => $ast.type, value => %evaluated);
+            return Value.new(:$type, :%value);
         }
         when List | Vector {
-            return Value.new(type => $ast.type,
-                             value => $ast.value.map({ EVAL($_, %env) }));
+            my @value = $ast.value.map({ EVAL($_, %env) });
+            return Value.new(:$type, :@value);
         }
         default {
             return $ast;
@@ -75,6 +76,6 @@ sub eval-ast($ast, %env) {
 sub wrap-int-op($native-func) {
     return sub (Value $a, Value $b) {
         my $value = $native-func($a.value, $b.value);
-        return Value.new(type => Integer, value => $value);
+        return Value.new(:type(Integer), :$value);
     }
 }
