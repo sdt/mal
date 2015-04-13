@@ -37,14 +37,30 @@ sub READ(Str $input) {
 }
 
 sub EVAL($ast, $env) {
-    given ($ast.type) {
-        when List {
-            my ($op, @args) = eval-ast($ast, $env).value.list;
-            return $op.value.(|@args);
-        }
-        default {
-            return eval-ast($ast, $env);
-        }
+    unless $ast.type ~~ List {
+        return eval-ast($ast, $env);
+    }
+
+    my %special =
+        'def!' => sub ($sym, $def) {
+            $env.set($sym.value, EVAL($def, $env))
+        },
+        'let*' => sub ($bindings, $expr) {
+            my $inner = Env.new(outer => $env);
+            for $bindings.value.list -> $lhs, $rhs {
+                $inner.set($lhs.value, EVAL($rhs, $inner));
+            }
+            return EVAL($expr, $inner);
+        },
+        ;
+
+    my ($op, @args) = $ast.value.list;
+    if $op.type ~~ Symbol && %special{$op.value} -> $handler {
+        return $handler(|@args);
+    }
+    else {
+        my ($op, @args) = eval-ast($ast, $env).value.list;
+        return $op.value.(|@args);
     }
 }
 
