@@ -21,12 +21,12 @@ class malEnv is export {
         if $.outer.defined {
             return $.outer.find($key);
         }
-        return malConstant.nil;
+        return malNil;
     }
 
     method get(Str $key) {
         my $env = self.find($key);
-        if $env ~~ malConstant.nil {
+        if $env ~~ malNil {
             die NotFound.new("\"$key\" not found");
         }
         return $env.data{$key};

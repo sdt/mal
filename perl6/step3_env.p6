@@ -24,7 +24,6 @@ sub MAIN() {
                 # nothing
             }
             default {
-                say $_;
                 say $_.message;
             }
         }
@@ -50,8 +49,8 @@ sub EVAL(malValue $ast, malEnv $env) {
         },
         'let*' => sub (malSequence $bindings, malValue $expr) {
             my $inner = malEnv.new(outer => $env);
-            for $bindings.value.list -> malSymbol $lhs, malValue $rhs {
-                $inner.set($lhs.value, EVAL($rhs, $inner));
+            for $bindings.value.list -> malSymbol $symbol, malValue $value {
+                $inner.set($symbol.value, EVAL($value, $inner));
             }
             return EVAL($expr, $inner);
         },

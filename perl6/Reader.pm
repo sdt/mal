@@ -109,9 +109,12 @@ class MALGrammar::Actions {
             return make malInteger.new($/.Int);
         }
         my $value = $/.Str;
+        my %constants = true  => malTrue,
+                        false => malFalse,
+                        nil   => malNil;
         given $value {
-            when true | false | nil {
-                make malConstant.new($value);
+            when %constants {
+                make %constants{$value};
             }
             when .substr(0, 1) eq ':' {
                 make malKeyword.new($value);

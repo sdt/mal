@@ -2,32 +2,26 @@ module Types;
 
 use v6;
 
-constant true  is export = 'true';
-constant false is export = 'false';
-constant nil   is export = 'nil';
-
 class malValue is export {
     has $.value;
 
     method Str { return $.type ~ ':' ~ $.value }
 }
 
+class malBoolean is malValue is export {
+    method new(Bool $value) { self.bless(:$value) }
+}
+constant malTrue  is export = malBoolean.new(True);
+constant malFalse is export = malBoolean.new(False);
+
 class malBuiltIn is malValue is export {
     method new(Sub $value) { self.bless(:$value) }
 }
 
-class malConstant is malValue is export {
-    method new(Str $value) { self.bless(:$value) }
-
-    my %constants = true  => malConstant.new(true),
-                    false => malConstant.new(false),
-                    nil   => malConstant.new(nil),
-                    ;
-
-    method true     { %constants<true>  }
-    method false    { %constants<false> }
-    method nil      { %constants<nil>   }
+class malNilValue is malValue is export {
+    method new() { self.bless(:value('nil')) }
 }
+constant malNil is export = malNilValue.new;
 
 class malHash is malValue is export {
     method new(Hash $value) { self.bless(:$value) }

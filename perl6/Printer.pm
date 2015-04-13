@@ -18,6 +18,9 @@ sub pr-str(malValue $ast, Bool $readably) is export {
         when malString {
             return $readably ?? $ast.value.perl !! $ast.value;
         }
+        when malBoolean {
+            return $ast.value ?? 'true' !! 'false';
+        }
         default {
             return $ast.value;
         }
