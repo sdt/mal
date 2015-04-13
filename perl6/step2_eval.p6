@@ -21,7 +21,6 @@ sub MAIN() {
                 # nothing
             }
             default {
-                say $_;
                 say $_.message;
             }
         }
