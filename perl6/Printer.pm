@@ -7,7 +7,7 @@ use Types;
 sub pr-str(Value $ast, Bool $readably) is export {
     given $ast.type {
         when HashMap {
-            return '{' ~ print-items($ast.value, $readably) ~ '}';
+            return '{' ~ print-hash($ast.value, $readably) ~ '}';
         }
         when List {
             return '(' ~ print-items($ast.value, $readably) ~ ')';
@@ -26,4 +26,10 @@ sub pr-str(Value $ast, Bool $readably) is export {
 
 sub print-items(@items, $readably) {
     return @items.map({ pr-str($_, $readably) }).join(' ');
+}
+
+sub print-hash(%hash, $readably) {
+    return %hash.pairs.map({
+        $_.key ~ ' ' ~ pr-str($_.value, $readably)
+    }).join(' ');
 }
