@@ -36,8 +36,8 @@ sub READ(Str $input) {
 }
 
 sub EVAL($ast, %env) {
-    given ($ast.type) {
-        when List {
+    given ($ast) {
+        when malList {
             my ($op, @args) = eval-ast($ast, %env).value.list;
             return $op(|@args);
         }
@@ -52,19 +52,22 @@ sub PRINT($ast) {
 }
 
 sub eval-ast($ast, %env) {
-    my $type = $ast.type;
-    given ($type) {
-        when Symbol {
+    given ($ast) {
+        when malSymbol {
             return %env{$ast.value};
         }
-        when HashMap {
+        when malHash {
             my %value = $ast.value.pairs.map(
                 { $_.key => EVAL($_.value, %env) });
-            return Value.new(:$type, :%value);
+            return malHash.new(%value);
         }
-        when List | Vector {
+        when malList {
             my @value = $ast.value.map({ EVAL($_, %env) });
-            return Value.new(:$type, :@value);
+            return malList.new(@value);
+        }
+        when malVector {
+            my @value = $ast.value.map({ EVAL($_, %env) });
+            return malVector.new(@value);
         }
         default {
             return $ast;
@@ -73,8 +76,8 @@ sub eval-ast($ast, %env) {
 }
 
 sub wrap-int-op($native-func) {
-    return sub (Value $a, Value $b) {
+    return sub (malInteger $a, malInteger $b) {
         my $value = $native-func($a.value, $b.value);
-        return Value.new(:type(Integer), :$value);
+        return malInteger.new($value.Int);
     }
 }

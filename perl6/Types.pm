@@ -2,40 +2,76 @@ module Types;
 
 use v6;
 
-enum Type is export <
-    Constant HashMap Integer Keyword List String Symbol Vector
->;
-
-class Value is export {
-    has Type $.type;
+class malValue is export {
     has $.value;
 
     method Str { return $.type ~ ':' ~ $.value }
 }
 
-class MAL-Exception is Exception is export {
+class malBoolean is malValue is export {
+    method new(Bool $value) { self.bless(:$value) }
+}
+constant malTrue  is export = malBoolean.new(True);
+constant malFalse is export = malBoolean.new(False);
+
+class malBuiltIn is malValue is export {
+    method new(Sub $value) { self.bless(:$value) }
+}
+
+class malNilValue is malValue is export {
+    method new() { self.bless(:value('nil')) }
+}
+constant malNil is export = malNilValue.new;
+
+class malHash is malValue is export {
+    method new(Hash $value) { self.bless(:$value) }
+}
+
+class malInteger is malValue is export {
+    method new(Int $value) { self.bless(:$value) }
+}
+
+class malKeyword is malValue is export {
+    method new(Str $value) { self.bless(:$value) }
+}
+
+class malSequence is malValue is export { }
+
+class malList is malSequence is export {
+    method new(*@value) { self.bless(:@value) }
+}
+
+class malString is malValue is export {
+    method new(Str $value) { self.bless(:$value) }
+}
+
+class malSymbol is malValue is export {
+    method new(Str $value) { self.bless(:$value) }
+}
+
+class malVector is malSequence is export {
+    method new(Array $value) { self.bless(:$value) }
+}
+
+class malException is Exception is export {
     has $.reason;
     method message { return $.reason }
     method new($reason) { self.bless(:$reason) }
 }
 
-class TypeError  is MAL-Exception { }
-class ArityError is MAL-Exception { }
-
-constant true  is export = 'true';
-constant false is export = 'false';
-constant nil   is export = 'nil';
+class TypeError  is malException { }
+class ArityError is malException { }
 
 sub make-hash(@items) is export {
     if @items.elems % 2 != 0 {
         die ArityError.new('Hashmap requires an even number of args');
     }
     my %hash = @items.map(sub ($k, $v) {
-        given $k.type {
-            when Keyword {
+        given $k {
+            when malKeyword {
                 $k.value => $v;
             }
-            when String {
+            when malString {
                 $k.value.perl => $v;
             }
             default {
@@ -43,11 +79,9 @@ sub make-hash(@items) is export {
             }
         }
     });
-    return Value.new(:type(HashMap), :value(%hash));
+    return malHash.new(%hash);
 }
 
 sub make-form(Str $symbol, *@list) is export {
-    Value.new(:type(List), :value(
-        Value.new(:type(Symbol), :value($symbol)),
-        @list));
+    return malList.new(malSymbol.new($symbol), @list);
 }
