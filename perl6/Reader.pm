@@ -4,13 +4,9 @@ use v6;
 
 use Types;
 
-class ParseError is Exception {
-    has $.reason;
-    method message { return $.reason }
-}
-
-class EmptyInput is Exception {
-    method message { return 'EmptyInput' }
+class ParseError is MAL-Exception { }
+class EmptyInput is MAL-Exception {
+    method new() { self.bless(:reason('Empty input')) }
 }
 
 grammar MALGrammar {
@@ -66,7 +62,7 @@ class MALGrammar::Actions {
 
         my $info = %seq-info{ $<seq-begin>.Str };
         if $end ne $info<end> {
-            die ParseError.new(reason => "Expected $info<end>, got $end");
+            die ParseError.new("Expected $info<end>, got $end");
         }
         my $type = $info<type>;
         my @value = $<form>.map({$_.ast}).list;
@@ -106,7 +102,7 @@ class MALGrammar::Actions {
 
     method string($/) {
         if $<string-end>.Str eq '' {
-            die ParseError.new(reason => "Expected \", got EOF");
+            die ParseError.new("Expected \", got EOF");
         }
         my $str = $<string-body>.Str;
         $str .= subst(/\\n/, "\n");
@@ -142,5 +138,5 @@ sub read-str(Str $input) is export {
     if $match ~~ Match {
         return $match.ast;
     }
-    die ParseError.new(reason => 'Syntax error');
+    die ParseError.new('Syntax error');
 }

@@ -13,8 +13,14 @@ class Value is export {
     method Str { return $.type ~ ':' ~ $.value }
 }
 
-class TypeError is Exception { }
-class ArityError is Exception { }
+class MAL-Exception is Exception is export {
+    has $.reason;
+    method message { return $.reason }
+    method new($reason) { self.bless(:$reason) }
+}
+
+class TypeError  is MAL-Exception { }
+class ArityError is MAL-Exception { }
 
 constant true  is export = 'true';
 constant false is export = 'false';
@@ -22,7 +28,7 @@ constant nil   is export = 'nil';
 
 sub make-hash(@items) is export {
     if @items.elems % 2 != 0 {
-        die ArityError.new('hashmap requires an even number of args');
+        die ArityError.new('Hashmap requires an even number of args');
     }
     my %hash = @items.map(sub ($k, $v) {
         given $k.type {
@@ -33,7 +39,7 @@ sub make-hash(@items) is export {
                 $k.value.perl => $v;
             }
             default {
-                die TypeError.new('hash keys must be keywords or strings');
+                die TypeError.new('Hash keys must be keywords or strings');
             }
         }
     });
