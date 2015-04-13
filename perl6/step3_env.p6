@@ -7,6 +7,8 @@ use Reader;
 use ReadLine;
 use Types;
 
+class RuntimeError is MAL-Exception { }
+
 sub MAIN() {
     my $repl-env = Env.new;
     $repl-env.set('+', wrap-int-op(&[+]));
@@ -57,10 +59,13 @@ sub EVAL($ast, $env) {
     my ($op, @args) = $ast.value.list;
     if $op.type ~~ Symbol && %special{$op.value} -> $handler {
         return $handler(|@args);
+        CATCH {
+            die RuntimeError.new($op.value ~ ': ' ~ $_);
+        }
     }
     else {
-        my ($op, @args) = eval-ast($ast, $env).value.list;
-        return $op.value.(|@args);
+        my ($builtin, @args) = eval-ast($ast, $env).value.list;
+        return $builtin.value.(|@args);
     }
 }
 
