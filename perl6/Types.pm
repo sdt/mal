@@ -85,3 +85,7 @@ sub make-hash(@items) is export {
 sub make-form(Str $symbol, *@list) is export {
     return malList.new(malSymbol.new($symbol), @list);
 }
+
+sub is-true(malValue $v) is export {
+    return !($v ~~ malNil) && !($v ~~ malFalse);
+}
