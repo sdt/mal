@@ -47,6 +47,13 @@ sub EVAL(malValue $ast, malEnv $env) {
         'def!' => sub (malSymbol $sym, malValue $def) {
             $env.set($sym.value, EVAL($def, $env))
         },
+        'do' => sub (*@values) {
+            my $ret;
+            for @values -> $value {
+                $ret = EVAL($value, $env);
+            }
+            return $ret;
+        },
         'if' => sub (malValue $cond, malValue $then, malValue $else = malNil) {
             my $ret = is-true(EVAL($cond, $env)) ?? $then !! $else;
             return EVAL($ret, $env);
