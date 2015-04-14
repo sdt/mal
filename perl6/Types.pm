@@ -6,8 +6,6 @@ class malEnv { ... }
 
 class malValue is export {
     has $.value;
-
-    method Str { return $.type ~ ':' ~ $.value }
 }
 
 class malBoolean is malValue is export {
@@ -97,6 +95,13 @@ class malEnv is export {
             die NotFound.new("\"$key\" not found");
         }
         return $env.data{$key};
+    }
+
+    method bind(malSequence $bindings, @values) {
+        for ^$bindings.value.elems -> $i {
+            my malSymbol $sym = $bindings.value[$i];
+            self.set($sym.value, @values[$i]);
+        }
     }
 }
 

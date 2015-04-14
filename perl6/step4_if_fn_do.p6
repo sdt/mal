@@ -61,7 +61,7 @@ sub EVAL(malValue $ast, malEnv $env) {
             return malLambda.new($args, $body, $env);
         },
         'let*' => sub (malSequence $bindings, malValue $expr) {
-            my $inner = malEnv.new(outer => $env);
+            my $inner = malEnv.new(:outer($env));
             for $bindings.value.list -> malSymbol $symbol, malValue $value {
                 $inner.set($symbol.value, EVAL($value, $inner));
             }
@@ -77,8 +77,16 @@ sub EVAL(malValue $ast, malEnv $env) {
         }
     }
     else {
-        my ($builtin, @args) = eval-ast($ast, $env).value.list;
-        return $builtin.value.(|@args);
+        my ($op, @args) = eval-ast($ast, $env).value.list;
+        if $op ~~ malBuiltIn {
+            return $op.value.(|@args);
+        }
+        if $op ~~ malLambda {
+            my $inner = malEnv.new(:outer($op.env));
+            $inner.bind($op.args, @args);
+            return EVAL($op.value, $inner);
+        }
+        die RuntimeError(pr-str($op, True) ~ " is not applicable");
     }
 }
 
