@@ -43,6 +43,14 @@ class malList is malSequence is export {
     method new(*@value) { self.bless(:@value) }
 }
 
+class malLambda is malValue is export {
+    has $.args;
+    has $.env;
+    method new(malSequence $args, malValue $body, malEnv $env) {
+        self.bless(:value($body), :$args, :$env)
+    }
+}
+
 class malString is malValue is export {
     method new(Str $value) { self.bless(:$value) }
 }

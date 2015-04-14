@@ -57,6 +57,9 @@ sub EVAL(malValue $ast, malEnv $env) {
             my $ret = is-true(EVAL($cond, $env)) ?? $then !! $else;
             return EVAL($ret, $env);
         },
+        'fn*' => sub (malSequence $args, malValue $body) {
+            return malLambda.new($args, $body, $env);
+        },
         'let*' => sub (malSequence $bindings, malValue $expr) {
             my $inner = malEnv.new(outer => $env);
             for $bindings.value.list -> malSymbol $symbol, malValue $value {
