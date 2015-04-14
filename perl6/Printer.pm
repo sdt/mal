@@ -22,8 +22,8 @@ sub pr-str(malValue $ast, Bool $readably) is export {
             return $ast.value ?? 'true' !! 'false';
         }
         when malLambda {
-            return 'user-function:' ~ pr-str($ast.args, $readably)
-                             ~ '=>' ~ pr-str($ast.value, $readably);
+            return 'user-function: (' ~ $ast.args ~ ') => '
+                   ~ pr-str($ast.value, $readably);
         }
         default {
             return $ast.value;

@@ -6,8 +6,6 @@ use Reader;
 use ReadLine;
 use Types;
 
-class RuntimeError is malException { }
-
 sub MAIN() {
     my $repl-env = malEnv.new;
     $repl-env.set('+', wrap-int-op(&[+]));

@@ -4,6 +4,17 @@ use v6;
 
 class malEnv { ... }
 
+class malException is Exception is export {
+    has $.reason;
+    method message { return $.reason }
+    method new($reason) { self.bless(:$reason) }
+}
+
+class ArityError    is malException is export { }
+class NotFound      is malException is export { }
+class RuntimeError  is malException is export { }
+class TypeError     is malException is export { }
+
 class malValue is export {
     has $.value;
 }
@@ -41,14 +52,6 @@ class malList is malSequence is export {
     method new(*@value) { self.bless(:@value) }
 }
 
-class malLambda is malValue is export {
-    has $.args;
-    has $.env;
-    method new(malSequence $args, malValue $body, malEnv $env) {
-        self.bless(:value($body), :$args, :$env)
-    }
-}
-
 class malString is malValue is export {
     method new(Str $value) { self.bless(:$value) }
 }
@@ -61,15 +64,27 @@ class malVector is malSequence is export {
     method new(Array $value) { self.bless(:$value) }
 }
 
-class malException is Exception is export {
-    has $.reason;
-    method message { return $.reason }
-    method new($reason) { self.bless(:$reason) }
-}
+class malLambda is malValue is export {
+    # $.value is the $body
+    has Str     @.args;
+    has malEnv  $.env;
 
-class TypeError  is malException { }
-class ArityError is malException { }
-class NotFound   is malException { }
+    method new(malSequence $args, malValue $body, malEnv $env) {
+        # Check all args are symbols, and extract the values;
+        my @args = $args.value.map: -> malSymbol $arg { $arg.value };
+
+        # Check for duplicates (including multiple ampersands)
+        die RuntimeError.new('Args must be unique')
+            unless @args.elems == @args.unique.elems;
+
+        # There's only zero or one ampersand now. Check it's in the right place.
+        my $ampIndex = @args.first-index('&');
+        if $ampIndex.defined && $ampIndex != @args.elems - 2 {
+            die RuntimeError.new('Slurpy & must be second-last argument');
+        }
+        self.bless(:value($body), :@args, :$env);
+    }
+}
 
 class malEnv is export {
     has %.data;
@@ -97,10 +112,18 @@ class malEnv is export {
         return $env.data{$key};
     }
 
-    method bind(malSequence $bindings, @values) {
-        for ^$bindings.value.elems -> $i {
-            my malSymbol $sym = $bindings.value[$i];
-            self.set($sym.value, @values[$i]);
+    method bind(@bindings, @values) {
+        # $bindings has already been checked to be valid
+        my $n = @bindings.elems;
+        if $n >= 2 && @bindings[$n - 2] eq '&' {
+            my $key = @bindings[$n - 1];
+            my $val = malList.new(@values[$n - 2 .. * - 1]);
+            self.set($key, $val);
+
+            $n -= 2;
+        }
+        for ^$n -> $i {
+            self.set(@bindings[$i], @values[$i]);
         }
     }
 }
