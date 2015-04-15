@@ -152,6 +152,10 @@ sub make-form(Str $symbol, *@list) is export {
     return malList.new(malSymbol.new($symbol), @list);
 }
 
+sub make-bool(Bool $value) is export {
+    return $value ?? malTrue !! malFalse;
+}
+
 sub is-true(malValue $v) is export {
     return !($v ~~ malNil) && !($v ~~ malFalse);
 }

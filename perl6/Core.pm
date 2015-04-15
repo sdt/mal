@@ -10,8 +10,17 @@ my %ns =
     '*' => int-op(* * *),
     '/' => int-op(* / *),
 
-    'list'  => sub (*@items) { malList.new(@items) },
-    'list?' => isa(malList),
+    '<'  => int-rel(* <  *),
+    '<=' => int-rel(* <= *),
+    '>'  => int-rel(* >  *),
+    '>=' => int-rel(* >= *),
+
+    '=' => -> $a, $b { make-bool($a.value eqv $b.value) },
+
+    'empty?'    => list-op(-> $xs { make-bool(!$xs.Bool) }),
+    'count'     => list-op(-> $xs { malInteger.new($xs.elems) }),
+    'list'      => sub (*@items) { malList.new(@items) },
+    'list?'     => isa(malList),
 
     ;
 
@@ -21,15 +30,23 @@ sub install-core(malEnv $env) is export {
     };
 }
 
-sub int-op($native-func) {
+sub int-op($f) {
     return sub (malInteger $a, malInteger $b) {
-        my $value = $native-func($a.value, $b.value);
+        my $value = $f($a.value, $b.value);
         return malInteger.new($value.Int);
     };
 }
 
-sub isa($type) {
-    return sub (malValue $x) {
-        return $x ~~ $type ?? malTrue !! malFalse;
+sub int-rel($f) {
+    return sub (malInteger $a, malInteger $b) {
+        return make-bool($f($a.value, $b.value));
     };
+}
+
+sub isa($type) {
+    return sub (malValue $x) { make-bool($x ~~ $type) };
+}
+
+sub list-op($f) {
+    return sub (malList $s) { $f($s.value) }
 }
