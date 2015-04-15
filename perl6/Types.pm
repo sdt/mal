@@ -26,7 +26,7 @@ constant malTrue  is export = malBoolean.new(True);
 constant malFalse is export = malBoolean.new(False);
 
 class malBuiltIn is malValue is export {
-    method new(Sub $value) { self.bless(:$value) }
+    method new(Code $value) { self.bless(:$value) }
 }
 
 class malNilValue is malValue is export {
