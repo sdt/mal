@@ -7,9 +7,14 @@ use Reader;
 use ReadLine;
 use Types;
 
+my @library =
+    '(def! not (fn* (a) (if a false true)))'
+    ;
+
 sub MAIN() {
     my $repl-env = malEnv.new;
     install-core($repl-env);
+    for @library { rep($_, $repl-env) }
 
     while defined (my $input = read-line('user> ')) {
         say rep($input, $repl-env);
