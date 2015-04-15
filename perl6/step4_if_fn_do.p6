@@ -1,6 +1,7 @@
 #!/usr/bin/env perl6
 
 use v6;
+use Core;
 use Printer;
 use Reader;
 use ReadLine;
@@ -8,10 +9,7 @@ use Types;
 
 sub MAIN() {
     my $repl-env = malEnv.new;
-    $repl-env.set('+', wrap-int-op(&[+]));
-    $repl-env.set('-', wrap-int-op(&[-]));
-    $repl-env.set('*', wrap-int-op(&[*]));
-    $repl-env.set('/', wrap-int-op(&[/]));
+    install-core($repl-env);
 
     while defined (my $input = read-line('user> ')) {
         say rep($input, $repl-env);
@@ -116,6 +114,7 @@ sub eval-ast(malValue $ast, malEnv $env) {
         }
     }
 }
+
 sub wrap-int-op($native-func) {
     return malBuiltIn.new(sub (malInteger $a, malInteger $b) {
         my $value = $native-func($a.value, $b.value);
