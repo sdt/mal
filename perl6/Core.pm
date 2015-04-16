@@ -16,17 +16,22 @@ my %ns =
     '>'  => int-rel(* >  *),
     '>=' => int-rel(* >= *),
 
-    '=' => -> $a, $b { make-bool(is-eq($a, $b)) },
+    '=' => sub ($a, $b) { make-bool(is-eq($a, $b)) },
 
-    'empty?'    => seq-op(-> $xs { make-bool(!$xs.Bool) }),
-    'count'     => seq-op(-> $xs { malInteger.new($xs.elems) }),
-    'list'      => sub (*@items) { malList.new(@items) },
-    'list?'     => isa(malList),
+    'count'  => sub ($x) {
+        return malInteger.new(0) if $x ~~ malNil;
+        for $x -> malSequence $xs {
+            return malInteger.new($xs.value.elems);
+        }
+    },
+    'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
+    'list'    => sub (*@xs) { malList.new(@xs) },
+    'list?'   => isa(malList),
 
-    'pr-str'  => sub (*@values) { str-join(@values, True, " ", False) },
-    'str'     => sub (*@values) { str-join(@values, False, "", False) },
-    'prn'     => sub (*@values) { str-join(@values, True, " ", True)  },
-    'println' => sub (*@values) { str-join(@values, False, " ", True) },
+    'pr-str'  => sub (*@xs) { str-join(@xs, True,  " ", False) },
+    'str'     => sub (*@xs) { str-join(@xs, False, "",  False) },
+    'prn'     => sub (*@xs) { str-join(@xs, True,  " ", True)  },
+    'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
     ;
 
 sub install-core(malEnv $env) is export {
@@ -79,10 +84,6 @@ sub int-rel($f) {
 
 sub isa($type) {
     return sub (malValue $x) { make-bool($x ~~ $type) };
-}
-
-sub seq-op($f) {
-    return sub (malSequence $s) { $f($s.value) }
 }
 
 sub str-join(@args, Bool $readably, Str $sep, Bool $print) {
