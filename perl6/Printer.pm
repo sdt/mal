@@ -21,6 +21,10 @@ sub pr-str(malValue $ast, Bool $readably) is export {
         when malBoolean {
             return $ast.value ?? 'true' !! 'false';
         }
+        when malLambda {
+            return 'user-function: (' ~ $ast.args ~ ') => '
+                   ~ pr-str($ast.value, $readably);
+        }
         default {
             return $ast.value;
         }
