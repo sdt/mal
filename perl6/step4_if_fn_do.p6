@@ -1,17 +1,20 @@
 #!/usr/bin/env perl6
 
 use v6;
+use Core;
 use Printer;
 use Reader;
 use ReadLine;
 use Types;
 
+my @library =
+    '(def! not (fn* (a) (if a false true)))'
+    ;
+
 sub MAIN() {
     my $repl-env = malEnv.new;
-    $repl-env.set('+', wrap-int-op(&[+]));
-    $repl-env.set('-', wrap-int-op(&[-]));
-    $repl-env.set('*', wrap-int-op(&[*]));
-    $repl-env.set('/', wrap-int-op(&[/]));
+    install-core($repl-env);
+    for @library { rep($_, $repl-env) }
 
     while defined (my $input = read-line('user> ')) {
         say rep($input, $repl-env);
@@ -21,6 +24,7 @@ sub MAIN() {
                 # nothing
             }
             default {
+                say $_;
                 say $_.message;
             }
         }
@@ -44,8 +48,22 @@ sub EVAL(malValue $ast, malEnv $env) {
         'def!' => sub (malSymbol $sym, malValue $def) {
             $env.set($sym.value, EVAL($def, $env))
         },
+        'do' => sub (*@values) {
+            my $ret;
+            for @values -> $value {
+                $ret = EVAL($value, $env);
+            }
+            return $ret;
+        },
+        'if' => sub (malValue $cond, malValue $then, malValue $else = malNil) {
+            my $ret = is-true(EVAL($cond, $env)) ?? $then !! $else;
+            return EVAL($ret, $env);
+        },
+        'fn*' => sub (malSequence $args, malValue $body) {
+            return malLambda.new($args, $body, $env);
+        },
         'let*' => sub (malSequence $bindings, malValue $expr) {
-            my $inner = malEnv.new(outer => $env);
+            my $inner = malEnv.new(:outer($env));
             for $bindings.value.list -> malSymbol $symbol, malValue $value {
                 $inner.set($symbol.value, EVAL($value, $inner));
             }
@@ -61,8 +79,16 @@ sub EVAL(malValue $ast, malEnv $env) {
         }
     }
     else {
-        my ($builtin, @args) = eval-ast($ast, $env).value.list;
-        return $builtin.value.(|@args);
+        my ($op, @args) = eval-ast($ast, $env).value.list;
+        if $op ~~ malBuiltIn {
+            return $op.value.(|@args);
+        }
+        if $op ~~ malLambda {
+            my $inner = malEnv.new(:outer($op.env));
+            $inner.bind($op.args, @args);
+            return EVAL($op.value, $inner);
+        }
+        die RuntimeError(pr-str($op, True) ~ " is not applicable");
     }
 }
 
@@ -93,6 +119,7 @@ sub eval-ast(malValue $ast, malEnv $env) {
         }
     }
 }
+
 sub wrap-int-op($native-func) {
     return malBuiltIn.new(sub (malInteger $a, malInteger $b) {
         my $value = $native-func($a.value, $b.value);
