@@ -54,7 +54,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         'do' => sub (*@values) {
             my $ret;
             my $n = @values.elems;
-            for @values[^$n-1] -> $value {
+            for @values[^($n-1)] -> $value {
                 EVAL($value, $env);
             }
             return (@values[$n-1], $env);
