@@ -8,13 +8,12 @@ use ReadLine;
 use Types;
 
 my @library =
-    '(def! not (fn* (a) (if a false true)))'
+    '(def! not (fn* (a) (if a false true)))',
+    '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
     ;
 
-sub MAIN() {
-    my $repl-env = malEnv.new;
-    install-core($repl-env);
-    for @library { rep($_, $repl-env) }
+multi sub MAIN() {
+    my $repl-env = setup-env([]);
 
     while defined (my $input = read-line('user> ')) {
         say rep($input, $repl-env);
@@ -29,6 +28,25 @@ sub MAIN() {
             }
         }
     }
+}
+
+multi sub MAIN(Str $mal-filename, *@args) {
+    my $repl-env = setup-env(@args);
+
+    rep("(load-file \"$mal-filename\")", $repl-env);
+}
+
+sub setup-env(@argv) {
+    my $env = malEnv.new;
+    install-core($env);
+
+    # Installing these locally avoids some circular dependency problems.
+    $env.set('eval', malBuiltIn.new(sub ($ast) { EVAL($ast, $env) }));
+    for @library { rep($_, $env) }
+
+    $env.set('*ARGV*', malList.new(@argv.map: { malString.new($_) }));
+
+    return $env;
 }
 
 sub rep(Str $input, $env) {
