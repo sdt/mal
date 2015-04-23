@@ -8,31 +8,51 @@ use ReadLine;
 use Types;
 
 my @library =
-    '(def! not (fn* (a) (if a false true)))'
+    '(def! not (fn* (a) (if a false true)))',
+    '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
     ;
 
-sub MAIN() {
-    my $repl-env = malEnv.new;
-    install-core($repl-env);
-    for @library { rep($_, $repl-env) }
+# This gets called when there is no argv
+multi sub MAIN() {
+    my $repl-env = setup-env([]);
 
     while defined (my $input = read-line('user> ')) {
         say rep($input, $repl-env);
-
-        CATCH {
-            when Reader::EmptyInput {
-                # nothing
-            }
-            default {
-                say $_;
-                say $_.message;
-            }
-        }
     }
 }
 
+# This gets called when there is an argv, and the first arg is a file
+multi sub MAIN(Str $filename, *@args) {
+    my $repl-env = setup-env(@args);
+
+    rep("(load-file \"$filename\")", $repl-env);
+}
+
+sub setup-env(@argv) {
+    my $env = malEnv.new;
+    install-core($env);
+
+    # Installing these locally avoids some circular dependency problems.
+    $env.set('eval', malBuiltIn.new(sub ($ast) { EVAL($ast, $env) }));
+    for @library { rep($_, $env) }
+
+    # Install argv
+    $env.set('*ARGV*', malList.new(@argv.map: { malString.new($_) }));
+
+    return $env;
+}
+
 sub rep(Str $input, $env) {
-    PRINT(EVAL(READ($input), $env));
+    return PRINT(EVAL(READ($input), $env));
+
+    CATCH {
+        when Reader::EmptyInput {
+            # nothing
+        }
+        default {
+            say %*ENV<MAL_DEBUG>:exists ?? $_ !! $_.message;
+        }
+    }
 }
 
 sub READ(Str $input) {

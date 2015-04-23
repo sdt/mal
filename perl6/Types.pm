@@ -11,6 +11,7 @@ class malException is Exception is export {
 }
 
 class ArityError    is malException is export { }
+class InternalError is malException is export { }
 class NotFound      is malException is export { }
 class RuntimeError  is malException is export { }
 class TypeError     is malException is export { }
