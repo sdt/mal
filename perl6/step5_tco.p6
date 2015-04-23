@@ -102,7 +102,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
                 ($ast, $env) = ($op.value, $inner);
                 next; # TCO - continue the loop
             }
-            die RuntimeError(pr-str($op, True) ~ " is not applicable");
+            die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
         }
     }
 }
