@@ -3,6 +3,7 @@ module Core;
 use v6;
 
 use Printer;
+use Reader;
 use Types;
 
 my %ns =
@@ -32,6 +33,13 @@ my %ns =
     'str'     => sub (*@xs) { str-join(@xs, False, "",  False) },
     'prn'     => sub (*@xs) { str-join(@xs, True,  " ", True)  },
     'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
+
+    'read-string' => sub (malString $s) { read-str($s.value) },
+    'slurp'   => sub (malString $s) {
+        my $fn = $s.value;
+        die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
+        return malString.new(slurp $fn);
+    };
     ;
 
 sub install-core(malEnv $env) is export {

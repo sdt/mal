@@ -10,11 +10,11 @@ class EmptyInput is malException {
 }
 
 grammar MALGrammar {
-    rule TOP            { ^ <form>? <comment>? $ }
+    rule TOP            { ^ <form>? $ }
 
     rule form           { <seq> | <atom> }
 
-    rule seq            { <seq-begin> <form>* <seq-end> }
+    rule seq            { <seq-begin> <ws>? <form>* %<ws> <ws>? <seq-end> }
 
     token seq-begin     { < [ ( { > }
     token seq-end       { < ] ) } > | $ }
@@ -34,8 +34,8 @@ grammar MALGrammar {
 
     token word          { <[ \S ] - [ \[ \] \{ \} \( \) \' \" \` \, \; \) ]>+ }
 
-    token comment       { \; .* $$ }
-    token ws            { <[ \s \, ]>* }
+    token comment       { \; .*? $$ }
+    token ws            { <[ \s \, ]>* | <comment>* }
 }
 
 class MALGrammar::Actions {

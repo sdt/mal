@@ -88,7 +88,7 @@ sub EVAL(malValue $ast, malEnv $env) {
             $inner.bind($op.args, @args);
             return EVAL($op.value, $inner);
         }
-        die RuntimeError(pr-str($op, True) ~ " is not applicable");
+        die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
     }
 }
 
