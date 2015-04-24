@@ -98,7 +98,11 @@ sub list-eq(@lhs, @rhs) {
 
 sub int-op($f) {
     return sub (malInteger $a, malInteger $b) {
-        my $value = $f($a.value, $b.value);
+        my $value = $f($a.value, $b.value).Int;
+        if $value ~~ Failure {
+            # This causes the divide-by-zero Failure to throw.
+            # Presumably this is some kind of feature...
+        }
         return malInteger.new($value.Int);
     };
 }

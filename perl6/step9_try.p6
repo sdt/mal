@@ -90,9 +90,20 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
                 return EVAL($expr, $env);
 
                 CATCH {
-                    my $payload = $_.payload;
-                    my $value = $payload ~~ malValue ?? $payload
-                                                     !! malString.new($payload);
+                    my $value;
+                    given $_ {
+                        when X::AdHoc {
+                            $value = $_.payload;
+                        }
+                        when X::TypeCheck {
+                            $value = $_.got.exception;
+                        }
+                        default {
+                            $value = $_;
+                        }
+                    }
+                    $value = malString.new($_.message)
+                        unless $value ~~ malValue;
                     my $inner = malEnv.new(:outer($env));
                     $inner.set($exception.value, $value);
                     return EVAL($handler, $inner);

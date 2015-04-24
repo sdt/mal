@@ -113,7 +113,7 @@ class malEnv is export {
     method get(Str $key) {
         my $env = self.find($key);
         if $env ~~ malNil {
-            die NotFound.new("\"$key\" not found");
+            die NotFound.new("'$key' not found");
         }
         return $env.data{$key};
     }
