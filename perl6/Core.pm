@@ -19,6 +19,14 @@ my %ns =
 
     '=' => sub ($a, $b) { make-bool(is-eq($a, $b)) },
 
+    'cons' => sub ($first, malSequence $rest) {
+        malList.new($first, $rest.value.list)
+    },
+    'concat' => sub (*@seqs) {
+        my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
+        malList.new(@all);
+    },
+
     'count'  => sub ($x) {
         return malInteger.new(0) if $x ~~ malNil;
         for $x -> malSequence $xs {
