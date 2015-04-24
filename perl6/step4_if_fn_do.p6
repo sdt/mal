@@ -39,7 +39,7 @@ sub READ(Str $input) {
 }
 
 sub EVAL(malValue $ast, malEnv $env) {
-    unless $ast ~~ malList {
+    unless ($ast ~~ malList) && ($ast.value.elems > 0) {
         return eval-ast($ast, $env);
     }
 

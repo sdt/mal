@@ -106,12 +106,12 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         ;
 
     loop {
-        unless $ast ~~ malList {
+        unless ($ast ~~ malList) && ($ast.value.elems > 0) {
             return eval-ast($ast, $env);
         }
 
         $ast = macro-expand($ast, $env);
-        unless $ast ~~ malList {
+        unless ($ast ~~ malList) && ($ast.value.elems > 0) {
             return $ast;
         }
 
