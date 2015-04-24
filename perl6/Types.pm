@@ -87,12 +87,17 @@ class malLambda is malValue is export {
     }
 }
 
+class malMacro is malValue is export {
+    method new(malLambda $value) { self.bless(:$value) }
+}
+
 class malEnv is export {
     has %.data;
     has malEnv $.outer;
 
     method set(Str $key, malValue $value) {
         %.data{$key} = $value;
+        return $value;
     }
 
     method find(Str $key) {

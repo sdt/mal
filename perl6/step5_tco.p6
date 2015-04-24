@@ -24,8 +24,7 @@ sub MAIN() {
                 # nothing
             }
             default {
-                say $_;
-                say $_.message;
+                say %*ENV<MAL_DEBUG>:exists ?? $_ !! $_.message;
             }
         }
     }
@@ -73,7 +72,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         ;
 
     loop {
-        unless $ast ~~ malList {
+        unless ($ast ~~ malList) && ($ast.value.elems > 0) {
             return eval-ast($ast, $env);
         }
 

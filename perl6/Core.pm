@@ -34,8 +34,17 @@ my %ns =
         }
     },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
+    'first'   => sub (malSequence $xs) {
+        $xs.value.elems > 0 ?? $xs.value[0] !! malNil
+    },
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
+    'nth'     => sub (malSequence $s, malInteger $index) {
+        my $i = $index.value;
+        die RuntimeError.new("Index $i out of range")
+            if ($i < 0) || ($i >= $s.value.elems);
+        return $s.value[$i];
+    },
 
     'pr-str'  => sub (*@xs) { str-join(@xs, True,  " ", False) },
     'str'     => sub (*@xs) { str-join(@xs, False, "",  False) },
@@ -43,11 +52,12 @@ my %ns =
     'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
 
     'read-string' => sub (malString $s) { read-str($s.value) },
+    'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) },
     'slurp'   => sub (malString $s) {
         my $fn = $s.value;
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
         return malString.new(slurp $fn);
-    };
+    },
     ;
 
 sub install-core(malEnv $env) is export {

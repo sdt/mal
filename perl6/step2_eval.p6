@@ -21,7 +21,7 @@ sub MAIN() {
                 # nothing
             }
             default {
-                say $_.message;
+                say %*ENV<MAL_DEBUG>:exists ?? $_ !! $_.message;
             }
         }
     }
@@ -36,15 +36,11 @@ sub READ(Str $input) {
 }
 
 sub EVAL($ast, %env) {
-    given ($ast) {
-        when malList {
-            my ($op, @args) = eval-ast($ast, %env).value.list;
-            return $op(|@args);
-        }
-        default {
-            return eval-ast($ast, %env);
-        }
+    if ($ast ~~ malList) && ($ast.value.elems > 0) {
+        my ($op, @args) = eval-ast($ast, %env).value.list;
+        return $op(|@args);
     }
+    return eval-ast($ast, %env);
 }
 
 sub PRINT($ast) {
