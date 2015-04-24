@@ -80,6 +80,25 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         'quote' => sub (malValue $quoted) {
             return $quoted;
         },
+        'try*' => sub (malValue $expr, malList $catchBlock) {
+            for $catchBlock.value.list ->
+                    malSymbol $catch, malSymbol $exception, malValue $handler {
+                my $str = $catch.value;
+                die "catch* block must start with \"catch\", not \"$str\""
+                    unless $str eq 'catch*';
+
+                return EVAL($expr, $env);
+
+                CATCH {
+                    my $payload = $_.payload;
+                    my $value = $payload ~~ malValue ?? $payload
+                                                     !! malString.new($payload);
+                    my $inner = malEnv.new(:outer($env));
+                    $inner.set($exception.value, $value);
+                    return EVAL($handler, $inner);
+                }
+            }
+        },
         ;
 
     my %special-tailrec =

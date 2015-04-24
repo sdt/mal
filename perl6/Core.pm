@@ -58,6 +58,7 @@ my %ns =
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
         return malString.new(slurp $fn);
     },
+    'throw' => sub (malValue $exception) { die $exception },
     ;
 
 sub install-core(malEnv $env) is export {
