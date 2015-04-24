@@ -157,10 +157,3 @@ sub eval-ast(malValue $ast, malEnv $env) {
         }
     }
 }
-
-sub wrap-int-op($native-func) {
-    return malBuiltIn.new(sub (malInteger $a, malInteger $b) {
-        my $value = $native-func($a.value, $b.value);
-        return malInteger.new($value.Int);
-    });
-}
