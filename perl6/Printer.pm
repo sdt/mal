@@ -22,8 +22,10 @@ sub pr-str(malValue $ast, Bool $readably) is export {
             return $ast.value ?? 'true' !! 'false';
         }
         when malLambda {
-            return 'user-function: (' ~ $ast.args ~ ') => '
-                   ~ pr-str($ast.value, $readably);
+            return 'user-function: ' ~ print-lambda($ast, $readably);
+        }
+        when malMacro {
+            return 'user-macro: ' ~ print-lambda($ast.value, $readably);
         }
         default {
             return $ast.value;
@@ -31,11 +33,15 @@ sub pr-str(malValue $ast, Bool $readably) is export {
     }
 }
 
-sub print-items(@items, $readably) {
+sub print-lambda(malLambda $ast, Bool $readably) {
+    return '(' ~ $ast.args ~ ') => ' ~ pr-str($ast.value, $readably);
+}
+
+sub print-items(@items, Bool $readably) {
     return @items.map({ pr-str($_, $readably) }).join(' ');
 }
 
-sub print-hash(%hash, $readably) {
+sub print-hash(%hash, Bool $readably) {
     return %hash.pairs.map({
         $_.key ~ ' ' ~ pr-str($_.value, $readably)
     }).join(' ');

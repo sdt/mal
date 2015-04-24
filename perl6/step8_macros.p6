@@ -63,7 +63,11 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
 
     my %special =
         'def!' => sub (malSymbol $sym, malValue $def) {
-            $env.set($sym.value, EVAL($def, $env))
+            return $env.set($sym.value, EVAL($def, $env));
+        },
+        'defmacro!' => sub (malSymbol $sym, malValue $def) {
+            my $macro = malMacro.new(EVAL($def, $env));
+            return $env.set($sym.value, $macro);
         },
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
