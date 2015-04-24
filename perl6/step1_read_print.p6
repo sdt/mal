@@ -14,7 +14,7 @@ sub MAIN() {
                 # nothing
             }
             when Reader::ParseError {
-                say $_.message;
+                say %*ENV<MAL_DEBUG>:exists ?? $_ !! $_.message;
             }
             default {
                 say 'Unexpected exception: ', $_.gist;

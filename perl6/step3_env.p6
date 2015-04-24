@@ -21,7 +21,7 @@ sub MAIN() {
                 # nothing
             }
             default {
-                say $_.message;
+                say %*ENV<MAL_DEBUG>:exists ?? $_ !! $_.message;
             }
         }
     }
