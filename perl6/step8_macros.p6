@@ -72,6 +72,9 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
         },
+        'macroexpand' => sub (malValue $ast) {
+            return macro-expand($ast, $env);
+        },
         'quote' => sub (malValue $quoted) {
             return $quoted;
         },
@@ -105,6 +108,11 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
     loop {
         unless $ast ~~ malList {
             return eval-ast($ast, $env);
+        }
+
+        $ast = macro-expand($ast, $env);
+        unless $ast ~~ malList {
+            return $ast;
         }
 
         my ($op, @args) = $ast.value.list;
@@ -165,12 +173,38 @@ sub eval-ast(malValue $ast, malEnv $env) {
     }
 }
 
+sub env-get(malEnv $env, malSymbol $symbol)
+{
+    my $owner = $env.find($symbol.value);
+    return $owner ~~ malNil ?? $owner !! $owner.get($symbol.value);
+}
+
+sub is-macro-call(malValue $ast, malEnv $env)
+{
+    return is-pair($ast)
+        && ($ast.value[0] ~~ malSymbol)
+        && (env-get($env, $ast.value[0]) ~~ malMacro);
+}
+
 sub is-pair(malValue $ast) {
     return $ast ~~ malSequence && $ast.value.elems > 0;
 }
 
 sub is-symbol(malValue $ast, Str $symbol) {
     return $ast ~~ malSymbol && $ast.value ~~ $symbol;
+}
+
+sub macro-expand(malValue $ast is copy, malEnv $env) {
+    while is-macro-call($ast, $env) {
+        my ($symbol, @args) = $ast.value.list;
+        my $lambda = $env.get($symbol.value).value;
+
+        my $inner = malEnv.new(:outer($lambda.env));
+        $inner.bind($lambda.args, @args);
+
+        $ast = EVAL($lambda.value, $inner);
+    }
+    return $ast;
 }
 
 sub quasiquote(malValue $ast) {
