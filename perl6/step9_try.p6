@@ -32,10 +32,8 @@ multi sub MAIN(Str $filename, *@args) {
 
 sub setup-env(@argv) {
     my $env = malEnv.new;
-    install-core($env);
+    install-core($env, :apply(&apply), :eval({ EVAL($_, $env) }));
 
-    # Installing these locally avoids some circular dependency problems.
-    $env.set('eval', malBuiltIn.new(sub ($ast) { EVAL($ast, $env) }));
     for @library { rep($_, $env) }
 
     # Install argv
@@ -175,6 +173,18 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
         }
     }
+}
+
+sub apply($op, @args) {
+    if $op ~~ malBuiltIn {
+        return $op.value.(|@args);
+    }
+    if $op ~~ malLambda {
+        my $inner = malEnv.new(:outer($op.env));
+        $inner.bind($op.args, @args);
+        return EVAL($op.value, $inner);
+    }
+    die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
 }
 
 sub PRINT($ast) {

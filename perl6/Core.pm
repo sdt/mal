@@ -6,7 +6,10 @@ use Printer;
 use Reader;
 use Types;
 
-my %ns =
+# apply and eval get passed in to avoid circular dependency problems.
+sub install-core(malEnv $env, :$apply, :$eval) is export {
+    my %ns =
+
     '+' => int-op(* + *),
     '-' => int-op(* - *),
     '*' => int-op(* * *),
@@ -19,6 +22,11 @@ my %ns =
 
     '=' => sub ($a, $b) { make-bool(is-eq($a, $b)) },
 
+    'apply' => sub ($f, *@args) {
+        my malSequence $last = @args.pop;
+        @args.push($last.value.list);
+        $apply($f, @args);
+    },
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },
@@ -34,11 +42,15 @@ my %ns =
         }
     },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
+    'eval'    => sub (malValue $ast) { $eval($ast) },
     'first'   => sub (malSequence $xs) {
         $xs.value.elems > 0 ?? $xs.value[0] !! malNil
     },
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
+    'map'     => sub ($f, malSequence $seq) {
+        malList.new($seq.value.map({ $apply($f, [ $_ ]) }))
+    },
     'nth'     => sub (malSequence $s, malInteger $index) {
         my $i = $index.value;
         die RuntimeError.new("Index $i out of range")
@@ -61,7 +73,6 @@ my %ns =
     'throw' => sub (malValue $exception) { die $exception },
     ;
 
-sub install-core(malEnv $env) is export {
     for %ns.kv -> $sym, $sub {
         $env.set($sym, malBuiltIn.new($sub));
     };
