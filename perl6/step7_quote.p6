@@ -68,6 +68,9 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
         },
+        'quote' => sub (malValue $quoted) {
+            return $quoted;
+        },
         ;
 
     my %special-tailrec =
