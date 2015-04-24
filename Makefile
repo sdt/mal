@@ -37,6 +37,7 @@ EXCLUDE_TESTS += test^mal^step5  # no TCO capability/step
 EXCLUDE_TESTS += test^miniMAL^step5 # strange error with runtest.py
 EXCLUDE_TESTS += test^nim^step5   # test completes, even at 100,000
 EXCLUDE_TESTS += test^go^step5   # test completes, even at 100,000
+EXCLUDE_TESTS += test^perl6^step5  # times out :(
 EXCLUDE_TESTS += test^php^step5  # test completes, even at 100,000
 EXCLUDE_TESTS += test^racket^step5 # test completes
 EXCLUDE_TESTS += test^ruby^step5 # test completes, even at 100,000

@@ -93,6 +93,9 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             }
             return ($expr, $inner);
         },
+        'quasiquote' => sub (malValue $quoted) {
+            return (quasiquote($quoted), $env);
+        },
         ;
 
     loop {
@@ -156,4 +159,32 @@ sub eval-ast(malValue $ast, malEnv $env) {
             return $ast;
         }
     }
+}
+
+sub is-pair(malValue $ast) {
+    return $ast ~~ malSequence && $ast.value.elems > 0;
+}
+
+sub is-symbol(malValue $ast, Str $symbol) {
+    return $ast ~~ malSymbol && $ast.value ~~ $symbol;
+}
+
+sub quasiquote(malValue $ast) {
+    if ! is-pair($ast) {
+        return make-form('quote', $ast);
+    }
+
+    my ($op, @args) = $ast.value.list;
+    if is-symbol($op, 'unquote') {
+        if @args.elems != 1 {
+            die RuntimeError.new('unquote requires exactly one arg');
+        }
+        return @args[0];
+    }
+
+    my $rest = malList.new(@args);
+    if is-pair($op) && is-symbol($op.value[0], 'splice-unquote') {
+        return make-form('concat', $op.value[1], quasiquote($rest));
+    }
+    return make-form('cons', quasiquote($op), quasiquote($rest));
 }
