@@ -34,6 +34,9 @@ my %ns =
         }
     },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
+    'first'   => sub (malSequence $xs) {
+        $xs.value.elems > 0 ?? $xs.value[0] !! malNil
+    },
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
 
@@ -43,6 +46,7 @@ my %ns =
     'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
 
     'read-string' => sub (malString $s) { read-str($s.value) },
+    'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) }
     'slurp'   => sub (malString $s) {
         my $fn = $s.value;
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
