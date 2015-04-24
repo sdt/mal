@@ -10,6 +10,8 @@ use Types;
 my @library =
     '(def! not (fn* (a) (if a false true)))',
     '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
+    q{(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw "odd number of forms to cond")) (cons 'cond (rest (rest xs)))))))},
+    q{(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))},
     ;
 
 # This gets called when there is no argv
@@ -63,10 +65,20 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
 
     my %special =
         'def!' => sub (malSymbol $sym, malValue $def) {
-            $env.set($sym.value, EVAL($def, $env))
+            return $env.set($sym.value, EVAL($def, $env));
+        },
+        'defmacro!' => sub (malSymbol $sym, malValue $def) {
+            my $macro = malMacro.new(EVAL($def, $env));
+            return $env.set($sym.value, $macro);
         },
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
+        },
+        'macroexpand' => sub (malValue $ast) {
+            return macro-expand($ast, $env);
+        },
+        'quote' => sub (malValue $quoted) {
+            return $quoted;
         },
         ;
 
@@ -90,11 +102,19 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             }
             return ($expr, $inner);
         },
+        'quasiquote' => sub (malValue $quoted) {
+            return (quasiquote($quoted), $env);
+        },
         ;
 
     loop {
         unless ($ast ~~ malList) && ($ast.value.elems > 0) {
             return eval-ast($ast, $env);
+        }
+
+        $ast = macro-expand($ast, $env);
+        unless ($ast ~~ malList) && ($ast.value.elems > 0) {
+            return $ast;
         }
 
         my ($op, @args) = $ast.value.list;
@@ -153,4 +173,58 @@ sub eval-ast(malValue $ast, malEnv $env) {
             return $ast;
         }
     }
+}
+
+sub env-get(malEnv $env, malSymbol $symbol)
+{
+    my $owner = $env.find($symbol.value);
+    return $owner ~~ malNil ?? $owner !! $owner.get($symbol.value);
+}
+
+sub is-macro-call(malValue $ast, malEnv $env)
+{
+    return is-pair($ast)
+        && ($ast.value[0] ~~ malSymbol)
+        && (env-get($env, $ast.value[0]) ~~ malMacro);
+}
+
+sub is-pair(malValue $ast) {
+    return $ast ~~ malSequence && $ast.value.elems > 0;
+}
+
+sub is-symbol(malValue $ast, Str $symbol) {
+    return $ast ~~ malSymbol && $ast.value ~~ $symbol;
+}
+
+sub macro-expand(malValue $ast is copy, malEnv $env) {
+    while is-macro-call($ast, $env) {
+        my ($symbol, @args) = $ast.value.list;
+        my $lambda = $env.get($symbol.value).value;
+
+        my $inner = malEnv.new(:outer($lambda.env));
+        $inner.bind($lambda.args, @args);
+
+        $ast = EVAL($lambda.value, $inner);
+    }
+    return $ast;
+}
+
+sub quasiquote(malValue $ast) {
+    if ! is-pair($ast) {
+        return make-form('quote', $ast);
+    }
+
+    my ($op, @args) = $ast.value.list;
+    if is-symbol($op, 'unquote') {
+        if @args.elems != 1 {
+            die RuntimeError.new('unquote requires exactly one arg');
+        }
+        return @args[0];
+    }
+
+    my $rest = malList.new(@args);
+    if is-pair($op) && is-symbol($op.value[0], 'splice-unquote') {
+        return make-form('concat', $op.value[1], quasiquote($rest));
+    }
+    return make-form('cons', quasiquote($op), quasiquote($rest));
 }
