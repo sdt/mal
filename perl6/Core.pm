@@ -39,6 +39,16 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
         malList.new(@all);
     },
+    'conj' => sub (malSequence $seq, *@args) {
+        given $seq {
+            when malList {
+                return malList.new(@( @args.reverse.list, $seq.value.list ));
+            }
+            when malValue {
+                return malVector.new([ $seq.value.list, @args.list ]);
+            }
+        }
+    },
     'contains?' => sub (malHash $hash, $key) {
         malBoolean.new($hash.value{make-hash-key($key)}:exists);
     },
