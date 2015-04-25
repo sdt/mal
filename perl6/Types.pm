@@ -18,6 +18,12 @@ class TypeError     is malException is export { }
 
 class malValue is export {
     has $.value;
+    has $.meta;
+
+    method with-meta(malValue $meta) {
+        # Create a clone, setting a new $meta attribute.
+        return self.clone(:$meta);
+    }
 }
 
 class malBoolean is malValue is export {

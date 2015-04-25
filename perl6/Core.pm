@@ -89,6 +89,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         malList.new(@mapped);
     },
     'map?'    => isa(malHash),
+    'meta'    => sub ($x) { $x.meta // malNil },
     'nil?'    => isa(malNil),
     'nth'     => sub (malSequence $s, malInteger $index) {
         my $i = $index.value;
@@ -121,6 +122,9 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'vals' => sub (malHash $hash) { malList.new($hash.value.values) },
     'vector' => sub (*@xs) { malVector.new(@xs) },
     'vector?' => isa(malVector),
+    'with-meta' => sub ($value, $meta) {
+        return $value.with-meta($meta);
+    },
     ;
 
     for %ns.kv -> $sym, $sub {
