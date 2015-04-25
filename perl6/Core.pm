@@ -6,7 +6,10 @@ use Printer;
 use Reader;
 use Types;
 
-my %ns =
+# apply and eval get passed in to avoid circular dependency problems.
+sub install-core(malEnv $env, :$apply, :$eval) is export {
+    my %ns =
+
     '+' => int-op(* + *),
     '-' => int-op(* - *),
     '*' => int-op(* * *),
@@ -19,6 +22,14 @@ my %ns =
 
     '=' => sub ($a, $b) { make-bool(is-eq($a, $b)) },
 
+    'apply' => sub ($f, *@args) {
+        my malSequence $last = @args.pop;
+        @args.push($last.value.list);
+        $apply($f, @args);
+    },
+    'assoc' => sub (malHash $hash, *@pairs) {
+        make-hash(( $hash.value.kv, @pairs ).list);
+    },
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },
@@ -26,19 +37,58 @@ my %ns =
         my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
         malList.new(@all);
     },
-
+    'contains?' => sub (malHash $hash, $key) {
+        malBoolean.new($hash.value{make-hash-key($key)}:exists);
+    },
     'count'  => sub ($x) {
         return malInteger.new(0) if $x ~~ malNil;
         for $x -> malSequence $xs {
             return malInteger.new($xs.value.elems);
         }
     },
+    'dissoc' => sub (malHash $hash, *@keys) {
+        # Create a set of the keys to be removed.
+        my $to-remove = @keys.map({ make-hash-key($_) }).Set;
+
+        # Create a new hash by filtering out the unwanted pairs.
+        my %filtered = $hash.value.pairs.grep: { $_.key !(elem) $to-remove };
+
+        malHash.new(%filtered);
+    },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
+    'eval'    => sub (malValue $ast) { $eval($ast) },
+    'false?'  => isa(malFalse),
     'first'   => sub (malSequence $xs) {
         $xs.value.elems > 0 ?? $xs.value[0] !! malNil
     },
+    'get' => sub ($hashmap, $key) {
+        return $hashmap if $hashmap ~~ malNil;
+        for $hashmap -> malHash $hash {
+            return $hash.value{make-hash-key($key)} // malNil;
+        }
+    },
+    'hash-map' => sub (*@pairs) { make-hash(@pairs) },
+    'keys' => sub (malHash $hash) {
+        malList.new($hash.value.keys.map({
+            #TODO: urgh...
+            $_.substr(0,1) eq ':'
+                ?? malKeyword.new($_)
+                !! malString.new(unescape-string($_))
+        }));
+    },
+    'keyword' => sub (malString $s) { malKeyword.new(':' ~ $s.value) },
+    'keyword?' => isa(malKeyword),
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
+    'map'     => sub ($f, malSequence $seq) {
+        # Something weird happens to exceptions with this one.
+        #   malList.new($seq.value.map({ $apply($f, [ $_ ]) }))
+        # Going via @mapped seems to fix it :/
+        my @mapped = $seq.value.map({ $apply($f, [ $_ ]) });
+        malList.new(@mapped);
+    },
+    'map?'    => isa(malHash),
+    'nil?'    => isa(malNil),
     'nth'     => sub (malSequence $s, malInteger $index) {
         my $i = $index.value;
         die RuntimeError.new("Index $i out of range")
@@ -58,9 +108,16 @@ my %ns =
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
         return malString.new(slurp $fn);
     },
+    'sequential?' => isa(malSequence),
+    'symbol' => sub (malString $s) { malSymbol.new($s.value) },
+    'symbol?' => isa(malSymbol),
+    'throw' => sub (malValue $exception) { die $exception },
+    'true?' => isa(malTrue),
+    'vals' => sub (malHash $hash) { malList.new($hash.value.values) },
+    'vector' => sub (*@xs) { malVector.new(@xs) },
+    'vector?' => isa(malVector),
     ;
 
-sub install-core(malEnv $env) is export {
     for %ns.kv -> $sym, $sub {
         $env.set($sym, malBuiltIn.new($sub));
     };
@@ -97,7 +154,11 @@ sub list-eq(@lhs, @rhs) {
 
 sub int-op($f) {
     return sub (malInteger $a, malInteger $b) {
-        my $value = $f($a.value, $b.value);
+        my $value = $f($a.value, $b.value).Int;
+        if $value ~~ Failure {
+            # This causes the divide-by-zero Failure to throw.
+            # Presumably this is some kind of feature...
+        }
         return malInteger.new($value.Int);
     };
 }
@@ -109,7 +170,7 @@ sub int-rel($f) {
 }
 
 sub isa($type) {
-    return sub (malValue $x) { make-bool($x ~~ $type) };
+    return sub ($x) { make-bool($x ~~ $type) };
 }
 
 sub str-join(@args, Bool $readably, Str $sep, Bool $print) {

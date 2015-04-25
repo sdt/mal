@@ -30,10 +30,8 @@ multi sub MAIN(Str $filename, *@args) {
 
 sub setup-env(@argv) {
     my $env = malEnv.new;
-    install-core($env);
+    install-core($env, :eval({ EVAL($_, $env) }));
 
-    # Installing these locally avoids some circular dependency problems.
-    $env.set('eval', malBuiltIn.new(sub ($ast) { EVAL($ast, $env) }));
     for @library { rep($_, $env) }
 
     # Install argv
