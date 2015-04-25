@@ -31,6 +31,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'assoc' => sub (malHash $hash, *@pairs) {
         make-hash(( $hash.value.kv, @pairs ).list);
     },
+    'atom' => sub ($value) { malAtom.new($value) },
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },
@@ -47,6 +48,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
             return malInteger.new($xs.value.elems);
         }
     },
+    'deref' => sub (malAtom $atom) { $atom.value },
     'dissoc' => sub (malHash $hash, *@keys) {
         # Create a set of the keys to be removed.
         my $to-remove = @keys.map({ make-hash-key($_) }).Set;
@@ -108,6 +110,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         return $line.defined ?? malString.new($line) !! malNil;
     },
     'read-string' => sub (malString $s) { read-str($s.value) },
+    'reset!' => sub (malAtom $atom, $new) { $atom.value = $new },
     'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) },
     'slurp'   => sub (malString $s) {
         my $fn = $s.value;
@@ -115,6 +118,10 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         return malString.new(slurp $fn);
     },
     'sequential?' => isa(malSequence),
+    'swap!' => sub (malAtom $atom, $f, *@args) {
+        @args.unshift($atom.value);
+        $atom.value = $apply($f, @args);
+    },
     'symbol' => sub (malString $s) { malSymbol.new($s.value) },
     'symbol?' => isa(malSymbol),
     'throw' => sub (malValue $exception) { die $exception },

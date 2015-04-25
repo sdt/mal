@@ -97,6 +97,12 @@ class malMacro is malValue is export {
     method new(malLambda $value) { self.bless(:$value) }
 }
 
+class malAtom is malValue is export {
+    has $.value is rw; # override the read-only setting
+
+    method new(malValue $value) { self.bless(:$value) }
+}
+
 class malEnv is export {
     has %.data;
     has malEnv $.outer;

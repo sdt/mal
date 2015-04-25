@@ -24,6 +24,9 @@ sub pr-str(malValue $ast, Bool $readably) is export {
         when malLambda {
             return 'user-function: ' ~ print-lambda($ast, $readably);
         }
+        when malAtom {
+            return '(atom ' ~ pr-str($_.value, $readably) ~ ')';
+        }
         when malMacro {
             return 'user-macro: ' ~ print-lambda($ast.value, $readably);
         }
