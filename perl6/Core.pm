@@ -27,6 +27,9 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         @args.push($last.value.list);
         $apply($f, @args);
     },
+    'assoc' => sub (malHash $hash, *@pairs) {
+        make-hash(( $hash.value.kv, @pairs ).list);
+    },
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },
@@ -34,18 +37,44 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
         malList.new(@all);
     },
-
+    'contains?' => sub (malHash $hash, $key) {
+        malBoolean.new($hash.value{make-hash-key($key)}:exists);
+    },
     'count'  => sub ($x) {
         return malInteger.new(0) if $x ~~ malNil;
         for $x -> malSequence $xs {
             return malInteger.new($xs.value.elems);
         }
     },
+    'dissoc' => sub (malHash $hash, *@keys) {
+        # Create a set of the keys to be removed.
+        my $to-remove = @keys.map({ make-hash-key($_) }).Set;
+
+        # Create a new hash by filtering out the unwanted pairs.
+        my %filtered = $hash.value.pairs.grep: { $_.key !(elem) $to-remove };
+
+        malHash.new(%filtered);
+    },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
     'eval'    => sub (malValue $ast) { $eval($ast) },
     'false?'  => isa(malFalse),
     'first'   => sub (malSequence $xs) {
         $xs.value.elems > 0 ?? $xs.value[0] !! malNil
+    },
+    'get' => sub ($hashmap, $key) {
+        return $hashmap if $hashmap ~~ malNil;
+        for $hashmap -> malHash $hash {
+            return $hash.value{make-hash-key($key)} // malNil;
+        }
+    },
+    'hash-map' => sub (*@pairs) { make-hash(@pairs) },
+    'keys' => sub (malHash $hash) {
+        malList.new($hash.value.keys.map({
+            #TODO: urgh...
+            $_.substr(0,1) eq ':'
+                ?? malKeyword.new($_)
+                !! malString.new(unescape-string($_.substr(1, *-1)))
+        }));
     },
     'keyword' => sub (malString $s) { malKeyword.new(':' ~ $s.value) },
     'keyword?' => isa(malKeyword),
@@ -80,8 +109,9 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'symbol?' => isa(malSymbol),
     'throw' => sub (malValue $exception) { die $exception },
     'true?' => isa(malTrue),
+    'vals' => sub (malHash $hash) { malList.new($hash.value.values) },
     'vector' => sub (*@xs) { malVector.new(@xs) },
-    'vector?' => isa(malValue),
+    'vector?' => isa(malVector),
     ;
 
     for %ns.kv -> $sym, $sub {

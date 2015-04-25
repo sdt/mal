@@ -134,23 +134,22 @@ class malEnv is export {
     }
 }
 
+sub make-hash-key($k) is export {
+    given $k {
+        when malKeyword { return $k.value;      }
+        when malString  { return $k.value.perl; }
+        when Str        { return $k;            }
+        default {
+            die TypeError.new('Hash keys must be keywords or strings');
+        }
+    }
+}
+
 sub make-hash(@items) is export {
     if @items.elems % 2 != 0 {
         die ArityError.new('Hashmap requires an even number of args');
     }
-    my %hash = @items.map(sub ($k, $v) {
-        given $k {
-            when malKeyword {
-                $k.value => $v;
-            }
-            when malString {
-                $k.value.perl => $v;
-            }
-            default {
-                die TypeError.new('Hash keys must be keywords or strings');
-            }
-        }
-    });
+    my %hash = @items.map(sub ($k, $v) { make-hash-key($k) => $v });
     return malHash.new(%hash);
 }
 
@@ -164,4 +163,11 @@ sub make-bool(Bool $value) is export {
 
 sub is-true(malValue $v) is export {
     return !($v ~~ malNil) && !($v ~~ malFalse);
+}
+
+sub unescape-string(Str $string is copy) is export {
+    $string .= subst(/\\n/, "\n");
+    $string .= subst(/\\\"/, '"');
+    $string .= subst(/\\\\/, '\\');
+    return $string;
 }
