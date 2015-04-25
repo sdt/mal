@@ -43,14 +43,19 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     },
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
     'eval'    => sub (malValue $ast) { $eval($ast) },
+    'false?'  => isa(malFalse),
     'first'   => sub (malSequence $xs) {
         $xs.value.elems > 0 ?? $xs.value[0] !! malNil
     },
+    'keyword' => sub (malString $s) { malKeyword.new(':' ~ $s.value) },
+    'keyword?' => isa(malKeyword),
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
     'map'     => sub ($f, malSequence $seq) {
         malList.new($seq.value.map({ $apply($f, [ $_ ]) }))
     },
+    'map?'    => isa(malHash),
+    'nil?'    => isa(malNil),
     'nth'     => sub (malSequence $s, malInteger $index) {
         my $i = $index.value;
         die RuntimeError.new("Index $i out of range")
@@ -70,7 +75,13 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
         return malString.new(slurp $fn);
     },
+    'sequential?' => isa(malSequence),
+    'symbol' => sub (malString $s) { malSymbol.new($s.value) },
+    'symbol?' => isa(malSymbol),
     'throw' => sub (malValue $exception) { die $exception },
+    'true?' => isa(malTrue),
+    'vector' => sub (*@xs) { malVector.new(@xs) },
+    'vector?' => isa(malValue),
     ;
 
     for %ns.kv -> $sym, $sub {
@@ -125,7 +136,7 @@ sub int-rel($f) {
 }
 
 sub isa($type) {
-    return sub (malValue $x) { make-bool($x ~~ $type) };
+    return sub ($x) { make-bool($x ~~ $type) };
 }
 
 sub str-join(@args, Bool $readably, Str $sep, Bool $print) {
