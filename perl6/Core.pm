@@ -32,6 +32,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         make-hash(( $hash.value.kv, @pairs ).list);
     },
     'atom' => sub ($value) { malAtom.new($value) },
+    'atom?' => isa(malAtom),
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },

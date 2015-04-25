@@ -30,6 +30,9 @@ sub pr-str(malValue $ast, Bool $readably) is export {
         when malMacro {
             return 'user-macro: ' ~ print-lambda($ast.value, $readably);
         }
+        when malBuiltIn {
+            return 'builtin:';
+        }
         default {
             return $ast.value;
         }
