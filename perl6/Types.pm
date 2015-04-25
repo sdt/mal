@@ -136,9 +136,9 @@ class malEnv is export {
 
 sub make-hash-key($k) is export {
     given $k {
-        when malKeyword { return $k.value;      }
-        when malString  { return $k.value.perl; }
-        when Str        { return $k;            }
+        when malKeyword { return $k.value;                  }
+        when malString  { return escape-string($k.value);   }
+        when Str        { return $k;                        }
         default {
             die TypeError.new('Hash keys must be keywords or strings');
         }
@@ -165,9 +165,10 @@ sub is-true(malValue $v) is export {
     return !($v ~~ malNil) && !($v ~~ malFalse);
 }
 
-sub unescape-string(Str $string is copy) is export {
-    $string .= subst(/\\n/, "\n");
-    $string .= subst(/\\\"/, '"');
-    $string .= subst(/\\\\/, '\\');
-    return $string;
+sub escape-string(Str $string) is export {
+    return $string.perl;
+}
+
+sub unescape-string(Str $string) is export {
+    return EVAL $string;
 }

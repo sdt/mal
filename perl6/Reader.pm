@@ -97,8 +97,7 @@ class MALGrammar::Actions {
         if $<string-end>.Str eq '' {
             die ParseError.new("Expected \", got EOF");
         }
-        my $value = $<string-body>.Str;
-        make malString.new(unescape-string($value));
+        make malString.new(unescape-string($/.Str));
     }
 
     method word($/) {

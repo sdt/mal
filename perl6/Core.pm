@@ -73,7 +73,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
             #TODO: urgh...
             $_.substr(0,1) eq ':'
                 ?? malKeyword.new($_)
-                !! malString.new(unescape-string($_.substr(1, *-1)))
+                !! malString.new(unescape-string($_))
         }));
     },
     'keyword' => sub (malString $s) { malKeyword.new(':' ~ $s.value) },
