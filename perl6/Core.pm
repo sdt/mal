@@ -4,6 +4,7 @@ use v6;
 
 use Printer;
 use Reader;
+use ReadLine;
 use Types;
 
 # apply and eval get passed in to avoid circular dependency problems.
@@ -101,6 +102,10 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'prn'     => sub (*@xs) { str-join(@xs, True,  " ", True)  },
     'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
 
+    'readline' => sub (malString $prompt) {
+        my $line = read-line($prompt.value);
+        return $line.defined ?? malString.new($line) !! malNil;
+    },
     'read-string' => sub (malString $s) { read-str($s.value) },
     'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) },
     'slurp'   => sub (malString $s) {
