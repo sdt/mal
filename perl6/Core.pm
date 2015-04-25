@@ -81,7 +81,11 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'list'    => sub (*@xs) { malList.new(@xs) },
     'list?'   => isa(malList),
     'map'     => sub ($f, malSequence $seq) {
-        malList.new($seq.value.map({ $apply($f, [ $_ ]) }))
+        # Something weird happens to exceptions with this one.
+        #   malList.new($seq.value.map({ $apply($f, [ $_ ]) }))
+        # Going via @mapped seems to fix it :/
+        my @mapped = $seq.value.map({ $apply($f, [ $_ ]) });
+        malList.new(@mapped);
     },
     'map?'    => isa(malHash),
     'nil?'    => isa(malNil),
