@@ -113,7 +113,7 @@ class malEnv is export {
     method get(Str $key) {
         my $env = self.find($key);
         if $env ~~ malNil {
-            die NotFound.new("\"$key\" not found");
+            die NotFound.new("'$key' not found");
         }
         return $env.data{$key};
     }
@@ -134,23 +134,22 @@ class malEnv is export {
     }
 }
 
+sub make-hash-key($k) is export {
+    given $k {
+        when malKeyword { return $k.value;                  }
+        when malString  { return escape-string($k.value);   }
+        when Str        { return $k;                        }
+        default {
+            die TypeError.new('Hash keys must be keywords or strings');
+        }
+    }
+}
+
 sub make-hash(@items) is export {
     if @items.elems % 2 != 0 {
         die ArityError.new('Hashmap requires an even number of args');
     }
-    my %hash = @items.map(sub ($k, $v) {
-        given $k {
-            when malKeyword {
-                $k.value => $v;
-            }
-            when malString {
-                $k.value.perl => $v;
-            }
-            default {
-                die TypeError.new('Hash keys must be keywords or strings');
-            }
-        }
-    });
+    my %hash = @items.map(sub ($k, $v) { make-hash-key($k) => $v });
     return malHash.new(%hash);
 }
 
@@ -164,4 +163,12 @@ sub make-bool(Bool $value) is export {
 
 sub is-true(malValue $v) is export {
     return !($v ~~ malNil) && !($v ~~ malFalse);
+}
+
+sub escape-string(Str $string) is export {
+    return $string.perl;
+}
+
+sub unescape-string(Str $string) is export {
+    return EVAL $string;
 }

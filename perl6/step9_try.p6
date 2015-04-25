@@ -10,6 +10,8 @@ use Types;
 my @library =
     '(def! not (fn* (a) (if a false true)))',
     '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) ")")))))',
+    q{(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw "odd number of forms to cond")) (cons 'cond (rest (rest xs)))))))},
+    q{(defmacro! or (fn* (& xs) (if (empty? xs) nil (if (= 1 (count xs)) (first xs) `(let* (or_FIXME ~(first xs)) (if or_FIXME or_FIXME (or ~@(rest xs))))))))},
     ;
 
 # This gets called when there is no argv
@@ -30,7 +32,7 @@ multi sub MAIN(Str $filename, *@args) {
 
 sub setup-env(@argv) {
     my $env = malEnv.new;
-    install-core($env, :eval({ EVAL($_, $env) }));
+    install-core($env, :apply(&apply), :eval({ EVAL($_, $env) }));
 
     for @library { rep($_, $env) }
 
@@ -61,13 +63,50 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
 
     my %special =
         'def!' => sub (malSymbol $sym, malValue $def) {
-            $env.set($sym.value, EVAL($def, $env))
+            return $env.set($sym.value, EVAL($def, $env));
+        },
+        'defmacro!' => sub (malSymbol $sym, malValue $def) {
+            my $macro = malMacro.new(EVAL($def, $env));
+            return $env.set($sym.value, $macro);
         },
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
         },
+        'macroexpand' => sub (malValue $ast) {
+            return macro-expand($ast, $env);
+        },
         'quote' => sub (malValue $quoted) {
             return $quoted;
+        },
+        'try*' => sub (malValue $expr, malList $catchBlock) {
+            for $catchBlock.value.list ->
+                    malSymbol $catch, malSymbol $exception, malValue $handler {
+                my $str = $catch.value;
+                die "catch* block must start with \"catch\", not \"$str\""
+                    unless $str eq 'catch*';
+
+                return EVAL($expr, $env);
+
+                CATCH {
+                    my $value;
+                    given $_ {
+                        when X::AdHoc {
+                            $value = $_.payload;
+                        }
+                        when X::TypeCheck {
+                            $value = $_.got.exception;
+                        }
+                        default {
+                            $value = $_;
+                        }
+                    }
+                    $value = malString.new($_.message)
+                        unless $value ~~ malValue;
+                    my $inner = malEnv.new(:outer($env));
+                    $inner.set($exception.value, $value);
+                    return EVAL($handler, $inner);
+                }
+            }
         },
         ;
 
@@ -101,6 +140,11 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             return eval-ast($ast, $env);
         }
 
+        $ast = macro-expand($ast, $env);
+        unless ($ast ~~ malList) && ($ast.value.elems > 0) {
+            return $ast;
+        }
+
         my ($op, @args) = $ast.value.list;
         if $op ~~ malSymbol && %special{$op.value} -> $handler {
             return $handler(|@args);
@@ -131,6 +175,18 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
     }
 }
 
+sub apply($op, @args) {
+    if $op ~~ malBuiltIn {
+        return $op.value.(|@args);
+    }
+    if $op ~~ malLambda {
+        my $inner = malEnv.new(:outer($op.env));
+        $inner.bind($op.args, @args);
+        return EVAL($op.value, $inner);
+    }
+    die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
+}
+
 sub PRINT($ast) {
     return pr-str($ast, True);
 }
@@ -159,12 +215,38 @@ sub eval-ast(malValue $ast, malEnv $env) {
     }
 }
 
+sub env-get(malEnv $env, malSymbol $symbol)
+{
+    my $owner = $env.find($symbol.value);
+    return $owner ~~ malNil ?? $owner !! $owner.get($symbol.value);
+}
+
+sub is-macro-call(malValue $ast, malEnv $env)
+{
+    return is-pair($ast)
+        && ($ast.value[0] ~~ malSymbol)
+        && (env-get($env, $ast.value[0]) ~~ malMacro);
+}
+
 sub is-pair(malValue $ast) {
     return $ast ~~ malSequence && $ast.value.elems > 0;
 }
 
 sub is-symbol(malValue $ast, Str $symbol) {
     return $ast ~~ malSymbol && $ast.value ~~ $symbol;
+}
+
+sub macro-expand(malValue $ast is copy, malEnv $env) {
+    while is-macro-call($ast, $env) {
+        my ($symbol, @args) = $ast.value.list;
+        my $lambda = $env.get($symbol.value).value;
+
+        my $inner = malEnv.new(:outer($lambda.env));
+        $inner.bind($lambda.args, @args);
+
+        $ast = EVAL($lambda.value, $inner);
+    }
+    return $ast;
 }
 
 sub quasiquote(malValue $ast) {
