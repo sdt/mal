@@ -149,16 +149,10 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
         my ($op, @args) = $ast.value.list;
         if $op ~~ malSymbol && %special{$op.value} -> $handler {
             return $handler(|@args);
-            CATCH {
-                die RuntimeError.new($op.value ~ ': ' ~ $_);
-            }
         }
         elsif $op ~~ malSymbol && %special-tailrec{$op.value} -> $handler {
             ($ast, $env) = $handler(|@args);
             next; # TCO - continue the loop
-            CATCH {
-                die RuntimeError.new($op.value ~ ': ' ~ $_);
-            }
         }
         else {
             my ($op, @args) = eval-ast($ast, $env).value.list;
