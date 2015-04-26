@@ -174,7 +174,17 @@ sub make-bool(Bool $value) is export {
 }
 
 sub is-true(malValue $v) is export {
-    return !($v ~~ malNil) && !($v ~~ malFalse);
+    given ($v) {
+        when malNilValue {
+            return False;
+        }
+        when malBoolean {
+            return $v.value;
+        }
+        default {
+            return True;
+        }
+    }
 }
 
 sub escape-string(Str $string) is export {
