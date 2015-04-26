@@ -192,5 +192,11 @@ sub escape-string(Str $string) is export {
 }
 
 sub unescape-string(Str $string) is export {
-    return EVAL $string;
+    my $s = $string;
+    $s .= subst(/\\n/,  "\n",   :g);    # \n
+    $s .= subst(/\\\"/, '"',    :g);    # \"
+    $s .= subst(/\\\\/, '\\',   :g);    # \\
+    $s .= subst(/^\"/,  '',     :g);    # strip surrounding quotes
+    $s .= subst(/\"$/,  '',     :g);
+    return $s;
 }
