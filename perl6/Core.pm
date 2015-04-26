@@ -157,17 +157,28 @@ sub is-eq(malValue $lhs, malValue $rhs) {
 
     return False unless $lhs.WHAT ~~ $rhs.WHAT;
 
-    if $lhs ~~ malHash {
-        return False unless $lhs.value.elems == $rhs.value.elems;
+    given $lhs {
+        when malHash {
+            return False unless $lhs.value.elems == $rhs.value.elems;
 
-        my @lhs-keys = $lhs.value.keys.sort;
-        my @rhs-keys = $rhs.value.keys.sort;
-        return False unless @lhs-keys eqv @rhs-keys;
+            my @lhs-keys = $lhs.value.keys.sort;
+            my @rhs-keys = $rhs.value.keys.sort;
+            return False unless @lhs-keys eqv @rhs-keys;
 
-        return list-eq($lhs.value{@lhs-keys}, $rhs.value{@rhs-keys});
+            return list-eq($lhs.value{@lhs-keys}, $rhs.value{@rhs-keys});
+        }
+        when malAtom {
+            return is-eq($lhs.value, $rhs.value);
+        }
+        when malBoolean {
+            # Can't use smartmatch for booleans. Hooray.
+            return $lhs.value == $rhs.value;
+        }
+        default {
+            # Use smartmatch for the rest.
+            return $lhs.value ~~ $rhs.value;
+        }
     }
-
-    return $lhs.value ~~ $rhs.value;
 }
 
 sub list-eq(@lhs, @rhs) {
