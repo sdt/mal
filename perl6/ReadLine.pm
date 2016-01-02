@@ -1,4 +1,4 @@
-module ReadLine;
+unit module ReadLine;
 
 use v6;
 

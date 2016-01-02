@@ -1,4 +1,4 @@
-module Printer;
+unit module Printer;
 
 use v6;
 

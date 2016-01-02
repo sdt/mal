@@ -1,4 +1,4 @@
-module Types;
+unit module Types;
 
 use v6;
 

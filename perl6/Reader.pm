@@ -1,4 +1,4 @@
-module Reader;
+unit module Reader;
 
 use v6;
 

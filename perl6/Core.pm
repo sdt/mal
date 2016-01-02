@@ -1,4 +1,4 @@
-module Core;
+unit module Core;
 
 use v6;
 
