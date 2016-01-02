@@ -10,17 +10,17 @@ sub MAIN() {
 }
 
 sub rep(Str $input) {
-    PRINT(EVAL(READ($input)));
+    malPRINT(malEVAL(malREAD($input)));
 }
 
-sub READ(Str $input) {
+sub malREAD(Str $input) {
     return $input;
 }
 
-sub EVAL($ast) {
+sub malEVAL($ast) {
     return $ast;
 }
 
-sub PRINT($ast) {
+sub malPRINT($ast) {
     return $ast;
 }

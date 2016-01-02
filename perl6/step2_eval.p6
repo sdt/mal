@@ -28,14 +28,14 @@ sub MAIN() {
 }
 
 sub rep(Str $input, %env) {
-    PRINT(EVAL(READ($input), %env));
+    malPRINT(malEVAL(malREAD($input), %env));
 }
 
-sub READ(Str $input) {
+sub malREAD(Str $input) {
     return read-str($input);
 }
 
-sub EVAL($ast, %env) {
+sub malEVAL($ast, %env) {
     if ($ast ~~ malList) && ($ast.value.elems > 0) {
         my ($op, @args) = eval-ast($ast, %env).value.list;
         return $op(|@args);
@@ -43,7 +43,7 @@ sub EVAL($ast, %env) {
     return eval-ast($ast, %env);
 }
 
-sub PRINT($ast) {
+sub malPRINT($ast) {
     return pr-str($ast, True);
 }
 
@@ -54,15 +54,15 @@ sub eval-ast($ast, %env) {
         }
         when malHash {
             my %value = $ast.value.pairs.map(
-                { $_.key => EVAL($_.value, %env) });
+                { $_.key => malEVAL($_.value, %env) });
             return malHash.new(%value);
         }
         when malList {
-            my @value = $ast.value.map({ EVAL($_, %env) });
+            my @value = $ast.value.map({ malEVAL($_, %env) });
             return malList.new(@value);
         }
         when malVector {
-            my @value = $ast.value.map({ EVAL($_, %env) });
+            my @value = $ast.value.map({ malEVAL($_, %env) });
             return malVector.new(@value);
         }
         default {

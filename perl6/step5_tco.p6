@@ -31,18 +31,18 @@ sub MAIN() {
 }
 
 sub rep(Str $input, $env) {
-    PRINT(EVAL(READ($input), $env));
+    malPRINT(malEVAL(malREAD($input), $env));
 }
 
-sub READ(Str $input) {
+sub malREAD(Str $input) {
     return read-str($input);
 }
 
-sub EVAL(malValue $ast is copy, malEnv $env is copy) {
+sub malEVAL(malValue $ast is copy, malEnv $env is copy) {
 
     my %special =
         'def!' => sub (malSymbol $sym, malValue $def) {
-            $env.set($sym.value, EVAL($def, $env))
+            $env.set($sym.value, malEVAL($def, $env))
         },
         'fn*' => sub (malSequence $args, malValue $body) {
             return malLambda.new($args, $body, $env);
@@ -54,18 +54,18 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             my $ret;
             my $n = @values.elems;
             for @values[^($n-1)] -> $value {
-                EVAL($value, $env);
+                malEVAL($value, $env);
             }
             return (@values[$n-1], $env);
         },
         'if' => sub (malValue $cond, malValue $then, malValue $else = malNil) {
-            my $ast = is-true(EVAL($cond, $env)) ?? $then !! $else;
+            my $ast = is-true(malEVAL($cond, $env)) ?? $then !! $else;
             return ($ast, $env);
         },
         'let*' => sub (malSequence $bindings, malValue $expr) {
             my $inner = malEnv.new(:outer($env));
             for $bindings.value.list -> malSymbol $symbol, malValue $value {
-                $inner.set($symbol.value, EVAL($value, $inner));
+                $inner.set($symbol.value, malEVAL($value, $inner));
             }
             return ($expr, $inner);
         },
@@ -106,7 +106,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
     }
 }
 
-sub PRINT($ast) {
+sub malPRINT($ast) {
     return pr-str($ast, True);
 }
 
@@ -117,15 +117,15 @@ sub eval-ast(malValue $ast, malEnv $env) {
         }
         when malHash {
             my %value = $ast.value.pairs.map(
-                { $_.key => EVAL($_.value, $env) });
+                { $_.key => malEVAL($_.value, $env) });
             return malHash.new(%value);
         }
         when malList {
-            my @value = $ast.value.map({ EVAL($_, $env) });
+            my @value = $ast.value.map({ malEVAL($_, $env) });
             return malList.new(@value);
         }
         when malVector {
-            my @value = $ast.value.map({ EVAL($_, $env) });
+            my @value = $ast.value.map({ malEVAL($_, $env) });
             return malVector.new(@value);
         }
         default {

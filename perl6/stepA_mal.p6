@@ -33,7 +33,7 @@ multi sub MAIN(Str $filename, *@args) {
 
 sub setup-env(@argv) {
     my $env = malEnv.new;
-    install-core($env, :apply(&apply), :eval({ EVAL($_, $env) }));
+    install-core($env, :apply(&apply), :eval({ malEVAL($_, $env) }));
 
     for @library { rep($_, $env) }
 
@@ -44,7 +44,7 @@ sub setup-env(@argv) {
 }
 
 sub rep(Str $input, $env) {
-    return PRINT(EVAL(READ($input), $env));
+    return malPRINT(malEVAL(malREAD($input), $env));
 
     CATCH {
         when Reader::EmptyInput {
@@ -56,18 +56,18 @@ sub rep(Str $input, $env) {
     }
 }
 
-sub READ(Str $input) {
+sub malREAD(Str $input) {
     return read-str($input);
 }
 
-sub EVAL(malValue $ast is copy, malEnv $env is copy) {
+sub malEVAL(malValue $ast is copy, malEnv $env is copy) {
 
     my %special =
         'def!' => sub (malSymbol $sym, malValue $def) {
-            return $env.set($sym.value, EVAL($def, $env));
+            return $env.set($sym.value, malEVAL($def, $env));
         },
         'defmacro!' => sub (malSymbol $sym, malValue $def) {
-            my $macro = malMacro.new(EVAL($def, $env));
+            my $macro = malMacro.new(malEVAL($def, $env));
             return $env.set($sym.value, $macro);
         },
         'fn*' => sub (malSequence $args, malValue $body) {
@@ -86,7 +86,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
                 die "catch* block must start with \"catch\", not \"$str\""
                     unless $str eq 'catch*';
 
-                return EVAL($expr, $env);
+                return malEVAL($expr, $env);
 
                 CATCH {
                     my $value;
@@ -105,7 +105,7 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
                         unless $value ~~ malValue;
                     my $inner = malEnv.new(:outer($env));
                     $inner.set($exception.value, $value);
-                    return EVAL($handler, $inner);
+                    return malEVAL($handler, $inner);
                 }
             }
         },
@@ -116,18 +116,18 @@ sub EVAL(malValue $ast is copy, malEnv $env is copy) {
             my $ret;
             my $n = @values.elems;
             for @values[^($n-1)] -> $value {
-                EVAL($value, $env);
+                malEVAL($value, $env);
             }
             return (@values[$n-1], $env);
         },
         'if' => sub (malValue $cond, malValue $then, malValue $else = malNil) {
-            my $ast = is-true(EVAL($cond, $env)) ?? $then !! $else;
+            my $ast = is-true(malEVAL($cond, $env)) ?? $then !! $else;
             return ($ast, $env);
         },
         'let*' => sub (malSequence $bindings, malValue $expr) {
             my $inner = malEnv.new(:outer($env));
             for $bindings.value.list -> malSymbol $symbol, malValue $value {
-                $inner.set($symbol.value, EVAL($value, $inner));
+                $inner.set($symbol.value, malEVAL($value, $inner));
             }
             return ($expr, $inner);
         },
@@ -177,12 +177,12 @@ sub apply($op, @args) {
     if $op ~~ malLambda {
         my $inner = malEnv.new(:outer($op.env));
         $inner.bind($op.args, @args);
-        return EVAL($op.value, $inner);
+        return malEVAL($op.value, $inner);
     }
     die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
 }
 
-sub PRINT($ast) {
+sub malPRINT($ast) {
     return pr-str($ast, True);
 }
 
@@ -193,15 +193,15 @@ sub eval-ast(malValue $ast, malEnv $env) {
         }
         when malHash {
             my %value = $ast.value.pairs.map(
-                { $_.key => EVAL($_.value, $env) });
+                { $_.key => malEVAL($_.value, $env) });
             return malHash.new(%value);
         }
         when malList {
-            my @value = $ast.value.map({ EVAL($_, $env) });
+            my @value = $ast.value.map({ malEVAL($_, $env) });
             return malList.new(@value);
         }
         when malVector {
-            my @value = $ast.value.map({ EVAL($_, $env) });
+            my @value = $ast.value.map({ malEVAL($_, $env) });
             return malVector.new(@value);
         }
         default {
@@ -239,7 +239,7 @@ sub macro-expand(malValue $ast is copy, malEnv $env) {
         my $inner = malEnv.new(:outer($lambda.env));
         $inner.bind($lambda.args, @args);
 
-        $ast = EVAL($lambda.value, $inner);
+        $ast = malEVAL($lambda.value, $inner);
     }
     return $ast;
 }
