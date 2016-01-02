@@ -18,6 +18,12 @@ class TypeError     is malException is export { }
 
 class malValue is export {
     has $.value;
+    has $.meta;
+
+    method with-meta(malValue $meta) {
+        # Create a clone, setting a new $meta attribute.
+        return self.clone(:$meta);
+    }
 }
 
 class malBoolean is malValue is export {
@@ -91,6 +97,12 @@ class malMacro is malValue is export {
     method new(malLambda $value) { self.bless(:$value) }
 }
 
+class malAtom is malValue is export {
+    has $.value is rw; # override the read-only setting
+
+    method new(malValue $value) { self.bless(:$value) }
+}
+
 class malEnv is export {
     has %.data;
     has malEnv $.outer;
@@ -162,7 +174,17 @@ sub make-bool(Bool $value) is export {
 }
 
 sub is-true(malValue $v) is export {
-    return !($v ~~ malNil) && !($v ~~ malFalse);
+    given ($v) {
+        when malNilValue {
+            return False;
+        }
+        when malBoolean {
+            return $v.value;
+        }
+        default {
+            return True;
+        }
+    }
 }
 
 sub escape-string(Str $string) is export {
@@ -170,5 +192,11 @@ sub escape-string(Str $string) is export {
 }
 
 sub unescape-string(Str $string) is export {
-    return EVAL $string;
+    my $s = $string;
+    $s .= subst(/\\n/,  "\n",   :g);    # \n
+    $s .= subst(/\\\"/, '"',    :g);    # \"
+    $s .= subst(/\\\\/, '\\',   :g);    # \\
+    $s .= subst(/^\"/,  '',     :g);    # strip surrounding quotes
+    $s .= subst(/\"$/,  '',     :g);
+    return $s;
 }

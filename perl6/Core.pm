@@ -4,6 +4,7 @@ use v6;
 
 use Printer;
 use Reader;
+use ReadLine;
 use Types;
 
 # apply and eval get passed in to avoid circular dependency problems.
@@ -30,12 +31,24 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'assoc' => sub (malHash $hash, *@pairs) {
         make-hash(( $hash.value.kv, @pairs ).list);
     },
+    'atom' => sub ($value) { malAtom.new($value) },
+    'atom?' => isa(malAtom),
     'cons' => sub ($first, malSequence $rest) {
         malList.new($first, $rest.value.list)
     },
     'concat' => sub (*@seqs) {
         my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
         malList.new(@all);
+    },
+    'conj' => sub (malSequence $seq, *@args) {
+        given $seq {
+            when malList {
+                return malList.new(@( @args.reverse.list, $seq.value.list ));
+            }
+            when malValue {
+                return malVector.new([ $seq.value.list, @args.list ]);
+            }
+        }
     },
     'contains?' => sub (malHash $hash, $key) {
         malBoolean.new($hash.value{make-hash-key($key)}:exists);
@@ -46,6 +59,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
             return malInteger.new($xs.value.elems);
         }
     },
+    'deref' => sub (malAtom $atom) { $atom.value },
     'dissoc' => sub (malHash $hash, *@keys) {
         # Create a set of the keys to be removed.
         my $to-remove = @keys.map({ make-hash-key($_) }).Set;
@@ -88,6 +102,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         malList.new(@mapped);
     },
     'map?'    => isa(malHash),
+    'meta'    => sub ($x) { $x.meta // malNil },
     'nil?'    => isa(malNil),
     'nth'     => sub (malSequence $s, malInteger $index) {
         my $i = $index.value;
@@ -101,7 +116,12 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'prn'     => sub (*@xs) { str-join(@xs, True,  " ", True)  },
     'println' => sub (*@xs) { str-join(@xs, False, " ", True) },
 
+    'readline' => sub (malString $prompt) {
+        my $line = read-line($prompt.value);
+        return $line.defined ?? malString.new($line) !! malNil;
+    },
     'read-string' => sub (malString $s) { read-str($s.value) },
+    'reset!' => sub (malAtom $atom, $new) { $atom.value = $new },
     'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) },
     'slurp'   => sub (malString $s) {
         my $fn = $s.value;
@@ -109,6 +129,10 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         return malString.new(slurp $fn);
     },
     'sequential?' => isa(malSequence),
+    'swap!' => sub (malAtom $atom, $f, *@args) {
+        @args.unshift($atom.value);
+        $atom.value = $apply($f, @args);
+    },
     'symbol' => sub (malString $s) { malSymbol.new($s.value) },
     'symbol?' => isa(malSymbol),
     'throw' => sub (malValue $exception) { die $exception },
@@ -116,6 +140,9 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'vals' => sub (malHash $hash) { malList.new($hash.value.values) },
     'vector' => sub (*@xs) { malVector.new(@xs) },
     'vector?' => isa(malVector),
+    'with-meta' => sub ($value, $meta) {
+        return $value.with-meta($meta);
+    },
     ;
 
     for %ns.kv -> $sym, $sub {
@@ -130,17 +157,28 @@ sub is-eq(malValue $lhs, malValue $rhs) {
 
     return False unless $lhs.WHAT ~~ $rhs.WHAT;
 
-    if $lhs ~~ malHash {
-        return False unless $lhs.value.elems == $rhs.value.elems;
+    given $lhs {
+        when malHash {
+            return False unless $lhs.value.elems == $rhs.value.elems;
 
-        my @lhs-keys = $lhs.value.keys.sort;
-        my @rhs-keys = $rhs.value.keys.sort;
-        return False unless @lhs-keys eqv @rhs-keys;
+            my @lhs-keys = $lhs.value.keys.sort;
+            my @rhs-keys = $rhs.value.keys.sort;
+            return False unless @lhs-keys eqv @rhs-keys;
 
-        return list-eq($lhs.value{@lhs-keys}, $rhs.value{@rhs-keys});
+            return list-eq($lhs.value{@lhs-keys}, $rhs.value{@rhs-keys});
+        }
+        when malAtom {
+            return is-eq($lhs.value, $rhs.value);
+        }
+        when malBoolean {
+            # Can't use smartmatch for booleans. Hooray.
+            return $lhs.value == $rhs.value;
+        }
+        default {
+            # Use smartmatch for the rest.
+            return $lhs.value ~~ $rhs.value;
+        }
     }
-
-    return $lhs.value ~~ $rhs.value;
 }
 
 sub list-eq(@lhs, @rhs) {
