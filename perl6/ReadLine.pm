@@ -2,16 +2,18 @@ unit module ReadLine;
 
 use v6;
 
+constant READLINE_LIB = %*ENV<MAL_READLINE> // 'libreadline';
+
 # Import some native functions from GNU readline.
 use NativeCall;
 sub readline(Str $prompt) returns Str
-    is native('libreadline') { ... }
+    is native(READLINE_LIB) { ... }
 sub add_history(Str $line)
-    is native('libreadline') { ... }
+    is native(READLINE_LIB) { ... }
 sub append_history(Int $lineno, Str $filename) returns Int
-    is native('libreadline') { ... }
+    is native(READLINE_LIB) { ... }
 sub read_history(Str $filename) returns Int
-    is native('libreadline') { ... }
+    is native(READLINE_LIB) { ... }
 
 # Load up the .mal-history file
 my $history-path = %*ENV<MAL_HISTORY> // %*ENV<HOME> ~ '/.mal-history';
