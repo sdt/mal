@@ -47,7 +47,8 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
                 return malList.new(@( @args.reverse.list, $seq.value.list ));
             }
             when malValue {
-                return malVector.new([ $seq.value.list, @args.list ]);
+                @args.prepend($seq.value.list);
+                return malVector.new(@args);
             }
         }
     },
