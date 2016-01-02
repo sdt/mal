@@ -6,4 +6,9 @@ RUN apt-get update \
     && echo ok.
 
 WORKDIR /run
+
+ENV INPUTRC=$PWD/.inputrc \
+    MAL_HISTORY=$PWD/.mal_history \
+    PERL6LIB=$PWD
+
 CMD /bin/bash
