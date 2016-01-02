@@ -188,7 +188,11 @@ sub is-true(malValue $v) is export {
 }
 
 sub escape-string(Str $string) is export {
-    return $string.perl;
+    my $s = $string;
+    $s .= subst(/\\/, '\\\\', :g); # \
+    $s .= subst(/\"/, '\\"',  :g); # "
+    $s .= subst(/\n/, '\n',   :g); # \n
+    return qq["$s"];
 }
 
 sub unescape-string(Str $string) is export {

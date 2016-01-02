@@ -16,7 +16,7 @@ sub pr-str(malValue $ast, Bool $readably) is export {
             return '[' ~ print-items($ast.value, $readably) ~ ']';
         }
         when malString {
-            return $readably ?? $ast.value.perl !! $ast.value;
+            return $readably ?? escape-string($ast.value) !! $ast.value;
         }
         when malBoolean {
             return $ast.value ?? 'true' !! 'false';
