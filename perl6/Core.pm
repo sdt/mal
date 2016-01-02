@@ -25,7 +25,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
 
     'apply' => sub ($f, *@args) {
         my malSequence $last = @args.pop;
-        @args.push($last.value.list);
+        @args.append($last.value.list);
         $apply($f, @args);
     },
     'assoc' => sub (malHash $hash, *@pairs) {
