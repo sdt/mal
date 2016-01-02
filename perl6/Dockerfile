@@ -1,7 +1,9 @@
-FROM sdt4docker/perl6-moarvm
-MAINTAINER Stephen Thirlwall <sdt@dr.com>
+FROM rakudo-star
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         libreadline-dev \
     && echo ok.
+
+WORKDIR /run
+CMD /bin/bash
