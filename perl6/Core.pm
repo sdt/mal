@@ -29,7 +29,8 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         $apply($f, @args);
     },
     'assoc' => sub (malHash $hash, *@pairs) {
-        make-hash(( $hash.value.kv, @pairs ).list);
+        @pairs.prepend($hash.value.kv);
+        make-hash(@pairs);
     },
     'atom' => sub ($value) { malAtom.new($value) },
     'atom?' => isa(malAtom),
