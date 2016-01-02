@@ -37,7 +37,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
         malList.new($first, $rest.value.list)
     },
     'concat' => sub (*@seqs) {
-        my @all = @seqs.for: -> malSequence $seq { $seq.value.list };
+        my @all = @seqs.flatmap({ $_.value.list });
         malList.new(@all);
     },
     'conj' => sub (malSequence $seq, *@args) {
