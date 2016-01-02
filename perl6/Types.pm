@@ -85,7 +85,7 @@ class malLambda is malValue is export {
             unless @args.elems == @args.unique.elems;
 
         # There's only zero or one ampersand now. Check it's in the right place.
-        my $ampIndex = @args.first-index('&');
+        my $ampIndex = first { $_ eq '&' }, @args, :k;
         if $ampIndex.defined && $ampIndex != @args.elems - 2 {
             die RuntimeError.new('Slurpy & must be second-last argument');
         }
