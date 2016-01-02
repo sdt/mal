@@ -138,6 +138,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'symbol' => sub (malString $s) { malSymbol.new($s.value) },
     'symbol?' => isa(malSymbol),
     'throw' => sub (malValue $exception) { die $exception },
+    'time-ms' => sub () { malInteger.new((now * 1000).Int) },
     'true?' => isa(malTrue),
     'vals' => sub (malHash $hash) { malList.new($hash.value.values) },
     'vector' => sub (*@xs) { malVector.new(@xs) },
