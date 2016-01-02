@@ -184,7 +184,7 @@ sub is-eq(malValue $lhs, malValue $rhs) {
 sub list-eq(@lhs, @rhs) {
     return False unless @lhs.elems == @rhs.elems;
 
-    for zip(@lhs; @rhs) -> $a, $b {
+    for @lhs Z @rhs -> ($a, $b) {
         return False unless is-eq($a, $b);
     }
     return True;
