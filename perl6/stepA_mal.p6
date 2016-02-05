@@ -146,7 +146,7 @@ sub malEVAL(malValue $ast is copy, malEnv $env is copy) {
 
         $ast = macro-expand($ast, $env);
         unless ($ast ~~ malList) && ($ast.value.elems > 0) {
-            return $ast;
+            return eval-ast($ast, $env);
         }
 
         my ($op, @args) = $ast.value.list;
