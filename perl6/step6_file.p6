@@ -30,7 +30,7 @@ multi sub MAIN(Str $filename, *@args) {
 
 sub setup-env(@argv) {
     my $env = malEnv.new;
-    install-core($env, :eval({ malEVAL($_, $env) }));
+    install-core($env, :apply(&apply), :eval({ malEVAL($_, $env) }));
 
     for @library { rep($_, $env) }
 
@@ -123,6 +123,18 @@ sub malEVAL(malValue $ast is copy, malEnv $env is copy) {
             die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
         }
     }
+}
+
+sub apply($op, @args) {
+    if $op ~~ malBuiltIn {
+        return $op.value.(|@args);
+    }
+    if $op ~~ malLambda {
+        my $inner = malEnv.new(:outer($op.env));
+        $inner.bind($op.args, @args);
+        return malEVAL($op.value, $inner);
+    }
+    die RuntimeError.new(pr-str($op, True) ~ " is not applicable");
 }
 
 sub malPRINT($ast) {
