@@ -74,9 +74,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     'empty?'  => sub (malSequence $xs) { make-bool(!$xs.value.Bool) },
     'eval'    => sub (malValue $ast) { $eval($ast) },
     'false?'  => isa(malFalse),
-    'first'   => sub (malSequence $xs) {
-        $xs.value.elems > 0 ?? $xs.value[0] !! malNil
-    },
+    'first' => &first,
     'get' => sub ($hashmap, $key) {
         return $hashmap if $hashmap ~~ malNil;
         for $hashmap -> malHash $hash {
@@ -124,7 +122,7 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     },
     'read-string' => sub (malString $s) { read-str($s.value) },
     'reset!' => sub (malAtom $atom, $new) { $atom.value = $new },
-    'rest'    => sub (malSequence $xs) { malList.new($xs.value[1..*]) },
+    'rest'    => &rest,
     'slurp'   => sub (malString $s) {
         my $fn = $s.value;
         die RuntimeError.new("File \"$fn\" not found") unless $fn.IO ~~ :e;
@@ -151,6 +149,22 @@ sub install-core(malEnv $env, :$apply, :$eval) is export {
     for %ns.kv -> $sym, $sub {
         $env.set($sym, malBuiltIn.new($sub));
     };
+}
+
+multi first(malSequence $xs) {
+    $xs.value.elems > 0 ?? $xs.value[0] !! malNil
+}
+
+multi first(malNil $nil) {
+    $nil;
+}
+
+multi rest(malSequence $xs) {
+    malList.new($xs.value[1..*]);
+}
+
+multi rest(malNil) {
+    malList.new();
 }
 
 sub is-eq(malValue $lhs, malValue $rhs) {
