@@ -1,16 +1,16 @@
-FROM ubuntu:vivid
+FROM rakudo-star
 MAINTAINER Joel Martin <github@martintribe.org>
 
-ENV PATH="~/.rakudobrew/bin:$PATH"
+ARG APT_MIRROR=http://httpredir.debian.org
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        gcc \
-        git \
-        libreadline-dev \
-        make \
- && git clone --depth 1 https://github.com/tadzik/rakudobrew ~/.rakudobrew \
- && PATH=~/.rakudobrew/bin:$PATH rakudobrew build moar \
+RUN sed -i -e "s!http://httpredir\.debian\.org!$APT_MIRROR!" \
+        /etc/apt/sources.list \
+ && apt-get update \
+ && buildDeps='gcc make' \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y $buildDeps \
+ && /usr/share/perl6/site/bin/panda install Linenoise \
+ && apt-get purge -y --auto-remove $buildDeps \
+ && rm -rf /var/lib/apt/lists/* \
  && true
 
-#    rakudobrew build-panda && \
+CMD ["perl6"]
